@@ -100,3 +100,26 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const saved = await saveWeekPlan(c.env.DB, householdId, meals);
   return c.json(saved);
 }
+
+export async function handleConfirmMeal(c: Context<{ Bindings: Env }>) {
+  const householdId = c.req.param('id') as string;
+  const body = (await c.req.json().catch(() => ({}))) as {
+    mealData?: unknown;
+    usedIngredients?: Array<{ name: string; quantityValue: number | null; quantityUnit: string }>;
+  };
+
+  const usedIngredients = body.usedIngredients ?? [];
+  if (usedIngredients.length === 0) {
+    return c.json({ updated: [], removed: [], message: 'No ingredients to subtract' });
+  }
+
+  const stub = c.env.HOUSEHOLD_SYNC.get(c.env.HOUSEHOLD_SYNC.idFromName(householdId));
+  const result = await stub.fetch('https://do/pantry/subtract', {
+    method: 'POST',
+    body: JSON.stringify({ usedIngredients }),
+    headers: { 'content-type': 'application/json' },
+  });
+
+  const data = (await result.json()) as { updated: string[]; removed: string[] };
+  return c.json(data);
+}

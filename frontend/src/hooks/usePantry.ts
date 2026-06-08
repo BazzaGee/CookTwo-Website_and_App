@@ -106,12 +106,12 @@ export function usePantry() {
   }, [householdId, token, partnerId, partnerSlot, applyEvent]);
 
   const addMutation = useMutation({
-    mutationFn: (input: { name: string; quantity: string }) =>
+    mutationFn: (input: { name: string; quantity?: string }) =>
       apiFetch<PantryItem>(`/api/household/${householdId}/pantry`, {
         method: 'POST',
         body: {
           name: input.name.trim(),
-          quantity: input.quantity.trim(),
+          quantity: '',
           addedByPartnerId: partnerId,
           addedByPartnerSlot: partnerSlot,
         },
@@ -127,11 +127,11 @@ export function usePantry() {
   });
 
   const addBulkMutation = useMutation({
-    mutationFn: (input: { items: Array<{ name: string; quantity: string }> }) =>
+    mutationFn: (input: { items: Array<{ name: string }> }) =>
       apiFetch<PantryItem[]>(`/api/household/${householdId}/pantry/bulk`, {
         method: 'POST',
         body: {
-          items: input.items,
+          items: input.items.map((item) => ({ name: item.name.trim(), quantity: '' })),
           addedByPartnerId: partnerId,
           addedByPartnerSlot: partnerSlot,
         },

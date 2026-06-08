@@ -18,11 +18,11 @@ new_sqlite_classes = ["HouseholdSync", "InviteStore"]
 [[d1_databases]]
 binding = "DB"
 database_name = "couples-food-system"
-database_id = "3aedecd6-7fda-4984-aa90-057258ba2e2d"
+database_id = "a1d7c319-cd3f-4f82-9d97-6e63eff19fca"
 migrations_dir = "migrations"
 
 [vars]
-JWT_SECRET = "dev-secret-change-me-in-production"
+AI_PROVIDER = "deepseek"
 
 [env.staging]
 name = "couples-food-system-api-staging"

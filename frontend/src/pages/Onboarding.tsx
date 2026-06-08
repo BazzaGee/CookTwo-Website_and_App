@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { apiFetch } from '../lib/api';
 import type { Diet, Goal } from '../hooks/useProfiles';
 
-type Step = 'welcome' | 'join-welcome' | 'name' | 'preferences' | 'goals' | 'pantry' | 'created' | 'join-code' | 'join-done';
+type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'pantry' | 'created' | 'join-code' | 'partner-check';
 
 const DIETS: readonly Diet[] = ['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'gluten-free'] as const;
 const GOALS: readonly Goal[] = ['lose', 'maintain', 'gain', 'none'] as const;
@@ -76,7 +76,17 @@ export default function Onboarding() {
     }
   }
 
-  async function handlePantryContinue() {
+  function handlePantryContinue() {
+    const name = displayName.trim();
+    if (!name) {
+      setError('Tell us what to call you.');
+      return;
+    }
+    setError(null);
+    setStep('partner-check');
+  }
+
+  async function handleCreateHousehold() {
     const name = displayName.trim();
     if (!name) {
       setError('Tell us what to call you.');
@@ -108,6 +118,7 @@ export default function Onboarding() {
               token: result.token,
             });
           } catch {
+            // pantry bulk is optional, don't block onboarding
           }
         }
       }
@@ -125,10 +136,6 @@ export default function Onboarding() {
     navigate('/', { replace: true });
   }
 
-  function goToJoin() {
-    setStep('join-welcome');
-  }
-
   return (
     <main className="min-h-full bg-cream flex flex-col">
       <div className="flex-1 flex items-center justify-center px-6 py-12">
@@ -136,14 +143,6 @@ export default function Onboarding() {
           {step === 'welcome' && (
             <WelcomeStep
               onCreate={() => setStep('name')}
-              onJoin={goToJoin}
-            />
-          )}
-
-          {step === 'join-welcome' && (
-            <JoinWelcome
-              onEnterCode={() => setStep('join-code')}
-              onBack={() => setStep('welcome')}
             />
           )}
 
@@ -156,20 +155,6 @@ export default function Onboarding() {
               }}
               onSubmit={() => setStep('preferences')}
               onBack={() => setStep('welcome')}
-              error={error}
-            />
-          )}
-
-          {step === 'join-code' && (
-            <JoinCodeStep
-              digits={inviteCodeDigits}
-              onDigitsChange={(d) => {
-                setInviteCodeDigits(d);
-                if (error) setError(null);
-              }}
-              onSubmit={handleJoin}
-              onBack={() => setStep('join-welcome')}
-              submitting={submitting}
               error={error}
             />
           )}
@@ -205,10 +190,11 @@ export default function Onboarding() {
             />
           )}
 
-          {step === 'created' && (
-            <CreatedStep
-              inviteCode={createdInviteCode}
-              onContinue={handleContinue}
+          {step === 'partner-check' && (
+            <PartnerCheckStep
+              onJoin={() => setStep('join-code')}
+              onCreate={handleCreateHousehold}
+              onBack={() => setStep('pantry')}
             />
           )}
 
@@ -220,9 +206,16 @@ export default function Onboarding() {
                 if (error) setError(null);
               }}
               onSubmit={handleJoin}
-              onBack={() => setStep('join-code')}
+              onBack={() => setStep('partner-check')}
               submitting={submitting}
               error={error}
+            />
+          )}
+
+          {step === 'created' && (
+            <CreatedStep
+              inviteCode={createdInviteCode}
+              onContinue={handleContinue}
             />
           )}
         </div>
@@ -283,7 +276,7 @@ function SecondaryButton({
   );
 }
 
-function WelcomeStep({ onCreate, onJoin }: { onCreate: () => void; onJoin: () => void }) {
+function WelcomeStep({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex flex-col">
       <Wordmark />
@@ -301,38 +294,7 @@ function WelcomeStep({ onCreate, onJoin }: { onCreate: () => void; onJoin: () =>
         </p>
       </div>
 
-      <div className="space-y-3">
-        <PrimaryButton onClick={onCreate}>Set up our kitchen</PrimaryButton>
-        <button
-          type="button"
-          onClick={onJoin}
-          className="w-full bg-transparent text-terracotta-dark font-medium py-4 px-6 rounded-2xl border border-terracotta/30 hover:bg-terracotta/5 transition-colors"
-        >
-          Join my partner
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function JoinWelcome({ onEnterCode, onBack }: { onEnterCode: () => void; onBack: () => void }) {
-  return (
-    <div className="flex flex-col">
-      <Wordmark />
-
-      <div className="text-center mb-12">
-        <h2 className="text-text-primary text-3xl font-semibold tracking-tight">
-          Join your partner's kitchen
-        </h2>
-        <p className="text-text-secondary text-base mt-3 leading-relaxed">
-          Your partner will give you a 6-digit code. Enter it below and you'll be linked up instantly.
-        </p>
-      </div>
-
-      <PrimaryButton onClick={onEnterCode}>Enter the code</PrimaryButton>
-      <div className="mt-4 text-center">
-        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-      </div>
+      <PrimaryButton onClick={onCreate}>Set up our kitchen</PrimaryButton>
     </div>
   );
 }
@@ -580,6 +542,46 @@ function PantryStep({
   );
 }
 
+function PartnerCheckStep({
+  onJoin,
+  onCreate,
+  onBack,
+}: {
+  onJoin: () => void;
+  onCreate: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex flex-col">
+      <Wordmark />
+
+      <div className="text-center mb-12">
+        <h2 className="text-text-primary text-3xl font-semibold tracking-tight">
+          Is your partner already set up?
+        </h2>
+        <p className="text-text-secondary text-base mt-3 leading-relaxed">
+          If they've already created a kitchen, enter their code to join.
+          If not, you'll get a code to share with them.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <PrimaryButton onClick={onJoin}>Yes, I have their code</PrimaryButton>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="w-full bg-transparent text-terracotta-dark font-medium py-4 px-6 rounded-2xl border border-terracotta/30 hover:bg-terracotta/5 transition-colors"
+        >
+          No, I'm setting up first
+        </button>
+      </div>
+      <div className="mt-4 text-center">
+        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
+      </div>
+    </div>
+  );
+}
+
 function CreatedStep({
   inviteCode,
   onContinue,
@@ -587,11 +589,23 @@ function CreatedStep({
   inviteCode: string | null;
   onContinue: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <Wordmark />
 
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <p className="text-sage text-sm font-medium tracking-wide uppercase">Your kitchen is ready</p>
         <h2 className="text-text-primary text-3xl font-semibold tracking-tight mt-3">
           Share this code with your partner
@@ -601,15 +615,30 @@ function CreatedStep({
         </p>
       </div>
 
-      <div className="bg-white border border-border rounded-2xl py-8 px-6 text-center mb-8">
-        {inviteCode ? (
-          <p className="font-mono text-text-primary text-4xl md:text-5xl font-semibold tracking-[0.4em]">
-            {inviteCode}
-          </p>
-        ) : (
-          <p className="text-text-secondary">No code generated.</p>
-        )}
-      </div>
+      {inviteCode && (
+        <div className="flex gap-2 justify-center mb-6">
+          {inviteCode.split('').map((d, i) => (
+            <div
+              key={i}
+              className="w-full aspect-square bg-white border border-border rounded-xl flex items-center justify-center text-text-primary text-2xl font-semibold"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={handleCopy}
+        className={`w-full font-medium py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 mb-6 ${
+          copied
+            ? 'bg-sage text-white'
+            : 'bg-white border border-border text-text-primary hover:bg-cream-dark'
+        }`}
+      >
+        {copied ? 'Copied!' : 'Copy code'}
+      </button>
 
       <PrimaryButton onClick={onContinue}>Continue to our kitchen</PrimaryButton>
       <p className="text-text-secondary text-sm text-center mt-4">

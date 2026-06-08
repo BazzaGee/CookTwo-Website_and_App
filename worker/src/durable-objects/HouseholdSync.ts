@@ -1,4 +1,5 @@
 import type { Env } from '../env';
+import { parsePantryItemSync, type ParsedPantryItem } from '../lib/pantry-parser';
 
 export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Other';
 
@@ -21,6 +22,11 @@ export interface PantryItem {
   householdId: string;
   name: string;
   quantity: string;
+  category: Category;
+  quantityValue: number | null;
+  quantityUnit: string;
+  brand: string;
+  isFood: boolean;
   addedByPartnerId: string;
   addedByPartnerSlot: PartnerSlot;
   createdAt: number;
@@ -52,6 +58,11 @@ interface PantryItemRow {
   household_id: string;
   name: string;
   quantity: string;
+  category: string;
+  quantity_value: number | null;
+  quantity_unit: string;
+  brand: string;
+  is_food: number;
   added_by_partner_id: string;
   added_by_partner_slot: number;
   created_at: number;
@@ -78,6 +89,11 @@ function rowToPantry(row: PantryItemRow): PantryItem {
     householdId: row.household_id,
     name: row.name,
     quantity: row.quantity,
+    category: (row.category || 'Other') as Category,
+    quantityValue: row.quantity_value,
+    quantityUnit: row.quantity_unit || '',
+    brand: row.brand || '',
+    isFood: row.is_food === 1,
     addedByPartnerId: row.added_by_partner_id,
     addedByPartnerSlot: row.added_by_partner_slot as PartnerSlot,
     createdAt: row.created_at,
@@ -108,12 +124,26 @@ const SCHEMA = `
     household_id TEXT NOT NULL,
     name TEXT NOT NULL,
     quantity TEXT NOT NULL DEFAULT '',
+    category TEXT NOT NULL DEFAULT 'Other',
+    quantity_value REAL DEFAULT NULL,
+    quantity_unit TEXT DEFAULT '',
+    brand TEXT DEFAULT '',
+    is_food INTEGER NOT NULL DEFAULT 1,
     added_by_partner_id TEXT NOT NULL,
     added_by_partner_slot INTEGER NOT NULL,
     created_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_pantry_items_household ON pantry_items(household_id);
   CREATE INDEX IF NOT EXISTS idx_pantry_items_created ON pantry_items(created_at);
+
+  CREATE TABLE IF NOT EXISTS pantry_parse_cache (
+    input_hash TEXT PRIMARY KEY,
+    raw_input TEXT NOT NULL,
+    parsed_json TEXT NOT NULL,
+    source TEXT NOT NULL CHECK(source IN ('regex', 'ai')),
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_parse_cache_created ON pantry_parse_cache(created_at);
 `;
 
 interface ConnectedPartner {
@@ -261,6 +291,13 @@ export class HouseholdSync {
         this.broadcast({ type: 'pantry_deleted', id: result.id });
         return this.json(result);
       }
+      if (path === '/pantry/subtract' && method === 'POST') {
+        const body = (await request.json()) as {
+          usedIngredients: Array<{ name: string; quantityValue: number | null; quantityUnit: string }>;
+        };
+        const result = await this.subtractPantryForMeal(body.usedIngredients);
+        return this.json(result);
+      }
 
       return this.json({ error: 'not_found', path, method }, 404);
     } catch (err) {
@@ -374,11 +411,14 @@ export class HouseholdSync {
     addedByPartnerId: string;
     addedByPartnerSlot: number;
   }): Promise<PantryItem> {
-    const name = (body.name ?? '').trim();
-    if (!name) throw new Error('name is required');
+    const rawInput = (body.name ?? '').trim();
+    if (!rawInput) throw new Error('name is required');
     if (body.addedByPartnerSlot !== 1 && body.addedByPartnerSlot !== 2) {
       throw new Error('addedByPartnerSlot must be 1 or 2');
     }
+
+    // Parse the raw input using regex (fast, no API calls)
+    const parsed = parsePantryItemSync(rawInput);
 
     const householdId = (this.state.id as { toString(): string }).toString();
     const id = crypto.randomUUID();
@@ -386,12 +426,17 @@ export class HouseholdSync {
 
     this.state.storage.sql.exec(
       `INSERT INTO pantry_items
-        (id, household_id, name, quantity, added_by_partner_id, added_by_partner_slot, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (id, household_id, name, quantity, category, quantity_value, quantity_unit, brand, is_food, added_by_partner_id, added_by_partner_slot, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       householdId,
-      name,
-      body.quantity ?? '',
+      parsed.name,
+      parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+      parsed.category,
+      parsed.quantityValue,
+      parsed.quantityUnit,
+      parsed.brand,
+      parsed.isFood ? 1 : 0,
       body.addedByPartnerId,
       body.addedByPartnerSlot,
       now,
@@ -400,8 +445,13 @@ export class HouseholdSync {
     return {
       id,
       householdId,
-      name,
-      quantity: body.quantity ?? '',
+      name: parsed.name,
+      quantity: parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+      category: parsed.category,
+      quantityValue: parsed.quantityValue,
+      quantityUnit: parsed.quantityUnit,
+      brand: parsed.brand,
+      isFood: parsed.isFood,
       addedByPartnerId: body.addedByPartnerId,
       addedByPartnerSlot: body.addedByPartnerSlot as PartnerSlot,
       createdAt: now,
@@ -418,18 +468,26 @@ export class HouseholdSync {
     const results: PantryItem[] = [];
 
     for (const item of body.items) {
-      const name = (item.name ?? '').trim();
-      if (!name) continue;
+      const rawInput = (item.name ?? '').trim();
+      if (!rawInput) continue;
+
+      // Parse the raw input using regex (fast, no API calls)
+      const parsed = parsePantryItemSync(rawInput);
 
       const id = crypto.randomUUID();
       this.state.storage.sql.exec(
         `INSERT INTO pantry_items
-          (id, household_id, name, quantity, added_by_partner_id, added_by_partner_slot, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          (id, household_id, name, quantity, category, quantity_value, quantity_unit, brand, is_food, added_by_partner_id, added_by_partner_slot, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         id,
         householdId,
-        name,
-        item.quantity ?? '',
+        parsed.name,
+        parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+        parsed.category,
+        parsed.quantityValue,
+        parsed.quantityUnit,
+        parsed.brand,
+        parsed.isFood ? 1 : 0,
         body.addedByPartnerId,
         body.addedByPartnerSlot,
         now,
@@ -438,8 +496,13 @@ export class HouseholdSync {
       results.push({
         id,
         householdId,
-        name,
-        quantity: item.quantity ?? '',
+        name: parsed.name,
+        quantity: parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+        category: parsed.category,
+        quantityValue: parsed.quantityValue,
+        quantityUnit: parsed.quantityUnit,
+        brand: parsed.brand,
+        isFood: parsed.isFood,
         addedByPartnerId: body.addedByPartnerId,
         addedByPartnerSlot: body.addedByPartnerSlot as PartnerSlot,
         createdAt: now,
@@ -452,5 +515,73 @@ export class HouseholdSync {
   private async deletePantryItem(id: string): Promise<{ id: string; deleted: true }> {
     this.state.storage.sql.exec('DELETE FROM pantry_items WHERE id = ?', id);
     return { id, deleted: true };
+  }
+
+  async subtractPantryForMeal(usedIngredients: Array<{ name: string; quantityValue: number | null; quantityUnit: string }>): Promise<{ updated: string[]; removed: string[] }> {
+    const updated: string[] = [];
+    const removed: string[] = [];
+
+    for (const ingredient of usedIngredients) {
+      const ingredientName = ingredient.name.toLowerCase().trim();
+      if (!ingredientName) continue;
+
+      // Find matching pantry item using bidirectional containment
+      const cursor = this.state.storage.sql.exec<PantryItemRow>(
+        'SELECT * FROM pantry_items',
+      );
+      const allItems = Array.from(cursor);
+
+      let matchedItem: PantryItemRow | null = null;
+      for (const row of allItems) {
+        const pantryName = (row.name as string).toLowerCase();
+        // Bidirectional containment: ingredient in pantry OR pantry in ingredient
+        if (pantryName.includes(ingredientName) || ingredientName.includes(pantryName)) {
+          matchedItem = row;
+          break;
+        }
+      }
+
+      if (!matchedItem) continue;
+
+      const pantryQuantityValue = matchedItem.quantity_value as number | null;
+      const pantryQuantityUnit = (matchedItem.quantity_unit as string) || '';
+
+      // If pantry item has no quantity, assume it's fully used and delete it
+      if (pantryQuantityValue === null || pantryQuantityValue === undefined) {
+        this.state.storage.sql.exec('DELETE FROM pantry_items WHERE id = ?', matchedItem.id);
+        removed.push(matchedItem.name as string);
+        this.broadcast({ type: 'pantry_deleted', id: matchedItem.id as string });
+        continue;
+      }
+
+      // If units don't match, we can't do math — delete the item (assume fully used)
+      if (ingredient.quantityUnit && pantryQuantityUnit && ingredient.quantityUnit.toLowerCase() !== pantryQuantityUnit.toLowerCase()) {
+        this.state.storage.sql.exec('DELETE FROM pantry_items WHERE id = ?', matchedItem.id);
+        removed.push(matchedItem.name as string);
+        this.broadcast({ type: 'pantry_deleted', id: matchedItem.id as string });
+        continue;
+      }
+
+      // Subtract quantity
+      const newQuantity = pantryQuantityValue - (ingredient.quantityValue ?? 0);
+
+      if (newQuantity <= 0) {
+        // Quantity depleted — remove item
+        this.state.storage.sql.exec('DELETE FROM pantry_items WHERE id = ?', matchedItem.id);
+        removed.push(matchedItem.name as string);
+        this.broadcast({ type: 'pantry_deleted', id: matchedItem.id as string });
+      } else {
+        // Update quantity
+        this.state.storage.sql.exec(
+          'UPDATE pantry_items SET quantity_value = ?, quantity = ? WHERE id = ?',
+          newQuantity,
+          `${newQuantity} ${pantryQuantityUnit}`.trim(),
+          matchedItem.id,
+        );
+        updated.push(matchedItem.name as string);
+      }
+    }
+
+    return { updated, removed };
   }
 }

@@ -114,105 +114,49 @@ const MOCK_MEALS: GeneratedMeal[] = [
   },
 ];
 
-export async function generateMeal(
-  env: Env,
-  pantryItems: Array<{ name: string; quantity: string }>,
+const MODEL_CHAINS = {
+  alibaba: ['qwen3.5-plus', 'qwen3.6-plus', 'moonshotai/kimi-k2.5'],
+  zai: ['glm-5.1', 'glm-5', 'glm-5-turbo'],
+  deepseek: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+} as const;
+
+const PROVIDER_CONFIG = {
+  alibaba: {
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
+    authHeader: 'Authorization',
+    authPrefix: 'Bearer',
+    secretRef: 'ALIBABA_KEY',
+  },
+  zai: {
+    baseUrl: 'https://api.z.ai/api/paas/v4/chat/completions',
+    authHeader: 'Authorization',
+    authPrefix: 'Bearer',
+    secretRef: 'ZAI_KEY',
+  },
+  deepseek: {
+    baseUrl: 'https://api.deepseek.com/v1/chat/completions',
+    authHeader: 'Authorization',
+    authPrefix: 'Bearer',
+    secretRef: 'DEEPSEEK_KEY',
+  },
+} as const;
+
+function buildPrompt(
+  pantryItems: Array<{ name: string; quantity: string; category?: string; quantityValue?: number | null; quantityUnit?: string; brand?: string }>,
   partner1Diet: Diet,
   partner2Diet: Diet,
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
-): Promise<GeneratedMeal> {
-  const apiKey = env.ANTHROPIC_API_KEY;
+): string {
+  const pantryList = pantryItems.map((i) => {
+    const qty = i.quantityValue && i.quantityUnit ? `${i.quantityValue} ${i.quantityUnit}` : (i.quantity || '');
+    const cat = i.category ? `, ${i.category}` : '';
+    const brand = i.brand ? `, ${i.brand}` : '';
+    return `${i.name}${qty ? ` (${qty}${cat}${brand})` : (cat || brand ? ` (${cat}${brand})` : '')}`;
+  }).join(', ') || 'none listed';
 
-  if (apiKey && partner1Body && partner2Body) {
-    return generateAdaptiveWithAnthropic(apiKey, pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
-  }
-
-  return generateMock(pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
-}
-
-async function generateWithAnthropic(
-  apiKey: string,
-  pantryItems: Array<{ name: string; quantity: string }>,
-  partner1Diet: Diet,
-  partner2Diet: Diet,
-): Promise<GeneratedMeal> {
-  const pantryList = pantryItems.map((i) => `${i.quantity ? i.quantity + ' ' : ''}${i.name}`).join(', ');
-
-  const prompt = `You are a meal planner for couples. Generate ONE dinner suggestion based on what they have.
-
-Pantry: ${pantryList}
-Partner 1 diet: ${partner1Diet}
-Partner 2 diet: ${partner2Diet}
-Time limit: 30 minutes
-
-Rules:
-- The meal must work for BOTH dietary preferences (if one is vegetarian, the meal must be vegetarian)
-- Prioritize using pantry ingredients
-- Keep it simple and realistic
-- Output ONLY valid JSON, no markdown, no explanation
-
-JSON format:
-{
-  "name": "Recipe Name",
-  "description": "Brief appetizing description",
-  "timeMinutes": 25,
-  "calories": 500,
-  "protein": 35,
-  "carbs": 45,
-  "fat": 15,
-  "ingredients": [
-    {"name": "ingredient name", "have": true, "quantity": "1 cup"},
-    {"name": "missing ingredient", "have": false, "quantity": "2 tbsp"}
-  ],
-  "steps": ["Step 1", "Step 2", "Step 3"]
-}`;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'x-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-
-  if (!res.ok) {
-    console.error(`Anthropic API error: ${res.status}`);
-    return generateMock(pantryItems, partner1Diet, partner2Diet);
-  }
-
-  const data = (await res.json()) as { content: Array<{ text: string }> };
-  const text = data.content?.[0]?.text ?? '';
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as GeneratedMeal;
-    }
-  } catch {
-    console.error('Failed to parse AI response');
-  }
-
-  return generateMock(pantryItems, partner1Diet, partner2Diet);
-}
-
-async function generateAdaptiveWithAnthropic(
-  apiKey: string,
-  pantryItems: Array<{ name: string; quantity: string }>,
-  partner1Diet: Diet,
-  partner2Diet: Diet,
-  partner1Body: { name: string; tdee: TDEEResult },
-  partner2Body: { name: string; tdee: TDEEResult },
-): Promise<GeneratedMeal> {
-  const pantryList = pantryItems.map((i) => `${i.quantity ? i.quantity + ' ' : ''}${i.name}`).join(', ');
-
-  const prompt = `You are an adaptive meal planner for couples who cook together but have different nutritional goals.
+  if (partner1Body && partner2Body) {
+    return `You are an adaptive meal planner for couples who cook together but have different nutritional goals.
 
 Pantry: ${pantryList}
 Partner 1: ${partner1Body.name}, diet=${partner1Diet}, target=${partner1Body.tdee.targetCalories} cal/day
@@ -242,32 +186,71 @@ JSON format:
   ],
   "steps": ["Step 1", "Step 2"],
   "plating": [
-    {"partnerSlot": 1, "partnerName": "${partner1Body.name}", "targetCalories": ${partner1Body.tdee.targetCalories}, "plate": "4oz chicken over spinach, 1/2 cup rice", "protein": 35, "carbs": 30, "fat": 12},
+    {"partnerSlot": 1, "partnerName": "${partner1Body.name}", "targetCalories": ${partner1Body.tdee.targetCalories}, "plate": "4oz chicken over greens, 1/2 cup rice", "protein": 35, "carbs": 30, "fat": 12},
     {"partnerSlot": 2, "partnerName": "${partner2Body.name}", "targetCalories": ${partner2Body.tdee.targetCalories}, "plate": "6oz chicken, 1 cup rice, side vegetables", "protein": 50, "carbs": 55, "fat": 15}
   ]
 }`;
+  }
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  return `You are a meal planner for couples. Generate ONE dinner suggestion based on what they have.
+
+Pantry: ${pantryList}
+Partner 1 diet: ${partner1Diet}
+Partner 2 diet: ${partner2Diet}
+Time limit: 30 minutes
+
+Rules:
+- The meal must work for BOTH dietary preferences (if one is vegetarian, the meal must be vegetarian)
+- Prioritize using pantry ingredients
+- Keep it simple and realistic
+- Output ONLY valid JSON, no markdown, no explanation
+
+JSON format:
+{
+  "name": "Recipe Name",
+  "description": "Brief appetizing description",
+  "timeMinutes": 25,
+  "calories": 500,
+  "protein": 35,
+  "carbs": 45,
+  "fat": 15,
+  "ingredients": [
+    {"name": "ingredient name", "have": true, "quantity": "1 cup"},
+    {"name": "missing ingredient", "have": false, "quantity": "2 tbsp"}
+  ],
+  "steps": ["Step 1", "Step 2", "Step 3"]
+}`;
+}
+
+async function callProvider(
+  env: Env,
+  provider: 'alibaba' | 'zai',
+  model: string,
+  prompt: string,
+): Promise<GeneratedMeal | null> {
+  const config = PROVIDER_CONFIG[provider];
+  const secretRef = config.secretRef;
+
+  const res = await fetch(config.baseUrl, {
     method: 'POST',
     headers: {
-      'content-type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+      [config.authHeader]: `${config.authPrefix} ${secretRef}`,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model,
       max_tokens: 1536,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
 
   if (!res.ok) {
-    console.error(`Anthropic API error: ${res.status}`);
-    return generateMock(pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
+    console.error(`Provider ${provider} call failed for model ${model}: ${res.status}`);
+    return null;
   }
 
-  const data = (await res.json()) as { content: Array<{ text: string }> };
-  const text = data.content?.[0]?.text ?? '';
+  const data = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+  const text = data.choices?.[0]?.message?.content ?? '';
 
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -275,9 +258,59 @@ JSON format:
       return JSON.parse(jsonMatch[0]) as GeneratedMeal;
     }
   } catch {
-    console.error('Failed to parse AI response');
+    console.error(`Failed to parse AI response from model ${model}`);
   }
 
+  return null;
+}
+
+export async function generateMeal(
+  env: Env,
+  pantryItems: Array<{ name: string; quantity: string }>,
+  partner1Diet: Diet,
+  partner2Diet: Diet,
+  partner1Body?: { name: string; tdee: TDEEResult },
+  partner2Body?: { name: string; tdee: TDEEResult },
+): Promise<GeneratedMeal> {
+  const provider = (env.AI_PROVIDER || 'deepseek') as keyof typeof MODEL_CHAINS;
+  const models = MODEL_CHAINS[provider] || MODEL_CHAINS.deepseek;
+  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
+
+  for (const model of models) {
+    try {
+      const meal = await callProvider(env, provider as 'alibaba' | 'zai' | 'deepseek', model, prompt);
+      if (meal) {
+        console.log(`AI meal generated using model: ${model} (provider: ${provider})`);
+        if (partner1Body && partner2Body && !meal.plating) {
+          meal.plating = [
+            {
+              partnerSlot: 1,
+              partnerName: partner1Body.name,
+              targetCalories: partner1Body.tdee.targetCalories,
+              plate: `${Math.round(partner1Body.tdee.targetCalories * 0.4 / 4)}oz protein over greens, ${Math.round(partner1Body.tdee.targetCalories * 0.3 / 200)}/2 cup rice`,
+              protein: Math.round(partner1Body.tdee.targetCalories * 0.3 / 4),
+              carbs: Math.round(partner1Body.tdee.targetCalories * 0.4 / 4),
+              fat: Math.round(partner1Body.tdee.targetCalories * 0.3 / 9),
+            },
+            {
+              partnerSlot: 2,
+              partnerName: partner2Body.name,
+              targetCalories: partner2Body.tdee.targetCalories,
+              plate: `${Math.round(partner2Body.tdee.targetCalories * 0.4 / 4)}oz protein, ${Math.round(partner2Body.tdee.targetCalories * 0.35 / 200)} cup rice, side vegetables`,
+              protein: Math.round(partner2Body.tdee.targetCalories * 0.35 / 4),
+              carbs: Math.round(partner2Body.tdee.targetCalories * 0.4 / 4),
+              fat: Math.round(partner2Body.tdee.targetCalories * 0.25 / 9),
+            },
+          ];
+        }
+        return meal;
+      }
+    } catch (err) {
+      console.error(`Model ${model} failed:`, err);
+    }
+  }
+
+  console.log(`All AI models failed for provider ${provider}, falling back to mock meal`);
   return generateMock(pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
 }
 

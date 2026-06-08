@@ -20,6 +20,7 @@ export default defineConfig({
         lang: 'en',
         orientation: 'portrait',
         categories: ['food', 'lifestyle', 'utilities'],
+        id: '/?v=2',
         icons: [
           {
             src: 'icon-192.png',
@@ -39,6 +40,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        cleanupOutdatedCaches: true,
+        sourcemap: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

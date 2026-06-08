@@ -10,6 +10,8 @@ export function ShareCodeButton() {
 
   if (!code) return null;
 
+  const digits = code.split('');
+
   async function handleCopy() {
     if (!code) return;
     try {
@@ -54,10 +56,15 @@ export function ShareCodeButton() {
               Share this code with your partner. They enter it when they open the app, and your kitchens link up instantly.
             </p>
 
-            <div className="bg-white border border-border rounded-xl py-6 px-4 text-center mb-6">
-              <p className="font-mono text-text-primary text-4xl md:text-5xl font-semibold tracking-[0.4em]">
-                {code}
-              </p>
+            <div className="flex gap-2 justify-center mb-6">
+              {digits.map((d, i) => (
+                <div
+                  key={i}
+                  className="w-full aspect-square bg-white border border-border rounded-xl flex items-center justify-center text-text-primary text-2xl font-semibold"
+                >
+                  {d}
+                </div>
+              ))}
             </div>
 
             <button

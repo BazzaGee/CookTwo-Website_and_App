@@ -4,7 +4,7 @@ import { HouseholdSync } from './durable-objects/HouseholdSync';
 import { InviteStore } from './durable-objects/InviteStore';
 import { readBearer, signToken, verifyToken, type TokenClaims } from './lib/jwt';
 import { createPartner, getPartners, handleGetProfiles, handleUpdateProfile, updatePartner } from './routes/profiles';
-import { handleGetWeekPlan, handleGenerateWeekPlan } from './routes/mealplan';
+import { handleGetWeekPlan, handleGenerateWeekPlan, handleConfirmMeal } from './routes/mealplan';
 import { handleGetRecipes, handleSaveRecipe } from './routes/recipes';
 import { generateMeal, type GeneratedMeal } from './lib/ai';
 import type { Env } from './env';
@@ -26,7 +26,7 @@ async function verifyTokenForWs(
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://cfs-app.pages.dev'],
   credentials: true,
 }));
 
@@ -373,6 +373,12 @@ app.post('/api/household/:id/meal-plan/week/generate', async (c) => {
   const denied = await requireAuth(c);
   if (denied) return denied;
   return handleGenerateWeekPlan(c);
+});
+
+app.post('/api/household/:id/meal-plan/confirm', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  return handleConfirmMeal(c);
 });
 
 app.get('/api/household/:id/recipes', async (c) => {

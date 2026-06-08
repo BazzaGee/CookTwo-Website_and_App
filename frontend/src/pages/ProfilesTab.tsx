@@ -27,7 +27,6 @@ export default function ProfilesTab() {
   const navigate = useNavigate();
   const { isLoading, myProfile, otherProfile, updateProfile } = useProfiles();
   const setSession = useAuthStore((s) => s.setSession);
-  const clear = useAuthStore((s) => s.clear);
   const [editing, setEditing] = useState(false);
   const [editingBody, setEditingBody] = useState(false);
   const [formName, setFormName] = useState('');
@@ -40,12 +39,38 @@ export default function ProfilesTab() {
   const [formActivity, setFormActivity] = useState<ActivityLevel>('sedentary');
   const [formGoal, setFormGoal] = useState<Goal>('maintain');
   const [saving, setSaving] = useState(false);
-  const [linkCode, setLinkCode] = useState('');
+  const [linkDigits, setLinkDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
 
+  function setLinkDigit(index: number, value: string) {
+    const cleaned = value.replace(/\D/g, '').slice(-1);
+    const next = [...linkDigits];
+    next[index] = cleaned;
+    setLinkDigits(next);
+    if (cleaned && index < 5) {
+      document.getElementById(`link-code-${index + 1}`)?.focus();
+    }
+  }
+
+  function handleLinkDigitKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !linkDigits[index] && index > 0) {
+      document.getElementById(`link-code-${index - 1}`)?.focus();
+    }
+  }
+
+  function handleLinkPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!text) return;
+    e.preventDefault();
+    const next = ['', '', '', '', '', ''];
+    for (let i = 0; i < text.length; i++) next[i] = text[i] ?? '';
+    setLinkDigits(next);
+    document.getElementById(`link-code-${Math.min(text.length, 5)}`)?.focus();
+  }
+
   async function handleLink() {
-    const code = linkCode.replace(/\D/g, '').trim();
+    const code = linkDigits.join('');
     if (!/^\d{6}$/.test(code)) {
       setLinkError('Enter a 6-digit code.');
       return;
@@ -167,33 +192,35 @@ export default function ProfilesTab() {
 
       {!otherProfile && (
         <section className="bg-white border border-border rounded-2xl p-6">
-          <h3 className="text-text-primary text-lg font-semibold mb-4">Link with your partner</h3>
-          <p className="text-text-secondary text-sm leading-relaxed mb-4">
-            If you both set up separately, enter your partner's code here to join their kitchen.
+          <h3 className="text-text-primary text-lg font-semibold mb-2">Link with your partner</h3>
+          <p className="text-text-secondary text-sm leading-relaxed mb-6">
+            Enter your partner's 6-digit code to join their kitchen.
           </p>
 
           <div className="space-y-4">
-            <div>
-              <label htmlFor="link-code" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
-                Your partner's invite code
-              </label>
-              <input
-                id="link-code"
-                type="text"
-                value={linkCode}
-                onChange={(e) => {
-                  setLinkCode(e.target.value);
-                  if (linkError) setLinkError(null);
-                }}
-                placeholder="Enter 6-digit code"
-                maxLength={6}
-                inputMode="numeric"
-                className="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary text-lg tracking-[0.3em] text-center placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
-              />
+            <div className="flex gap-2 justify-center" onPaste={handleLinkPaste}>
+              {linkDigits.map((d, i) => (
+                <input
+                  key={i}
+                  id={`link-code-${i}`}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  value={d}
+                  onChange={(e) => {
+                    setLinkDigit(i, e.target.value);
+                    if (linkError) setLinkError(null);
+                  }}
+                  onKeyDown={(e) => handleLinkDigitKeyDown(i, e)}
+                  autoFocus={i === 0}
+                  className="w-full aspect-square bg-cream border border-border rounded-xl text-center text-text-primary text-2xl font-semibold focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
+                />
+              ))}
             </div>
 
             {linkError && (
-              <p className="text-error text-sm" role="alert">
+              <p className="text-error text-sm text-center" role="alert">
                 {linkError}
               </p>
             )}

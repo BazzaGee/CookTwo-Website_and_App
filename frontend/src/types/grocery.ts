@@ -19,6 +19,11 @@ export interface PantryItem {
   householdId: string;
   name: string;
   quantity: string;
+  category: Category;
+  quantityValue: number | null;
+  quantityUnit: string;
+  brand: string;
+  isFood: boolean;
   addedByPartnerId: string;
   addedByPartnerSlot: PartnerSlot;
   createdAt: number;
