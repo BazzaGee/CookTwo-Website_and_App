@@ -23,9 +23,35 @@ interface ServerResponse {
   };
 }
 
-// Module-level state persists across component unmounts (tab switches)
-let persistedMessages: ChatMessage[] = [];
-let persistedIdCounter = 0;
+const STORAGE_KEY = 'cupla_chat_messages';
+
+function loadMessages(): ChatMessage[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved) as ChatMessage[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+function saveMessages(msgs: ChatMessage[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  } catch { /* ignore (e.g. quota) */ }
+}
+
+function loadIdCounter(): number {
+  try {
+    const saved = localStorage.getItem('cupla_chat_counter');
+    if (saved) return parseInt(saved, 10) || 0;
+  } catch { /* ignore */ }
+  return 0;
+}
+
+function saveIdCounter(n: number) {
+  try {
+    localStorage.setItem('cupla_chat_counter', String(n));
+  } catch { /* ignore */ }
+}
 
 const PANTRY_QUERY_KEY = ['pantry'] as const;
 const GROCERY_QUERY_KEY = ['grocery'] as const;
@@ -36,14 +62,17 @@ export function useMealChat() {
   const householdId = session?.householdId ?? '';
   const token = session?.token ?? '';
 
-  const [messages, setMessages] = useState<ChatMessage[]>(persistedMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const nextId = useCallback(() => {
-    persistedIdCounter += 1;
-    return `msg-${persistedIdCounter}-${Date.now()}`;
-  }, []);
+  let idCounter = loadIdCounter();
+
+  function nextId() {
+    idCounter += 1;
+    saveIdCounter(idCounter);
+    return `msg-${idCounter}-${Date.now()}`;
+  }
 
   function invalidateRelated() {
     if (householdId) {
@@ -63,8 +92,9 @@ export function useMealChat() {
         timestamp: Date.now(),
       };
 
-      const updatedMessages = [...persistedMessages, userMsg];
-      persistedMessages = updatedMessages;
+      const currentMessages = loadMessages();
+      const updatedMessages = [...currentMessages, userMsg];
+      saveMessages(updatedMessages);
       setMessages(updatedMessages);
       setIsTyping(true);
       setError(null);
@@ -94,7 +124,7 @@ export function useMealChat() {
         };
 
         const messagesWithReply = [...updatedMessages, assistantMsg];
-        persistedMessages = messagesWithReply;
+        saveMessages(messagesWithReply);
         setMessages(messagesWithReply);
 
         if (result.actions?.addToPantry?.length || result.actions?.addToList?.length) {
@@ -110,10 +140,11 @@ export function useMealChat() {
   );
 
   const clearChat = useCallback(() => {
-    persistedMessages = [];
-    persistedIdCounter = 0;
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    try { localStorage.removeItem('cupla_chat_counter'); } catch { /* ignore */ }
     setMessages([]);
     setError(null);
+    idCounter = 0;
   }, []);
 
   return {
