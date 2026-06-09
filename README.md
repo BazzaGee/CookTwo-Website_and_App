@@ -2,7 +2,7 @@
 
 > A progressive web app for couples to share a kitchen, a grocery list, and a meal plan — in real time.
 
-**Status:** Full MVP complete. Guided first-run experience (6-step wizard for Partner 1, code-join for Partner 2). Three pillars: Shopping List (real-time sync, offline queue, "Your regulars"), Pantry (natural language input, "Move to Pantry"), Meals (AI generation, weekly planning, saved recipe library). Adaptive cooking ("one prep, two plates") with body profiles and TDEE. PWA installable. See [Roadmap](#roadmap) for what's parked.
+**Status:** Full MVP complete. Guided first-run experience (6-step wizard for Partner 1, code-join for Partner 2). Three pillars: Shopping List (real-time sync, offline queue, "Your regulars"), Pantry (natural language input, "Move to Pantry"), Meals (AI chat-based generation with session memory, weekly planning, saved recipe library with expandable cards). Adaptive cooking ("one prep, two plates") with body profiles and TDEE. PWA installable. See [Roadmap](#roadmap) for what's parked.
 
 ---
 
@@ -61,13 +61,29 @@ couples-food-system/
 ├── worker/                         # Cloudflare Worker (Hono)
 │   ├── src/
 │   │   ├── index.ts                # Hono routes, /api/household/*
-│   │   ├── env.d.ts                # Cloudflare binding types
+│   │   ├── env.d.ts                # Cloudflare binding types (DEEPSEEK_KEY, AI_PROVIDER, etc.)
 │   │   ├── durable-objects/
-│   │   │   ├── HouseholdSync.ts    # The per-couple DO. SQLite + WebSocket.
-│   │   │   └── InviteStore.ts      # Singleton DO for invite codes.
-│   │   └── lib/
-│   │       └── jwt.ts              # sign/verify with jose
-│   ├── wrangler.toml               # DO + JWT_SECRET config
+│   │   │   ├── HouseholdSync.ts    # Per-couple DO: SQLite + WebSocket for grocery/pantry sync
+│   │   │   └── InviteStore.ts      # Singleton DO for 6-digit invite codes
+│   │   ├── lib/
+│   │   │   ├── ai.ts               # AI meal generation: chatWithAI(), callDeepSeekChat(), system prompts
+│   │   │   ├── ai-pantry-parser.ts # AI-powered pantry item parsing
+│   │   │   ├── jwt.ts              # JWT sign/verify with jose
+│   │   │   ├── pantry.ts           # Regex-based pantry input parser
+│   │   │   ├── pantry-parser.ts    # Sync pantry item parsing
+│   │   │   ├── parse-cache.ts      # Parse result cache for pantry
+│   │   │   └── tdee.ts            # TDEE calculator (body profiles → calorie targets)
+│   │   └── routes/
+│   │       ├── mealChat.ts         # POST /api/household/:id/meal-chat (AI chat endpoint)
+│   │       ├── mealplan.ts         # Week plan generation + confirm meal
+│   │       ├── profiles.ts         # Partner profiles CRUD + TDEE
+│   │       └── recipes.ts          # Saved recipes CRUD
+│   ├── migrations/
+│   │   ├── 0001_profiles.sql       # Partners table
+│   │   ├── 0002_meal_plans.sql     # Weekly meal plans table
+│   │   ├── 0003_body_profiles.sql  # Body profile columns
+│   │   └── 0004_recipes.sql        # Saved recipes table
+│   ├── wrangler.toml               # DO + D1 + AI_PROVIDER config
 │   ├── tsconfig.json
 │   └── package.json
 │
@@ -75,44 +91,59 @@ couples-food-system/
 │   ├── src/
 │   │   ├── main.tsx                # React + Query + Router entry
 │   │   ├── App.tsx                 # Routes, auth gate
-│   │   ├── index.css               # Tailwind + base styles
+│   │   ├── index.css               # Tailwind + brand base styles
 │   │   ├── env.d.ts                # Vite env types
 │   │   ├── types/
-│   │   │   └── grocery.ts          # GroceryItem, SyncEvent, Category
+│   │   │   ├── grocery.ts          # GroceryItem, PantryItem, SyncEvent, Category
+│   │   │   └── meal.ts             # GeneratedMeal, MealIngredient, PlatingInstruction
 │   │   ├── lib/
 │   │   │   ├── api.ts              # apiFetch() with auth header
-│   │   │   └── categories.ts       # classify() + QUICK_ADD
+│   │   │   ├── categories.ts       # classify() + QUICK_ADD presets
+│   │   │   └── offlineQueue.ts     # Offline queue for grocery items
 │   │   ├── stores/
 │   │   │   └── authStore.ts        # Zustand + localStorage persist
 │   │   ├── hooks/
-│   │   │   ├── useAuth.ts          # create/join household helpers
-│   │   │   └── useGroceryList.ts   # TanStack Query + WS subscription
+│   │   │   ├── useAuth.ts          # Create/join household helpers
+│   │   │   ├── useGroceryList.ts   # TanStack Query + WS subscription
+│   │   │   ├── useMealChat.ts      # AI chat state (localStorage persistence)
+│   │   │   ├── useMealPlan.ts      # Single meal generator (deprecated)
+│   │   │   ├── useWeekPlan.ts      # Week plan generation
+│   │   │   ├── useRecipes.ts       # Saved recipes (list, save, delete)
+│   │   │   ├── usePantry.ts        # Pantry items with WS sync
+│   │   │   ├── useProfiles.ts      # Partner profiles
+│   │   │   ├── useRegulars.ts      # Frequent grocery items
+│   │   │   ├── useInstallPrompt.ts # PWA install prompt
+│   │   │   └── useOfflineQueue.ts  # Offline sync state
 │   │   ├── pages/
-│   │   │   ├── Onboarding.tsx      # Welcome / Create / Join / Created
+│   │   │   ├── Onboarding.tsx      # Welcome / Create / Join / Created wizard
 │   │   │   ├── MainApp.tsx         # Header + bottom nav shell
-│   │   │   ├── ShoppingTab.tsx     # The grocery list UI
-│   │   │   ├── PantryTab.tsx       # placeholder
-│   │   │   └── MealPlanTab.tsx     # placeholder
+│   │   │   ├── ShoppingTab.tsx     # Grocery list UI
+│   │   │   ├── PantryTab.tsx       # Pantry management UI
+│   │   │   ├── MealPlanTab.tsx     # AI chat, saved recipes (expandable), week plan
+│   │   │   └── ProfilesTab.tsx     # Dietary preferences, body goals
 │   │   └── components/
-│   │       ├── ShoppingList.tsx
-│   │       ├── CategorySection.tsx
-│   │       ├── ItemRow.tsx
-│   │       ├── PartnerDot.tsx
-│   │       ├── AddItemForm.tsx
-│   │       ├── QuickAddChips.tsx
-│   │       └── SyncIndicator.tsx
-│   ├── public/
-│   │   ├── favicon.svg
-│   │   ├── icon-source.svg         # Source for generated icons
-│   │   ├── icon-192.png            # Generated
-│   │   ├── icon-512.png            # Generated
-│   │   └── apple-touch-icon.png    # Generated
+│   │       ├── ShoppingList.tsx     # Main list with categories
+│   │       ├── CategorySection.tsx  # Collapsible category groups
+│   │       ├── ItemRow.tsx          # Individual item row
+│   │       ├── PartnerDot.tsx       # Colored dot per partner
+│   │       ├── AddItemForm.tsx      # Input + submit
+│   │       ├── QuickAddChips.tsx    # One-tap quick-add buttons
+│   │       ├── RegularsChips.tsx    # Frequently bought items
+│   │       ├── ShareCodeButton.tsx  # Invite code display/copy
+│   │       ├── SyncIndicator.tsx    # WS connection dot
+│   │       └── InstallBanner.tsx    # PWA install prompt banner
+│   ├── public/                      # favicon, icons, manifest
 │   ├── scripts/
-│   │   └── generate-icons.mjs      # `npm run icons`
+│   │   └── generate-icons.mjs      # npm run icons
+│   ├── .env.development            # VITE_API_URL=http://localhost:8787
+│   ├── .env.production             # VITE_API_URL=production worker URL
 │   ├── vite.config.ts              # Vite + PWA plugin
-│   ├── tailwind.config.js          # Brand colors
+│   ├── tailwind.config.js          # Brand palette
 │   ├── tsconfig.json
 │   └── package.json
+│
+├── docs/                           # Documentation
+│   └── AI_MEAL_GENERATION.md       # AI architecture & troubleshooting guide
 │
 └── README.md                       # You are here
 ```
@@ -123,15 +154,64 @@ couples-food-system/
 
 All endpoints are under `/api/`. Auth is `Authorization: Bearer <jwt>`.
 
+### Household
+
 | Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/household/create` | Create a new household. Body: `{ displayName }`. Returns `{ householdId, inviteCode, token, partner }`. |
-| `POST` | `/api/household/join` | Join with a code. Body: `{ inviteCode, displayName }`. Returns `{ householdId, token, partner }`. |
-| `GET` | `/api/household/:id/items` | List all grocery items for the household. |
-| `POST` | `/api/household/:id/items` | Add an item. Body: `{ name, category, addedByPartnerId, addedByPartnerSlot }`. |
-| `PATCH` | `/api/household/:id/items/:itemId/toggle` | Toggle an item's checked state. |
-| `DELETE` | `/api/household/:id/items/:itemId` | Delete an item. |
-| `GET` | `/api/household/:id/ws` | WebSocket upgrade. Query: `?token=…&partnerId=…&slot=1|2`. Server pushes `item_added` / `item_toggled` / `item_deleted` events. |
+|--------|------|-------------|
+| `POST` | `/api/household/create` | Create household. Body: `{ displayName }`. Returns `{ householdId, inviteCode, token }`. |
+| `POST` | `/api/household/join` | Join with code. Body: `{ inviteCode, displayName }`. Returns `{ householdId, token }`. |
+| `POST` | `/api/household/link` | Link existing account to another household. Body: `{ inviteCode }`. |
+
+### Profiles
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/household/:id/profiles` | List partners (name, diet, allergies, TDEE). |
+| `PUT` | `/api/household/:id/profiles/:partnerId` | Update partner profile (diet, goal, body stats). |
+
+### Grocery list
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/household/:id/items` | List grocery items. |
+| `POST` | `/api/household/:id/items` | Add item. Body: `{ name, category, addedByPartnerId, addedByPartnerSlot }`. |
+| `PATCH` | `/api/household/:id/items/:itemId/toggle` | Toggle checked state. |
+| `DELETE` | `/api/household/:id/items/:itemId` | Delete item. |
+| `GET` | `/api/household/:id/regulars` | Most-frequently bought items. |
+
+### Pantry
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/household/:id/pantry` | List pantry items (name, quantity, category, brand). |
+| `POST` | `/api/household/:id/pantry` | Add item. Body: `{ name, quantity, addedByPartnerId, addedByPartnerSlot }`. |
+| `POST` | `/api/household/:id/pantry/bulk` | Bulk add items. Body: `{ items: [{ name, quantity }], addedByPartnerId, addedByPartnerSlot }`. |
+| `DELETE` | `/api/household/:id/pantry/:itemId` | Delete item. |
+| `POST` | `/api/household/:id/pantry/subtract` | Subtract used ingredients after cooking. |
+
+### Meals — AI chat
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/household/:id/meal-chat` | **Main AI endpoint.** Body: `{ message, history }`. Returns `{ message, meal?, actions? }`. Conversations span multiple messages. |
+| `POST` | `/api/household/:id/meal-plan/generate` | Single-shot meal generation (deprecated, kept for week plan compat). |
+| `GET` | `/api/household/:id/meal-plan/week` | Get weekly plan. |
+| `POST` | `/api/household/:id/meal-plan/week/generate` | Generate full week (7 days). |
+| `POST` | `/api/household/:id/meal-plan/confirm` | Subtract used pantry ingredients after cooking. |
+
+### Saved recipes
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/household/:id/recipes` | List saved recipes. |
+| `POST` | `/api/household/:id/recipes` | Save a recipe. Body: `{ name, mealData }` (mealData is JSON-stringified `GeneratedMeal`). |
+| `DELETE` | `/api/household/:id/recipes/:recipeId` | Delete a saved recipe. |
+
+### Real-time
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/household/:id/ws` | WebSocket upgrade. Query: `?token=…&partnerId=…&slot=1|2`. Server pushes `item_added/toggled/deleted` and `pantry_added/deleted` events. |
 
 ### Sync event format
 
@@ -140,7 +220,9 @@ type SyncEvent =
   | { type: 'hello'; partnerId: string; slot: 1 | 2; at: number }
   | { type: 'item_added'; item: GroceryItem }
   | { type: 'item_toggled'; item: GroceryItem }
-  | { type: 'item_deleted'; id: string };
+  | { type: 'item_deleted'; id: string }
+  | { type: 'pantry_added'; item: PantryItem }
+  | { type: 'pantry_deleted'; id: string };
 ```
 
 ### Quick curl example
@@ -185,21 +267,43 @@ curl -X POST http://localhost:8787/api/household/<householdId>/items \
 
 ## Deployment
 
-When you're ready to put this on the public internet (not Step 1, but later):
+### Worker
 
-1. **Worker**
-   - `cd worker && npx wrangler login`
-   - `npm run deploy` — wrangler prints a URL like `https://couples-food-system-api.<your-subdomain>.workers.dev`.
+```bash
+cd worker
+npx wrangler deploy
+```
 
-2. **Frontend**
-   - Create a Cloudflare Pages project pointing at this repo.
-   - Build command: `npm run build`
-   - Build output: `frontend/dist`
-   - Environment variables:
-     - `VITE_API_URL` = your worker URL
-     - `VITE_WS_URL` = same URL but with `wss://`
+Before first deploy, set secrets:
+```bash
+npx wrangler secret put DEEPSEEK_KEY
+npx wrangler secret put ALIBABA_KEY
+npx wrangler secret put ZAI_KEY
+```
 
-3. **Production JWT secret** — in `worker/wrangler.toml`, replace `JWT_SECRET = "dev-secret-change-me-in-production"` with a real secret (or use `wrangler secret put JWT_SECRET`). The current value is unsafe for production.
+### Frontend (Cloudflare Pages)
+
+```bash
+cd frontend
+npm run build
+npx wrangler pages deploy dist --project-name=cfs-app
+```
+
+**Important:** The frontend needs `.env.production` with the worker URL:
+
+```
+VITE_API_URL=https://couples-food-system-api.byte-digital.workers.dev
+VITE_WS_URL=wss://couples-food-system-api.byte-digital.workers.dev
+```
+
+### Production URLs
+
+- **Frontend:** https://cfs-app.pages.dev
+- **Worker:** https://couples-food-system-api.byte-digital.workers.dev
+
+### Troubleshooting AI issues
+
+See [`docs/AI_MEAL_GENERATION.md`](docs/AI_MEAL_GENERATION.md) for complete architecture, common issues, and deployment checklist for the AI meal generation system.
 
 ---
 
@@ -227,19 +331,13 @@ When all 12 pass, **Step 1 is done. Tell the assistant you're ready for Step 2.*
 
 ## Roadmap
 
-This is **Step 1 of 7** in the [product development plan](../Cupla%20Market_Gap/Product_Development_Steps.md).
-
 - [x] **Step 1** — Shared grocery list with real-time sync
 - [x] **Step 2** — PWA install + mobile polish + offline support
 - [x] **Step 3** — Partner profiles + D1 database
 - [x] **Step 4** — Pantry tracking
-- [x] **Step 5** — AI meal generation
+- [x] **Step 5** — AI meal generation (chat-based with session memory)
 - [x] **Step 6** — Meal calendar + smart grocery
 - [x] **Step 7** — Adaptive shared cooking (the moat)
-- [ ] **Step 4** — Pantry tracking
-- [ ] **Step 5** — AI meal generation
-- [ ] **Step 6** — Meal calendar + smart grocery
-- [ ] **Step 7** — Adaptive shared cooking (the moat)
 
 Each step is independently shippable.
 
