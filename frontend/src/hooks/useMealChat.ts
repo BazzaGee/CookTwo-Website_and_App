@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
@@ -23,6 +23,10 @@ interface ServerResponse {
   };
 }
 
+// Module-level state persists across component unmounts (tab switches)
+let persistedMessages: ChatMessage[] = [];
+let persistedIdCounter = 0;
+
 const PANTRY_QUERY_KEY = ['pantry'] as const;
 const GROCERY_QUERY_KEY = ['grocery'] as const;
 
@@ -31,15 +35,14 @@ export function useMealChat() {
   const queryClient = useQueryClient();
   const householdId = session?.householdId ?? '';
   const token = session?.token ?? '';
-  const idCounter = useRef(0);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(persistedMessages);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const nextId = useCallback(() => {
-    idCounter.current += 1;
-    return `msg-${idCounter.current}-${Date.now()}`;
+    persistedIdCounter += 1;
+    return `msg-${persistedIdCounter}-${Date.now()}`;
   }, []);
 
   function invalidateRelated() {
@@ -60,11 +63,13 @@ export function useMealChat() {
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, userMsg]);
+      const updatedMessages = [...persistedMessages, userMsg];
+      persistedMessages = updatedMessages;
+      setMessages(updatedMessages);
       setIsTyping(true);
       setError(null);
 
-      const history = [...messages, userMsg]
+      const history = updatedMessages
         .filter((m) => m.role === 'user' || m.role === 'assistant')
         .map((m) => ({ role: m.role, content: m.content }));
 
@@ -88,7 +93,9 @@ export function useMealChat() {
           timestamp: Date.now(),
         };
 
-        setMessages((prev) => [...prev, assistantMsg]);
+        const messagesWithReply = [...updatedMessages, assistantMsg];
+        persistedMessages = messagesWithReply;
+        setMessages(messagesWithReply);
 
         if (result.actions?.addToPantry?.length || result.actions?.addToList?.length) {
           invalidateRelated();
@@ -99,13 +106,14 @@ export function useMealChat() {
         setIsTyping(false);
       }
     },
-    [householdId, token, messages, nextId, queryClient],
+    [householdId, token, nextId, queryClient],
   );
 
   const clearChat = useCallback(() => {
+    persistedMessages = [];
+    persistedIdCounter = 0;
     setMessages([]);
     setError(null);
-    idCounter.current = 0;
   }, []);
 
   return {
