@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { classify } from '../lib/categories';
-import { QuickAddChips } from './QuickAddChips';
+import { RegularsChips } from './RegularsChips';
 
 interface Props {
   onAdd: (input: { name: string }) => void;
@@ -20,13 +19,11 @@ export function AddItemForm({ onAdd, disabled }: Props) {
     inputRef.current?.focus();
   }
 
-  function handleQuickPick(name: string) {
-    onAdd({ name });
-  }
+  const parts = value.trim() ? value.split(/[,;]/).filter((p) => p.trim()).length : 0;
 
   return (
     <div className="space-y-3">
-      <QuickAddChips onPick={handleQuickPick} disabled={disabled} />
+      <RegularsChips onAdd={(name) => onAdd({ name })} />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -39,7 +36,7 @@ export function AddItemForm({ onAdd, disabled }: Props) {
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="1 litre of whole milk, 250g Swiss cheddar…"
+          placeholder="milk, bread, chicken, dish soap…"
           disabled={disabled}
           className="flex-1 bg-white border border-border rounded-full px-5 py-3 text-text-primary text-base placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
         />
@@ -54,9 +51,9 @@ export function AddItemForm({ onAdd, disabled }: Props) {
       </form>
       {value.trim() && (
         <p className="text-text-secondary text-xs px-1">
-          {value.split(/[,;]/).filter((p) => p.trim()).length > 1
-            ? `${value.split(/[,;]/).filter((p) => p.trim()).length} items → ${[...new Set(value.split(/[,;/]/).map((p) => classify(p.trim())).filter(Boolean))].join(', ')}`
-            : `Will be added to ${classify(value)}`}
+          {parts > 1
+            ? `${parts} items — categories auto-detected`
+            : 'Category auto-detected'}
         </p>
       )}
     </div>

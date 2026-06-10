@@ -78,8 +78,16 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   await clearWeekPlan(c.env.DB, householdId);
 
   const profiles = await getPartners(c.env.DB, householdId);
-  const p1Diet = profiles.find((p) => p.slot === 1)?.diet ?? 'omnivore';
-  const p2Diet = profiles.find((p) => p.slot === 2)?.diet ?? 'omnivore';
+  const p1 = profiles.find((p) => p.slot === 1);
+  const p2 = profiles.find((p) => p.slot === 2);
+  const p1Diet = p1?.diet ?? 'omnivore';
+  const p2Diet = p2?.diet ?? 'omnivore';
+  const p1Allergies = p1?.allergies ?? '';
+  const p2Allergies = p2?.allergies ?? '';
+  const p1Goal = p1?.goal ?? null;
+  const p2Goal = p2?.goal ?? null;
+  const p1Body = p1?.tdee ? { name: p1.name, tdee: p1.tdee } : undefined;
+  const p2Body = p2?.tdee ? { name: p2.name, tdee: p2.tdee } : undefined;
 
   const pantryRes = await c.env.HOUSEHOLD_SYNC
     .get(c.env.HOUSEHOLD_SYNC.idFromName(householdId))
@@ -89,7 +97,7 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const meals: Array<{ dayOfWeek: DayOfWeek; mealName: string; mealData: string }> = [];
 
   for (const day of DAYS) {
-    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet);
+    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergies, p2Allergies, p1Goal, p2Goal, p1Body, p2Body);
     if (meal) {
       meals.push({
         dayOfWeek: day,

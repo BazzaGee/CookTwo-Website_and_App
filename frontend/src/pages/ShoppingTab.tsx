@@ -1,18 +1,17 @@
 import { useGroceryList } from '../hooks/useGroceryList';
-import { usePantry } from '../hooks/usePantry';
-import { classify } from '../lib/categories';
 import { ShoppingList } from '../components/ShoppingList';
 import { AddItemForm } from '../components/AddItemForm';
-import { RegularsChips } from '../components/RegularsChips';
-import type { GroceryItem } from '../types/grocery';
 
 export default function ShoppingTab() {
-  const { items, addItem, toggleItem, deleteItem, isLoading, isOnline, queuedCount } = useGroceryList();
-  const { addItem: addPantryItem } = usePantry();
+  const { items, addItem, toggleItem, deleteItem, moveCheckedToPantry, isMovingToPantry, isLoading, isOnline, queuedCount } = useGroceryList();
 
-  function handleMoveToPantry(item: GroceryItem) {
-    addPantryItem({ name: item.name, quantity: '' });
-    deleteItem(item.id);
+  function handleAdd(input: { name: string }) {
+    const text = input.name.trim();
+    if (!text) return;
+    const parts = text.split(/[,;]/).map((p) => p.trim()).filter((p) => p.length > 0);
+    for (const part of parts) {
+      addItem({ name: part });
+    }
   }
 
   return (
@@ -47,8 +46,6 @@ export default function ShoppingTab() {
         </p>
       </div>
 
-      <RegularsChips onAdd={(name) => addItem({ name, category: classify(name) })} />
-
       {isLoading ? (
         <div className="text-center py-12">
           <p className="text-text-secondary text-sm">Loading your list…</p>
@@ -59,7 +56,7 @@ export default function ShoppingTab() {
             Your list is empty.
           </p>
           <p className="text-text-secondary text-base mt-2 leading-relaxed max-w-xs mx-auto">
-            Tap a quick-add chip below, or type exactly what you need — quantities, brands, specifics.
+            Type exactly what you need below — quantities, brands, specifics. Separate items with commas.
           </p>
         </div>
       ) : (
@@ -67,14 +64,13 @@ export default function ShoppingTab() {
           items={items}
           onToggle={toggleItem}
           onDelete={deleteItem}
-          onMoveToPantry={handleMoveToPantry}
+          onMoveToPantry={moveCheckedToPantry}
+          isMovingToPantry={isMovingToPantry}
         />
       )}
 
       <div className="mt-6 sticky bottom-20 bg-cream/95 backdrop-blur -mx-6 px-6 py-4 border-t border-border">
-        <AddItemForm
-          onAdd={(input) => addItem({ name: input.name, category: classify(input.name) })}
-        />
+        <AddItemForm onAdd={handleAdd} disabled={false} />
       </div>
     </div>
   );

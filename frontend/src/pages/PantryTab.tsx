@@ -10,10 +10,12 @@ const CATEGORY_EMOJIS: Record<Category, string> = {
   Meat: '🥩',
   Dairy: '🥛',
   Pantry: '🫙',
-  Other: '',
+  Household: '🏠',
+  'Personal Care': '🧴',
+  Other: '📦',
 };
 
-const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Other'];
+const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'];
 
 export default function PantryTab() {
   const { items, addItem, deleteItem, isLoading } = usePantry();

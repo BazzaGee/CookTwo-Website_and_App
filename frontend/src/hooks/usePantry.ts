@@ -41,6 +41,12 @@ export function usePantry() {
         if (event.type === 'pantry_deleted') {
           return old.filter((i) => i.id !== event.id);
         }
+        if (event.type === 'items_moved') {
+          const existing = new Set(old.map((i) => i.id));
+          const newItems = event.pantryItems.filter((i) => !existing.has(i.id));
+          if (newItems.length === 0) return old;
+          return [...old, ...newItems];
+        }
         return old;
       });
     },

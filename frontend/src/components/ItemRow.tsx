@@ -1,4 +1,4 @@
-import { Check, X, ArrowDown } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { PartnerDot } from './PartnerDot';
 import type { GroceryItem } from '../types/grocery';
 
@@ -6,10 +6,9 @@ interface Props {
   item: GroceryItem;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onMoveToPantry?: (item: GroceryItem) => void;
 }
 
-export function ItemRow({ item, onToggle, onDelete, onMoveToPantry }: Props) {
+export function ItemRow({ item, onToggle, onDelete }: Props) {
   return (
     <li className="group flex items-center gap-3 py-3">
       <button
@@ -26,27 +25,24 @@ export function ItemRow({ item, onToggle, onDelete, onMoveToPantry }: Props) {
         {item.isChecked && <Check size={14} strokeWidth={3} />}
       </button>
 
+      {!item.isFood && (
+        <span className="text-text-secondary text-xs flex-shrink-0" title="Non-food item">
+          🏠
+        </span>
+      )}
+
       <span
         className={`flex-1 text-base leading-snug transition-all ${
           item.isChecked ? 'text-text-secondary line-through' : 'text-text-primary'
         }`}
       >
         {item.name}
+        {item.brand && (
+          <span className="text-text-secondary text-xs ml-1">({item.brand})</span>
+        )}
       </span>
 
       <PartnerDot slot={item.addedByPartnerSlot} size={8} />
-
-      {item.isChecked && onMoveToPantry && (
-        <button
-          type="button"
-          onClick={() => onMoveToPantry(item)}
-          aria-label={`Move ${item.name} to pantry`}
-          className="flex-shrink-0 p-1 rounded-full text-sage hover:text-sage-dark transition-colors"
-          title="Move to pantry"
-        >
-          <ArrowDown size={16} />
-        </button>
-      )}
 
       <button
         type="button"

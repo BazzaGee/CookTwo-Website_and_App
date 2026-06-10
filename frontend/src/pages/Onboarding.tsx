@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { createHousehold, joinHousehold } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
 import { apiFetch } from '../lib/api';
-import type { Diet, Goal } from '../hooks/useProfiles';
+import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
-type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'pantry' | 'created' | 'join-code' | 'partner-check';
+type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'created' | 'join-code' | 'partner-check';
 
 const DIETS: readonly Diet[] = ['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'gluten-free'] as const;
 const GOALS: readonly Goal[] = ['lose', 'maintain', 'gain', 'none'] as const;
@@ -27,6 +27,11 @@ const GOAL_LABELS: Record<Goal, string> = {
   none: 'Just eat well',
 };
 
+const GENDERS: readonly Gender[] = ['male', 'female', 'other'] as const;
+const ACTIVITY_LEVELS: readonly ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active', 'very_active'] as const;
+const GENDER_LABELS: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
+const ACTIVITY_LABELS: Record<ActivityLevel, string> = { sedentary: 'Sedentary', light: 'Light exercise', moderate: 'Moderate exercise', active: 'Active', very_active: 'Very active' };
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const session = useAuthStore((s) => s.session);
@@ -41,6 +46,11 @@ export default function Onboarding() {
   const [diet, setDiet] = useState<Diet>('omnivore');
   const [allergies, setAllergies] = useState('');
   const [goal, setGoal] = useState<Goal>('none');
+  const [weightKg, setWeightKg] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState<Gender>('male');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [pantryInput, setPantryInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +75,11 @@ export default function Onboarding() {
         diet: diet === 'omnivore' ? undefined : diet,
         allergies: allergies.trim() || undefined,
         goal: goal === 'none' ? undefined : goal,
+        weightKg: weightKg ? parseFloat(weightKg) : null,
+        heightCm: heightCm ? parseFloat(heightCm) : null,
+        age: age ? parseInt(age) : null,
+        gender,
+        activityLevel,
       });
       setSession(result);
       completeOnboarding();
@@ -100,6 +115,11 @@ export default function Onboarding() {
         diet: diet === 'omnivore' ? undefined : diet,
         allergies: allergies.trim() || undefined,
         goal: goal === 'none' ? undefined : goal,
+        weightKg: weightKg ? parseFloat(weightKg) : null,
+        heightCm: heightCm ? parseFloat(heightCm) : null,
+        age: age ? parseInt(age) : null,
+        gender,
+        activityLevel,
       });
       setSession(result);
       setCreatedInviteCode(result.inviteCode ?? null);
@@ -174,8 +194,27 @@ export default function Onboarding() {
             <GoalsStep
               goal={goal}
               onGoalChange={setGoal}
-              onNext={() => setStep('pantry')}
+              onNext={() => setStep('body')}
               onBack={() => setStep('preferences')}
+            />
+          )}
+
+          {step === 'body' && (
+            <BodyMetricsStep
+              weightKg={weightKg}
+              heightCm={heightCm}
+              age={age}
+              gender={gender}
+              activityLevel={activityLevel}
+              goal={goal}
+              onWeightKgChange={setWeightKg}
+              onHeightCmChange={setHeightCm}
+              onAgeChange={setAge}
+              onGenderChange={setGender}
+              onActivityLevelChange={setActivityLevel}
+              onNext={() => setStep('pantry')}
+              onSkip={() => setStep('pantry')}
+              onBack={() => setStep('goals')}
             />
           )}
 
@@ -475,6 +514,155 @@ function GoalsStep({
         <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
       </div>
       <div className="mt-2 text-center">
+        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
+      </div>
+    </div>
+  );
+}
+
+function BodyMetricsStep({
+  weightKg,
+  heightCm,
+  age,
+  gender,
+  activityLevel,
+  goal,
+  onWeightKgChange,
+  onHeightCmChange,
+  onAgeChange,
+  onGenderChange,
+  onActivityLevelChange,
+  onNext,
+  onSkip,
+  onBack,
+}: {
+  weightKg: string;
+  heightCm: string;
+  age: string;
+  gender: Gender;
+  activityLevel: ActivityLevel;
+  goal: Goal;
+  onWeightKgChange: (v: string) => void;
+  onHeightCmChange: (v: string) => void;
+  onAgeChange: (v: string) => void;
+  onGenderChange: (v: Gender) => void;
+  onActivityLevelChange: (v: ActivityLevel) => void;
+  onNext: () => void;
+  onSkip: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex flex-col">
+      <Wordmark />
+
+      <div className="mb-8">
+        <h2 className="text-text-primary text-2xl font-semibold tracking-tight">
+          Tell us about your body
+        </h2>
+        <p className="text-text-secondary text-sm mt-2">
+          {goal !== 'none'
+            ? `This helps us tailor portions and nutrition to your goal: ${GOAL_LABELS[goal]}.`
+            : 'This helps us personalize portion sizes and nutrition for you.'}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="body-weight" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+              Weight (kg)
+            </label>
+            <input
+              id="body-weight"
+              type="number"
+              inputMode="decimal"
+              value={weightKg}
+              onChange={(e) => onWeightKgChange(e.target.value)}
+              placeholder="70"
+              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="body-height" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+              Height (cm)
+            </label>
+            <input
+              id="body-height"
+              type="number"
+              inputMode="decimal"
+              value={heightCm}
+              onChange={(e) => onHeightCmChange(e.target.value)}
+              placeholder="170"
+              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="body-age" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+              Age
+            </label>
+            <input
+              id="body-age"
+              type="number"
+              inputMode="numeric"
+              value={age}
+              onChange={(e) => onAgeChange(e.target.value)}
+              placeholder="30"
+              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="body-gender" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+              Gender
+            </label>
+            <select
+              id="body-gender"
+              value={gender}
+              onChange={(e) => onGenderChange(e.target.value as Gender)}
+              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
+            >
+              {GENDERS.map((g) => (
+                <option key={g} value={g}>{GENDER_LABELS[g]}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="body-activity" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+            Activity level
+          </label>
+          <select
+            id="body-activity"
+            value={activityLevel}
+            onChange={(e) => onActivityLevelChange(e.target.value as ActivityLevel)}
+            className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
+          >
+            {ACTIVITY_LEVELS.map((a) => (
+              <option key={a} value={a}>{ACTIVITY_LABELS[a]}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
+      </div>
+      <div className="mt-3 text-center">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-text-secondary text-sm hover:text-text-primary transition-colors"
+        >
+          Skip for now
+        </button>
+        <p className="text-text-secondary/70 text-[11px] mt-3 leading-relaxed">
+          You can add your body measurements later in the Profile tab, but we recommend doing it now for the best personalized meals.
+        </p>
+      </div>
+      <div className="mt-3 text-center">
         <SecondaryButton onClick={onBack}>Back</SecondaryButton>
       </div>
     </div>

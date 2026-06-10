@@ -1,6 +1,8 @@
 import type { Env } from '../env';
-import type { Diet } from '../routes/profiles';
+import type { Diet, Goal, ActivityLevel } from '../routes/profiles';
 import type { TDEEResult } from '../lib/tdee';
+
+const GOAL_LABELS: Record<Goal, string> = { lose: 'lose weight', maintain: 'maintain weight', gain: 'build muscle' };
 
 export interface MealIngredient {
   name: string;
@@ -62,6 +64,10 @@ function buildPrompt(
   pantryItems: Array<{ name: string; quantity: string; category?: string; quantityValue?: number | null; quantityUnit?: string; brand?: string }>,
   partner1Diet: Diet,
   partner2Diet: Diet,
+  partner1Allergies?: string,
+  partner2Allergies?: string,
+  partner1Goal?: Goal | null,
+  partner2Goal?: Goal | null,
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
 ): string {
@@ -72,18 +78,22 @@ function buildPrompt(
     return `${i.name}${qty ? ` (${qty}${cat}${brand})` : (cat || brand ? ` (${cat}${brand})` : '')}`;
   }).join(', ') || 'none listed';
 
+  const allAllergens = [partner1Allergies, partner2Allergies].filter(Boolean).join(', ') || null;
+  const hasAnyGoal = partner1Goal || partner2Goal;
+  const goalRule = hasAnyGoal ? `\n- Respect each partner's body goal when choosing meals and portions (higher protein for muscle gain, lower calorie density for weight loss, balanced for maintenance). This is critical.` : '';
+
   if (partner1Body && partner2Body) {
     return `You are an adaptive meal planner for couples who cook together but have different nutritional goals.
 
 Pantry: ${pantryList}
-Partner 1: ${partner1Body.name}, diet=${partner1Diet}, target=${partner1Body.tdee.targetCalories} cal/day
-Partner 2: ${partner2Body.name}, diet=${partner2Diet}, target=${partner2Body.tdee.targetCalories} cal/day
+Partner 1: ${partner1Body.name}, diet=${partner1Diet}${partner1Allergies ? `, allergies=${partner1Allergies}` : ''}${partner1Goal ? `, goal=${GOAL_LABELS[partner1Goal]}` : ''}, target=${partner1Body.tdee.targetCalories} cal/day
+Partner 2: ${partner2Body.name}, diet=${partner2Diet}${partner2Allergies ? `, allergies=${partner2Allergies}` : ''}${partner2Goal ? `, goal=${GOAL_LABELS[partner2Goal]}` : ''}, target=${partner2Body.tdee.targetCalories} cal/day
 Time limit: 30 minutes
 
 Generate ONE shared recipe with TWO different plating instructions. Same cooking process, different portions.
 
 Rules:
-- The meal must work for BOTH dietary preferences
+- The meal must work for BOTH dietary preferences${allAllergens ? `\n- STRICTLY AVOID any trace of these allergens: ${allAllergens}. This is critical — meals must be 100% free of these items.` : ''}${goalRule}
 - Prioritize using pantry ingredients
 - Give specific portion sizes for each partner's plate
 - Output ONLY valid JSON, no markdown, no explanation
@@ -112,12 +122,12 @@ JSON format:
   return `You are a meal planner for couples. Generate ONE dinner suggestion based on what they have.
 
 Pantry: ${pantryList}
-Partner 1 diet: ${partner1Diet}
-Partner 2 diet: ${partner2Diet}
+Partner 1: diet=${partner1Diet}${partner1Allergies ? `, allergies=${partner1Allergies}` : ''}${partner1Goal ? `, goal=${GOAL_LABELS[partner1Goal]}` : ''}
+Partner 2: diet=${partner2Diet}${partner2Allergies ? `, allergies=${partner2Allergies}` : ''}${partner2Goal ? `, goal=${GOAL_LABELS[partner2Goal]}` : ''}
 Time limit: 30 minutes
 
 Rules:
-- The meal must work for BOTH dietary preferences (if one is vegetarian, the meal must be vegetarian)
+- The meal must work for BOTH dietary preferences (if one is vegetarian, the meal must be vegetarian)${allAllergens ? `\n- STRICTLY AVOID any trace of these allergens: ${allAllergens}. This is critical — meals must be 100% free of these items.` : ''}${goalRule}
 - Prioritize using pantry ingredients
 - Keep it simple and realistic
 - Output ONLY valid JSON, no markdown, no explanation
@@ -191,12 +201,16 @@ export async function generateMeal(
   pantryItems: Array<{ name: string; quantity: string }>,
   partner1Diet: Diet,
   partner2Diet: Diet,
+  partner1Allergies?: string,
+  partner2Allergies?: string,
+  partner1Goal?: Goal | null,
+  partner2Goal?: Goal | null,
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
 ): Promise<GeneratedMeal | null> {
   const provider = (env.AI_PROVIDER || 'deepseek') as keyof typeof MODEL_CHAINS;
   const models = MODEL_CHAINS[provider] || MODEL_CHAINS.deepseek;
-  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Body, partner2Body);
+  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Allergies, partner2Allergies, partner1Goal, partner2Goal, partner1Body, partner2Body);
 
   for (const model of models) {
     try {
@@ -250,6 +264,8 @@ interface PartnerContext {
   diet: Diet;
   allergies: string;
   tdee: TDEEResult | null;
+  goal: Goal | null;
+  activityLevel: ActivityLevel | null;
   slot: 1 | 2;
 }
 
@@ -267,13 +283,14 @@ function buildChatSystemPrompt(
   const p2 = profiles.find((p) => p.slot === 2);
 
   const p1Line = p1
-    ? `Partner 1: ${p1.name}, diet=${p1.diet}${p1.allergies ? `, allergies=${p1.allergies}` : ''}${p1.tdee ? `, target=${p1.tdee.targetCalories} cal/day` : ''}`
+    ? `Partner 1: ${p1.name}, diet=${p1.diet}${p1.allergies ? `, allergies=${p1.allergies}` : ''}${p1.goal ? `, goal=${GOAL_LABELS[p1.goal]}` : ''}${p1.tdee ? `, target=${p1.tdee.targetCalories} cal/day` : ''}`
     : 'Partner 1: no profile set';
   const p2Line = p2
-    ? `Partner 2: ${p2.name}, diet=${p2.diet}${p2.allergies ? `, allergies=${p2.allergies}` : ''}${p2.tdee ? `, target=${p2.tdee.targetCalories} cal/day` : ''}`
+    ? `Partner 2: ${p2.name}, diet=${p2.diet}${p2.allergies ? `, allergies=${p2.allergies}` : ''}${p2.goal ? `, goal=${GOAL_LABELS[p2.goal]}` : ''}${p2.tdee ? `, target=${p2.tdee.targetCalories} cal/day` : ''}`
     : 'Partner 2: no profile set';
 
   const hasBothTdee = p1?.tdee && p2?.tdee;
+  const hasAnyGoal = p1?.goal || p2?.goal;
 
   return `You are Cupla's meal planner for couples. Your job is to help them decide what to cook together based on what they have and what they need.
 
@@ -290,6 +307,7 @@ Rules:
 - If the user says they bought something or have it, put it in addToPantry.
 - Every meal must work for BOTH partners' dietary requirements. If one is vegetarian, the meal is vegetarian.
 - Keep total cook time under 30 minutes unless the user asks for something specific.
+${hasAnyGoal ? `- Respect each partner's body goal when choosing meals and portions (higher protein for muscle gain, lower calorie density for weight loss, balanced for maintenance). This is critical.` : ''}
 ${hasBothTdee ? `- When both partners have calorie targets, include plating instructions with different portion sizes for each partner.\n- Use the same recipe but adjust quantities so each person hits their target calories.` : ''}
 
 Response format — you MUST respond with valid JSON only, no markdown:

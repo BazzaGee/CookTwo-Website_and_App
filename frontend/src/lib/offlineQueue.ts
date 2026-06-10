@@ -1,11 +1,11 @@
-import type { Category, GroceryItem } from '../types/grocery';
+import type { GroceryItem } from '../types/grocery';
 
 const STORAGE_KEY = 'cfs.offline.queue';
 
 export interface QueuedAction {
   id: string;
   type: 'addItem';
-  payload: { name: string; category: Category };
+  payload: { name: string };
   timestamp: number;
 }
 
@@ -60,7 +60,6 @@ export async function drainQueue(
         },
         body: JSON.stringify({
           name: action.payload.name,
-          category: action.payload.category,
           addedByPartnerId: 'offline',
           addedByPartnerSlot: 1,
         }),

@@ -56,6 +56,8 @@ export async function handleMealChat(c: Context<{ Bindings: Env }>): Promise<Res
     diet: p.diet as Diet,
     allergies: p.allergies,
     tdee: p.tdee,
+    goal: p.goal,
+    activityLevel: p.activityLevel,
     slot: p.slot as 1 | 2,
   }));
 

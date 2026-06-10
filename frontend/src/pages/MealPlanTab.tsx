@@ -4,7 +4,7 @@ import { useMealChat, type ChatMessage } from '../hooks/useMealChat';
 import { useRecipes } from '../hooks/useRecipes';
 import { useWeekPlan } from '../hooks/useWeekPlan';
 import { useGroceryList } from '../hooks/useGroceryList';
-import { classify } from '../lib/categories';
+
 import type { GeneratedMeal } from '../types/meal';
 
 // Version: 2026-06-08-fix-no-mock
@@ -251,7 +251,7 @@ function InlineMealCard({ meal }: { meal: GeneratedMeal }) {
   function handleAddMissing() {
     const missing = meal.ingredients.filter((i) => !i.have);
     for (const item of missing) {
-      addItem({ name: item.name, category: classify(item.name) });
+      addItem({ name: item.name });
     }
     setAddedMissing(true);
   }
@@ -483,7 +483,7 @@ function SavedRecipeCard({
   function handleAddMissing() {
     const missing = meal.ingredients.filter((i) => !i.have);
     for (const item of missing) {
-      addItem({ name: item.name, category: classify(item.name) });
+      addItem({ name: item.name });
     }
     setAddedMissing(true);
   }
@@ -649,7 +649,7 @@ function WeekView() {
       }
     }
     for (const name of allMissing) {
-      addItem({ name, category: classify(name) });
+      addItem({ name });
     }
   }
 

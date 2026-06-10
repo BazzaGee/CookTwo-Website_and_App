@@ -30,7 +30,9 @@ const CATEGORY_KEYWORDS: Array<{ category: Category; words: string[] }> = [
   { category: 'Produce', words: ['apple', 'banana', 'orange', 'lettuce', 'spinach', 'tomato', 'potato', 'onion', 'garlic', 'carrot', 'pepper', 'cucumber', 'broccoli', 'kale', 'mushroom', 'avocado', 'lemon', 'lime', 'berry', 'grape', 'mango', 'peach', 'pear', 'corn', 'zucchini', 'celery', 'ginger', 'herb', 'basil', 'cilantro', 'parsley', 'cabbage', 'pumpkin', 'squash', 'eggplant', 'radish', 'turnip', 'beet', 'asparagus', 'artichoke', 'sprout', 'bean', 'pea', 'olive', 'fig', 'date', 'raisin', 'prune', 'apricot', 'cherry', 'plum', 'melon', 'watermelon', 'cantaloupe', 'honeydew', 'kiwi', 'papaya', 'pomegranate', 'passionfruit', 'dragonfruit', 'lychee', 'rambutan', 'durian', 'jackfruit', 'starfruit', 'persimmon', 'quince', 'elderberry', 'blackberry', 'raspberry', 'blueberry', 'strawberry', 'cranberry', 'gooseberry', 'currant', 'mulberry', 'boysenberry', 'loganberry', 'cloudberry', 'lingonberry', 'huckleberry', 'serviceberry', 'snowberry', 'bearberry', 'crowberry', 'dewberry', 'wineberry', 'salmonberry', 'thimbleberry'] },
   { category: 'Meat', words: ['chicken', 'beef', 'pork', 'turkey', 'lamb', 'fish', 'salmon', 'tuna', 'shrimp', 'bacon', 'sausage', 'ham', 'steak', 'ground', 'fillet', 'breast', 'thigh', 'mince', 'prawn', 'crab', 'lobster', 'clam', 'mussel', 'oyster', 'scallop', 'squid', 'octopus', 'anchovy', 'sardine', 'mackerel', 'trout', 'cod', 'haddock', 'halibut', 'snapper', 'grouper', 'tilapia', 'catfish', 'perch', 'pike', 'bass', 'carp', 'eel', 'shark', 'swordfish', 'marlin', 'mahi', 'wahoo', 'amberjack', 'yellowtail', 'kingfish', 'snook', 'tarpon', 'bonefish', 'permit', 'jack', 'crevalle', 'pompano', 'drum', 'croaker', 'weakfish', 'spot', 'pigfish', 'pinfish', 'sheepshead', 'bream', 'bullhead', 'channel', 'flathead', 'largemouth', 'smallmouth', 'spotted'] },
   { category: 'Dairy', words: ['milk', 'cheese', 'yogurt', 'yoghurt', 'butter', 'cream', 'egg', 'eggs', 'sour cream', 'cottage cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta', 'gouda', 'brie', 'cream cheese', 'kefir', 'ricotta', 'mascarpone', 'provolone', 'swiss', 'american', 'pepper jack', 'monterey jack', 'colby', 'havarti', 'jarlsberg', 'limburger', 'munster', 'romano', 'asiago', 'manchego', 'pecorino', 'cotija', 'queso', 'panela', 'oaxaca', 'asadero', 'chihuahua', 'leche', 'condensada', 'evaporada'] },
-  { category: 'Pantry', words: ['rice', 'pasta', 'flour', 'sugar', 'salt', 'pepper', 'oil', 'olive oil', 'vinegar', 'sauce', 'soup', 'canned', 'beans', 'lentils', 'cereal', 'oats', 'bread', 'tortilla', 'honey', 'peanut butter', 'jam', 'tea', 'coffee', 'spice', 'soy sauce', 'sesame oil', 'coconut oil', 'wheat', 'oat', 'quinoa', 'noodle', 'barley', 'bulgur', 'couscous', 'farro', 'millet', 'rye', 'spelt', 'amaranth', 'buckwheat', 'kamut', 'teff', 'triticale', 'wild rice', 'brown rice', 'white rice', 'jasmine rice', 'basmati rice', 'arborio rice', 'sushi rice', 'sticky rice', 'glutinous rice', 'black rice', 'red rice', 'parboiled rice', 'converted rice', 'instant rice', 'quick rice', 'minute rice', 'ready rice', 'microwave rice'] },
+  { category: 'Pantry', words: ['rice', 'pasta', 'flour', 'sugar', 'salt', 'pepper', 'oil', 'olive oil', 'vinegar', 'sauce', 'soup', 'canned', 'beans', 'lentils', 'cereal', 'oats', 'bread', 'tortilla', 'honey', 'peanut butter', 'jam', 'tea', 'coffee', 'spice', 'soy sauce', 'sesame oil', 'coconut oil', 'wheat', 'oat', 'quinoa', 'noodle', 'barley', 'bulgur', 'couscous', 'farro', 'millet', 'rye', 'spelt', 'amaranth', 'buckwheat', 'kamut', 'teff', 'triticale', 'wild rice', 'brown rice', 'white rice', 'jasmine rice', 'basmati rice', 'arborio rice', 'sushi rice', 'sticky rice', 'glutinous rice', 'black rice', 'red rice', 'parboiled rice', 'converted rice', 'instant rice', 'quick rice', 'minute rice', 'ready rice', 'microwave rice', 'chips', 'crackers', 'biscuits', 'cookies', 'chocolate', 'nuts', 'almonds', 'walnuts', 'cashews', 'peanuts', 'seeds', 'sunflower', 'chia', 'flax', 'popcorn', 'granola', 'muesli', 'trail mix', 'dried fruit', 'coconut', 'cocoa', 'baking powder', 'baking soda', 'vanilla', 'stock', 'broth', 'tomato paste', 'coconut milk'] },
+  { category: 'Household', words: ['dish soap', 'dishwasher', 'detergent', 'laundry', 'fabric softener', 'bleach', 'cleaning', 'cleaner', 'spray', 'wipe', 'sponge', 'scrub', 'bin bag', 'bin liner', 'trash bag', 'rubbish bag', 'garbage bag', 'foil', 'cling wrap', 'cling film', 'plastic wrap', 'baking paper', 'parchment', 'paper towel', 'kitchen roll', 'tissue', 'napkin', 'serviette', 'batteries', 'light bulb', 'lightbulb', 'candle', 'matches', 'lighter', 'extension cord', 'power strip', 'tape', 'glue', 'scissors', 'zip tie', 'command hook', 'hanger', 'storage', 'container', 'mop', 'broom', 'brush', 'bucket', 'gloves', 'rubber gloves', 'steel wool', 'air freshener', 'insect repellent', 'fly spray', 'pest control', 'weed killer', 'fertiliser', 'fertilizer', 'compost', 'potting mix', 'seed', 'plant food'] },
+  { category: 'Personal Care', words: ['shampoo', 'conditioner', 'soap', 'body wash', 'shower gel', 'face wash', 'face cream', 'moisturiser', 'moisturizer', 'lotion', 'sunscreen', 'sunblock', 'toothpaste', 'toothbrush', 'floss', 'mouthwash', 'deodorant', 'antiperspirant', 'razor', 'shaving cream', 'shaving gel', 'hair gel', 'hair spray', 'hair mask', 'dry shampoo', 'cotton pad', 'cotton bud', 'cotton swab', 'q-tip', 'makeup remover', 'nail polish', 'nail clipper', 'tweezers', 'comb', 'hairbrush', 'toilet paper', 'toilet roll', 'tissues', 'wet wipe', 'baby wipe', 'diaper', 'nappy', 'sanitary', 'tampon', 'pad', 'liners', 'contact lens', 'solution', 'vitamin', 'supplement', 'panadol', 'paracetamol', 'ibuprofen', 'bandaid', 'bandage', 'first aid', 'medicine', 'pharmacy'] },
 ];
 
 export interface ParsedPantryItem {
@@ -52,18 +54,18 @@ function extractQuantity(text: string): { value: number | null; unit: string; re
   const numericMatch = text.match(/^(\d+(?:\.\d+)?)\s*(cups?|tbsp|tsp|lbs?|oz|kg|g|ml|l(?:itres?|iters?)?|pieces?|slices?|cans?|bags?|boxes?|bottles?|jars?|packs?|dozen|bunches?|heads?|cloves?|sticks?|slices?)\s+(.+)/i);
   if (numericMatch) {
     return {
-      value: parseFloat(numericMatch[1]),
-      unit: normalizeUnit(numericMatch[2]),
-      remaining: numericMatch[3].trim(),
+      value: parseFloat(numericMatch[1]!),
+      unit: normalizeUnit(numericMatch[2]!),
+      remaining: numericMatch[3]!.trim(),
     };
   }
 
   const suffixNumericMatch = text.match(/(.+?)\s+(\d+(?:\.\d+)?)\s*(cups?|tbsp|tsp|lbs?|oz|kg|g|ml|l(?:itres?|iters?)?|pieces?|slices?|cans?|bags?|boxes?|bottles?|jars?|packs?|dozen|bunches?|heads?|cloves?|sticks?|slices?)$/i);
   if (suffixNumericMatch) {
     return {
-      value: parseFloat(suffixNumericMatch[2]),
-      unit: normalizeUnit(suffixNumericMatch[3]),
-      remaining: suffixNumericMatch[1].trim(),
+      value: parseFloat(suffixNumericMatch[2]!),
+      unit: normalizeUnit(suffixNumericMatch[3]!),
+      remaining: suffixNumericMatch[1]!.trim(),
     };
   }
 
@@ -71,16 +73,16 @@ function extractQuantity(text: string): { value: number | null; unit: string; re
   if (fractionMatch) {
     const fractionValues: Record<string, number> = { half: 0.5, quarter: 0.25, third: 0.333 };
     return {
-      value: fractionValues[fractionMatch[1].toLowerCase()] ?? null,
+      value: fractionValues[fractionMatch[1]!.toLowerCase()] ?? null,
       unit: '',
-      remaining: fractionMatch[2].trim(),
+      remaining: fractionMatch[2]!.trim(),
     };
   }
 
   const fractionNotationMatch = text.match(/^(\d+)\/(\d+)\s*(cups?|tbsp|tsp|lbs?|oz|kg|g|ml|l(?:itres?|iters?)?|pieces?|slices?|cans?|bags?|boxes?|bottles?|jars?|packs?|dozen|bunches?|heads?|cloves?|sticks?|slices?)?\s*(.+)/i);
   if (fractionNotationMatch) {
-    const num = parseInt(fractionNotationMatch[1]);
-    const den = parseInt(fractionNotationMatch[2]);
+    const num = parseInt(fractionNotationMatch[1]!);
+    const den = parseInt(fractionNotationMatch[2]!);
     return {
       value: den > 0 ? num / den : null,
       unit: fractionNotationMatch[3] ? normalizeUnit(fractionNotationMatch[3]) : '',
@@ -142,13 +144,15 @@ function regexParse(raw: string): ParsedPantryItem {
 
   const confidence = calculateRegexConfidence({ quantityValue: value, category, name, rawInput: trimmed });
 
+  const isFood = category !== 'Household' && category !== 'Personal Care' && (category !== 'Other' || confidence > 0.6);
+
   return {
     name,
     quantityValue: value,
     quantityUnit: unit,
     brand,
     category,
-    isFood: category !== 'Other' || confidence > 0.6,
+    isFood,
     confidence,
   };
 }

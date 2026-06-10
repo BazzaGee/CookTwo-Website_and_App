@@ -1,3 +1,12 @@
+interface ParseCacheRow {
+  input_hash: string;
+  raw_input: string;
+  parsed_json: string;
+  source: string;
+  created_at: number;
+  [key: string]: string | number;
+}
+
 export interface ParseCacheEntry {
   inputHash: string;
   rawInput: string;
@@ -6,26 +15,35 @@ export interface ParseCacheEntry {
   createdAt: number;
 }
 
-const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+const CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
+
+function rowToEntry(row: ParseCacheRow): ParseCacheEntry {
+  return {
+    inputHash: row.input_hash,
+    rawInput: row.raw_input,
+    parsedJson: row.parsed_json,
+    source: row.source as 'regex' | 'ai',
+    createdAt: row.created_at,
+  };
+}
 
 export async function getCachedParse(
   sql: DurableObjectStorage['sql'],
   inputHash: string,
 ): Promise<ParseCacheEntry | null> {
   try {
-    const cursor = sql.exec<ParseCacheEntry>('SELECT * FROM pantry_parse_cache WHERE input_hash = ?', inputHash);
+    const cursor = sql.exec<ParseCacheRow>('SELECT * FROM pantry_parse_cache WHERE input_hash = ?', inputHash);
     const rows = Array.from(cursor);
     const result = rows[0];
-    
+
     if (!result) return null;
-    
-    // Check TTL
-    if (Date.now() - result.createdAt > CACHE_TTL) {
+
+    if (Date.now() - result.created_at > CACHE_TTL) {
       sql.exec('DELETE FROM pantry_parse_cache WHERE input_hash = ?', inputHash);
       return null;
     }
-    
-    return result;
+
+    return rowToEntry(result);
   } catch {
     return null;
   }
@@ -45,7 +63,6 @@ export async function cacheParse(
       entry.createdAt,
     );
   } catch {
-    // Cache write failure is non-critical
   }
 }
 
@@ -56,6 +73,5 @@ export async function cleanExpiredCache(
     const cutoff = Date.now() - CACHE_TTL;
     sql.exec('DELETE FROM pantry_parse_cache WHERE created_at < ?', cutoff);
   } catch {
-    // Cleanup failure is non-critical
   }
 }

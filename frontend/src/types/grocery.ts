@@ -1,4 +1,4 @@
-export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Other';
+export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Household' | 'Personal Care' | 'Other';
 
 export type PartnerSlot = 1 | 2;
 
@@ -8,6 +8,8 @@ export interface GroceryItem {
   name: string;
   category: Category;
   isChecked: boolean;
+  isFood: boolean;
+  brand: string;
   addedByPartnerId: string;
   addedByPartnerSlot: PartnerSlot;
   createdAt: number;
@@ -31,10 +33,12 @@ export interface PantryItem {
 
 export type SyncEvent =
   | { type: 'item_added'; item: GroceryItem }
+  | { type: 'items_added'; items: GroceryItem[] }
   | { type: 'item_toggled'; item: GroceryItem }
   | { type: 'item_deleted'; id: string }
+  | { type: 'items_moved'; deletedIds: string[]; pantryItems: PantryItem[] }
   | { type: 'pantry_added'; item: PantryItem }
   | { type: 'pantry_deleted'; id: string }
   | { type: 'hello'; partnerId: string; slot: PartnerSlot; at: number };
 
-export const CATEGORIES: readonly Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Other'] as const;
+export const CATEGORIES: readonly Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'] as const;

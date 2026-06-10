@@ -277,6 +277,30 @@ app.post('/api/household/:id/items', async (c) => {
   });
 });
 
+app.post('/api/household/:id/items/bulk', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const stub = getStub(c, c.req.param('id'));
+  const body = await c.req.json();
+  return stub.fetch('https://do/items/bulk', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'content-type': 'application/json' },
+  });
+});
+
+app.post('/api/household/:id/items/move-to-pantry', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const stub = getStub(c, c.req.param('id'));
+  const body = await c.req.json();
+  return stub.fetch('https://do/items/move-to-pantry', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'content-type': 'application/json' },
+  });
+});
+
 app.patch('/api/household/:id/items/:itemId/toggle', async (c) => {
   const denied = await requireAuth(c);
   if (denied) return denied;
@@ -356,11 +380,15 @@ app.post('/api/household/:id/meal-plan/generate', async (c) => {
   const p2 = profiles.find((p) => p.slot === 2);
   const p1Diet = p1?.diet ?? 'omnivore';
   const p2Diet = p2?.diet ?? 'omnivore';
+  const p1Allergies = p1?.allergies ?? '';
+  const p2Allergies = p2?.allergies ?? '';
+  const p1Goal = p1?.goal ?? null;
+  const p2Goal = p2?.goal ?? null;
 
   const p1Body = p1?.tdee ? { name: p1.name, tdee: p1.tdee } : undefined;
   const p2Body = p2?.tdee ? { name: p2.name, tdee: p2.tdee } : undefined;
 
-  const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Body, p2Body);
+  const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergies, p2Allergies, p1Goal, p2Goal, p1Body, p2Body);
   if (!meal) {
     return c.json({ error: 'AI meal generation failed. Please try again later.' }, 503);
   }

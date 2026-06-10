@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, getWsBaseUrl } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
-import type { Category, GroceryItem, PartnerSlot, SyncEvent } from '../types/grocery';
+import type { GroceryItem, PartnerSlot, SyncEvent } from '../types/grocery';
 import { drainQueue, pushToQueue, getQueueLength } from '../lib/offlineQueue';
 
 export type ConnectionState = 'idle' | 'connecting' | 'open' | 'closed';
@@ -34,7 +34,7 @@ export function useGroceryList() {
     window.addEventListener('offline', onOffline);
     return () => {
       window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
+      window.removeEventListener('online', onOffline);
     };
   }, []);
 
@@ -60,11 +60,20 @@ export function useGroceryList() {
           if (old.some((i) => i.id === event.item.id)) return old;
           return [...old, event.item];
         }
+        if (event.type === 'items_added') {
+          const existing = new Set(old.map((i) => i.id));
+          const newItems = event.items.filter((i) => !existing.has(i.id));
+          return [...old, ...newItems];
+        }
         if (event.type === 'item_toggled') {
           return old.map((i) => (i.id === event.item.id ? event.item : i));
         }
         if (event.type === 'item_deleted') {
           return old.filter((i) => i.id !== event.id);
+        }
+        if (event.type === 'items_moved') {
+          const deletedSet = new Set(event.deletedIds);
+          return old.filter((i) => !deletedSet.has(i.id));
         }
         return old;
       });
@@ -144,17 +153,28 @@ export function useGroceryList() {
   }, [householdId, token, partnerId, partnerSlot, applyEvent, queryClient]);
 
   const addMutation = useMutation({
-    mutationFn: (input: { name: string; category: Category }) => {
+    mutationFn: (input: { name: string }) => {
       if (!isOnline) {
-        pushToQueue({ type: 'addItem', payload: { name: input.name.trim(), category: input.category } });
+        pushToQueue({ type: 'addItem', payload: { name: input.name.trim() } });
         setQueueLen(getQueueLength());
-        return Promise.resolve({ id: `queued-${Date.now()}`, householdId, name: input.name.trim(), category: input.category, isChecked: false, addedByPartnerId: partnerId, addedByPartnerSlot: partnerSlot, createdAt: Date.now(), updatedAt: Date.now() } as GroceryItem);
+        return Promise.resolve({
+          id: `queued-${Date.now()}`,
+          householdId,
+          name: input.name.trim(),
+          category: 'Other' as const,
+          isChecked: false,
+          isFood: true,
+          brand: '',
+          addedByPartnerId: partnerId,
+          addedByPartnerSlot: partnerSlot,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        } as GroceryItem);
       }
       return apiFetch<GroceryItem>(`/api/household/${householdId}/items`, {
         method: 'POST',
         body: {
           name: input.name.trim(),
-          category: input.category,
           addedByPartnerId: partnerId,
           addedByPartnerSlot: partnerSlot,
         },
@@ -166,6 +186,28 @@ export function useGroceryList() {
         if (!old) return [item];
         if (old.some((i) => i.id === item.id)) return old;
         return [...old, item];
+      });
+    },
+  });
+
+  const addBulkMutation = useMutation({
+    mutationFn: (items: string[]) => {
+      return apiFetch<GroceryItem[]>(`/api/household/${householdId}/items/bulk`, {
+        method: 'POST',
+        body: {
+          items,
+          addedByPartnerId: partnerId,
+          addedByPartnerSlot: partnerSlot,
+        },
+        token,
+      });
+    },
+    onSuccess: (items) => {
+      queryClient.setQueryData<GroceryItem[]>(QUERY_KEY(householdId), (old) => {
+        if (!old) return items;
+        const existing = new Set(old.map((i) => i.id));
+        const newItems = items.filter((i) => !existing.has(i.id));
+        return [...old, ...newItems];
       });
     },
   });
@@ -198,12 +240,35 @@ export function useGroceryList() {
     },
   });
 
+  const moveToPantryMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<{ deletedIds: string[] }>(`/api/household/${householdId}/items/move-to-pantry`, {
+        method: 'POST',
+        body: {
+          addedByPartnerId: partnerId,
+          addedByPartnerSlot: partnerSlot,
+        },
+        token,
+      }),
+    onSuccess: (res) => {
+      const deletedSet = new Set(res.deletedIds);
+      queryClient.setQueryData<GroceryItem[]>(QUERY_KEY(householdId), (old) => {
+        if (!old) return old;
+        return old.filter((i) => !deletedSet.has(i.id));
+      });
+      queryClient.invalidateQueries({ queryKey: ['pantry', householdId] });
+    },
+  });
+
   return {
     items: itemsQuery.data ?? [],
     isLoading: itemsQuery.isLoading,
     addItem: addMutation.mutate,
+    addItemsBulk: addBulkMutation.mutate,
     toggleItem: toggleMutation.mutate,
     deleteItem: deleteMutation.mutate,
+    moveCheckedToPantry: moveToPantryMutation.mutate,
+    isMovingToPantry: moveToPantryMutation.isPending,
     isAdding: addMutation.isPending,
     connectionState: connState,
     isOnline,

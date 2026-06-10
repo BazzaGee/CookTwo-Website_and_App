@@ -1,7 +1,7 @@
 import type { Env } from '../env';
 import { parsePantryItemSync, type ParsedPantryItem } from '../lib/pantry-parser';
 
-export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Other';
+export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Household' | 'Personal Care' | 'Other';
 
 export type PartnerSlot = 1 | 2;
 
@@ -11,6 +11,8 @@ export interface GroceryItem {
   name: string;
   category: Category;
   isChecked: boolean;
+  isFood: boolean;
+  brand: string;
   addedByPartnerId: string;
   addedByPartnerSlot: PartnerSlot;
   createdAt: number;
@@ -34,8 +36,10 @@ export interface PantryItem {
 
 export type SyncEvent =
   | { type: 'item_added'; item: GroceryItem }
+  | { type: 'items_added'; items: GroceryItem[] }
   | { type: 'item_toggled'; item: GroceryItem }
   | { type: 'item_deleted'; id: string }
+  | { type: 'items_moved'; deletedIds: string[]; pantryItems: PantryItem[] }
   | { type: 'pantry_added'; item: PantryItem }
   | { type: 'pantry_deleted'; id: string }
   | { type: 'hello'; partnerId: string; slot: PartnerSlot; at: number };
@@ -46,6 +50,8 @@ interface GroceryItemRow {
   name: string;
   category: string;
   is_checked: number;
+  is_food: number;
+  brand: string;
   added_by_partner_id: string;
   added_by_partner_slot: number;
   created_at: number;
@@ -66,7 +72,7 @@ interface PantryItemRow {
   added_by_partner_id: string;
   added_by_partner_slot: number;
   created_at: number;
-  [key: string]: string | number;
+  [key: string]: string | number | null;
 }
 
 function rowToItem(row: GroceryItemRow): GroceryItem {
@@ -76,6 +82,8 @@ function rowToItem(row: GroceryItemRow): GroceryItem {
     name: row.name,
     category: row.category as Category,
     isChecked: row.is_checked === 1,
+    isFood: (row.is_food ?? 1) === 1,
+    brand: (row.brand as string) || '',
     addedByPartnerId: row.added_by_partner_id,
     addedByPartnerSlot: row.added_by_partner_slot as PartnerSlot,
     createdAt: row.created_at,
@@ -101,7 +109,7 @@ function rowToPantry(row: PantryItemRow): PantryItem {
 }
 
 function isCategory(value: string): value is Category {
-  return value === 'Produce' || value === 'Meat' || value === 'Dairy' || value === 'Pantry' || value === 'Other';
+  return value === 'Produce' || value === 'Meat' || value === 'Dairy' || value === 'Pantry' || value === 'Household' || value === 'Personal Care' || value === 'Other';
 }
 
 const SCHEMA = `
@@ -111,6 +119,8 @@ const SCHEMA = `
     name TEXT NOT NULL,
     category TEXT NOT NULL,
     is_checked INTEGER NOT NULL DEFAULT 0,
+    is_food INTEGER NOT NULL DEFAULT 1,
+    brand TEXT NOT NULL DEFAULT '',
     added_by_partner_id TEXT NOT NULL,
     added_by_partner_slot INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
@@ -166,7 +176,17 @@ export class HouseholdSync {
   private async ensureSchema(): Promise<void> {
     if (this.initialized) return;
     await this.state.storage.sql.exec(SCHEMA);
+    await this.runMigrations();
     this.initialized = true;
+  }
+
+  private async runMigrations(): Promise<void> {
+    try {
+      this.state.storage.sql.exec('ALTER TABLE grocery_items ADD COLUMN is_food INTEGER NOT NULL DEFAULT 1');
+    } catch { /* column already exists */ }
+    try {
+      this.state.storage.sql.exec('ALTER TABLE grocery_items ADD COLUMN brand TEXT NOT NULL DEFAULT \'\'');
+    } catch { /* column already exists */ }
   }
 
   private broadcast(event: SyncEvent, exclude?: WebSocket): void {
@@ -229,16 +249,47 @@ export class HouseholdSync {
       if (path === '/items' && method === 'GET') {
         return this.json(await this.getItems());
       }
-      if (path === '/items' && method === 'POST') {
+      if (path === '/items/bulk' && method === 'POST') {
         const body = (await request.json()) as {
-          name: string;
-          category: string;
+          items: string[];
           addedByPartnerId: string;
           addedByPartnerSlot: number;
         };
+        const items = await this.addItemsBulk(body);
+        this.broadcast({ type: 'items_added', items });
+        return this.json(items, 201);
+      }
+      if (path === '/items' && method === 'POST') {
+        const body = (await request.json()) as {
+          name: string;
+          addedByPartnerId: string;
+          addedByPartnerSlot: number;
+        };
+        const rawName = (body.name ?? '').trim();
+        const parts = rawName.split(/[,;]/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
+        if (parts.length > 1) {
+          const items = await this.addItemsBulk({ items: parts, addedByPartnerId: body.addedByPartnerId, addedByPartnerSlot: body.addedByPartnerSlot });
+          this.broadcast({ type: 'items_added', items });
+          return this.json(items, 201);
+        }
         const item = await this.addItem(body);
         this.broadcast({ type: 'item_added', item });
         return this.json(item, 201);
+      }
+      if (path === '/items/move-to-pantry' && method === 'POST') {
+        const body = (await request.json()) as {
+          addedByPartnerId: string;
+          addedByPartnerSlot: number;
+        };
+        const result = await this.moveCheckedToPantry(body);
+        for (const pi of result.pantryItems) {
+          this.broadcast({ type: 'pantry_added', item: pi });
+        }
+        for (const id of result.deletedIds) {
+          this.broadcast({ type: 'item_deleted', id });
+        }
+        this.broadcast({ type: 'items_moved', deletedIds: result.deletedIds, pantryItems: result.pantryItems });
+        return this.json(result, 200);
       }
       const toggleMatch = path.match(/^\/items\/([^/]+)\/toggle$/);
       if (toggleMatch && method === 'PATCH') {
@@ -323,23 +374,23 @@ export class HouseholdSync {
 
   private async getRegulars(): Promise<Array<{ name: string; count: number }>> {
     const cursor = this.state.storage.sql.exec<{ name: string; count: number }>(
-      'SELECT name, COUNT(*) as count FROM grocery_items GROUP BY name ORDER BY count DESC LIMIT 15',
+      'SELECT name, COUNT(*) as count FROM grocery_items GROUP BY name HAVING count > 1 ORDER BY count DESC LIMIT 15',
     );
     return Array.from(cursor);
   }
 
   private async addItem(body: {
     name: string;
-    category: string;
     addedByPartnerId: string;
     addedByPartnerSlot: number;
   }): Promise<GroceryItem> {
-    const name = (body.name ?? '').trim();
-    if (!name) throw new Error('name is required');
-    if (!isCategory(body.category)) throw new Error('invalid category');
+    const rawInput = (body.name ?? '').trim();
+    if (!rawInput) throw new Error('name is required');
     if (body.addedByPartnerSlot !== 1 && body.addedByPartnerSlot !== 2) {
       throw new Error('addedByPartnerSlot must be 1 or 2');
     }
+
+    const parsed = parsePantryItemSync(rawInput);
 
     const householdId = (this.state.id as { toString(): string }).toString();
     const id = crypto.randomUUID();
@@ -347,12 +398,14 @@ export class HouseholdSync {
 
     this.state.storage.sql.exec(
       `INSERT INTO grocery_items
-        (id, household_id, name, category, is_checked, added_by_partner_id, added_by_partner_slot, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+        (id, household_id, name, category, is_checked, is_food, brand, added_by_partner_id, added_by_partner_slot, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
       id,
       householdId,
-      name,
-      body.category,
+      parsed.name,
+      parsed.category,
+      parsed.isFood ? 1 : 0,
+      parsed.brand,
       body.addedByPartnerId,
       body.addedByPartnerSlot,
       now,
@@ -362,14 +415,131 @@ export class HouseholdSync {
     return {
       id,
       householdId,
-      name,
-      category: body.category,
+      name: parsed.name,
+      category: parsed.category,
       isChecked: false,
+      isFood: parsed.isFood,
+      brand: parsed.brand,
       addedByPartnerId: body.addedByPartnerId,
       addedByPartnerSlot: body.addedByPartnerSlot as PartnerSlot,
       createdAt: now,
       updatedAt: now,
     };
+  }
+
+  private async addItemsBulk(body: {
+    items: string[];
+    addedByPartnerId: string;
+    addedByPartnerSlot: number;
+  }): Promise<GroceryItem[]> {
+    if (body.addedByPartnerSlot !== 1 && body.addedByPartnerSlot !== 2) {
+      throw new Error('addedByPartnerSlot must be 1 or 2');
+    }
+
+    const householdId = (this.state.id as { toString(): string }).toString();
+    const now = Date.now();
+    const results: GroceryItem[] = [];
+
+    for (const rawInput of body.items) {
+      const trimmed = (rawInput ?? '').trim();
+      if (!trimmed) continue;
+
+      const parsed = parsePantryItemSync(trimmed);
+      const id = crypto.randomUUID();
+
+      this.state.storage.sql.exec(
+        `INSERT INTO grocery_items
+          (id, household_id, name, category, is_checked, is_food, brand, added_by_partner_id, added_by_partner_slot, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+        id,
+        householdId,
+        parsed.name,
+        parsed.category,
+        parsed.isFood ? 1 : 0,
+        parsed.brand,
+        body.addedByPartnerId,
+        body.addedByPartnerSlot,
+        now,
+        now,
+      );
+
+      results.push({
+        id,
+        householdId,
+        name: parsed.name,
+        category: parsed.category,
+        isChecked: false,
+        isFood: parsed.isFood,
+        brand: parsed.brand,
+        addedByPartnerId: body.addedByPartnerId,
+        addedByPartnerSlot: body.addedByPartnerSlot as PartnerSlot,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return results;
+  }
+
+  private async moveCheckedToPantry(body: {
+    addedByPartnerId: string;
+    addedByPartnerSlot: number;
+  }): Promise<{ deletedIds: string[]; pantryItems: PantryItem[] }> {
+    const cursor = this.state.storage.sql.exec<GroceryItemRow>(
+      'SELECT * FROM grocery_items WHERE is_checked = 1',
+    );
+    const checkedRows = Array.from(cursor);
+
+    const deletedIds: string[] = [];
+    const pantryItems: PantryItem[] = [];
+    const now = Date.now();
+    const householdId = (this.state.id as { toString(): string }).toString();
+
+    for (const row of checkedRows) {
+      const item = rowToItem(row);
+      const id = row.id as string;
+
+      if (item.isFood) {
+        const parsed = parsePantryItemSync(item.name);
+        const pantryId = crypto.randomUUID();
+        this.state.storage.sql.exec(
+          `INSERT INTO pantry_items
+            (id, household_id, name, quantity, category, quantity_value, quantity_unit, brand, is_food, added_by_partner_id, added_by_partner_slot, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          pantryId,
+          householdId,
+          parsed.name,
+          parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+          parsed.category,
+          parsed.quantityValue,
+          parsed.quantityUnit,
+          parsed.brand || item.brand,
+          1,
+          body.addedByPartnerId,
+          body.addedByPartnerSlot,
+          now,
+        );
+        pantryItems.push({
+          id: pantryId,
+          householdId,
+          name: parsed.name,
+          quantity: parsed.quantityUnit ? `${parsed.quantityValue ?? ''} ${parsed.quantityUnit}`.trim() : '',
+          category: parsed.category,
+          quantityValue: parsed.quantityValue,
+          quantityUnit: parsed.quantityUnit,
+          brand: parsed.brand || item.brand,
+          isFood: true,
+          addedByPartnerId: body.addedByPartnerId,
+          addedByPartnerSlot: body.addedByPartnerSlot as PartnerSlot,
+          createdAt: now,
+        });
+      }
+
+      this.state.storage.sql.exec('DELETE FROM grocery_items WHERE id = ?', id);
+      deletedIds.push(id);
+    }
+
+    return { deletedIds, pantryItems };
   }
 
   private async toggleItem(id: string): Promise<GroceryItem> {
