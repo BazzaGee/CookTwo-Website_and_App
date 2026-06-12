@@ -3,7 +3,6 @@ import { ChevronDown, ChevronRight, Plus, X, Sparkles } from 'lucide-react';
 import { usePantry } from '../hooks/usePantry';
 import { PartnerDot } from '../components/PartnerDot';
 import type { PantryItem, Category } from '../types/grocery';
-import { FOOD_CATEGORIES } from '../types/grocery';
 
 const CATEGORY_EMOJIS: Record<Category, string> = {
   Produce: '🥬',
@@ -17,17 +16,8 @@ const CATEGORY_EMOJIS: Record<Category, string> = {
 
 const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'];
 
-const CATEGORY_CHIPS: Array<{ category: Category; label: string }> = [
-  { category: 'Produce', label: '🥬 Produce' },
-  { category: 'Meat', label: '🥩 Meat' },
-  { category: 'Dairy', label: '🥛 Dairy' },
-  { category: 'Pantry', label: '🫙 Pantry' },
-  { category: 'Household', label: '🏠 Household' },
-  { category: 'Personal Care', label: '🧴 Personal Care' },
-];
-
 export default function PantryTab() {
-  const { items, addItem, deleteItem, isLoading, reclassifyItem, reclassifyWithAI, isAIReclassifying } = usePantry();
+  const { items, addItem, deleteItem, isLoading, reclassifyWithAI, isAIReclassifying } = usePantry();
   const [input, setInput] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<Set<Category>>(new Set());
 
@@ -224,7 +214,6 @@ export default function PantryTab() {
                           key={item.id}
                           item={item}
                           onDelete={deleteItem}
-                          onReclassify={(id, category, isFood) => reclassifyItem({ id, category, isFood })}
                           displayText={formatItemDisplay(item)}
                         />
                       ))}
@@ -240,10 +229,9 @@ export default function PantryTab() {
   );
 }
 
-function PantryRow({ item, onDelete, onReclassify, displayText }: {
+function PantryRow({ item, onDelete, displayText }: {
   item: PantryItem;
   onDelete: (id: string) => void;
-  onReclassify?: (id: string, category: Category, isFood: boolean) => void;
   displayText: string;
 }) {
   return (
@@ -276,27 +264,6 @@ function PantryRow({ item, onDelete, onReclassify, displayText }: {
           <X size={16} />
         </button>
       </div>
-
-      {item.needsReview && onReclassify && (
-        <div className="px-4 pb-3 border-t border-dashed border-border/40">
-          <div className="flex flex-wrap gap-1.5 pt-2">
-            {CATEGORY_CHIPS.map(({ category, label }) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => onReclassify(item.id, category, FOOD_CATEGORIES.includes(category))}
-                className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${
-                  category === item.category
-                    ? 'bg-sage/10 border-sage/40 text-sage-dark'
-                    : 'border-border/60 bg-white hover:bg-sage/10 hover:border-sage/40 text-text-primary'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </li>
   );
 }
