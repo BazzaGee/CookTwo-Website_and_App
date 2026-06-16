@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: '/PWA/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -16,12 +16,12 @@ export default defineConfig({
         theme_color: '#7A9E7E',
         background_color: '#FAF6EE',
         display: 'standalone',
-        start_url: '/PWA/',
-        scope: '/PWA/',
+        start_url: '/',
+        scope: '/',
         lang: 'en',
         orientation: 'portrait',
         categories: ['food', 'lifestyle', 'utilities'],
-        id: '/PWA/',
+        id: '/',
         icons: [
           {
             src: 'icon-192.png',
@@ -39,7 +39,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
-        navigateFallback: '/PWA/index.html',
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
         sourcemap: true,
@@ -68,7 +68,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^\/PWA\/(?!api\/).*/,
+            urlPattern: /^\/(?!api\/).*/,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'app-shell-cache',

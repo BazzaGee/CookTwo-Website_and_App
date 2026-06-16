@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS partner_allergens (
   severity   TEXT NOT NULL DEFAULT 'strict' CHECK(severity IN ('strict')),
   added_at   INTEGER NOT NULL,
   PRIMARY KEY (partner_id, allergen)
-)
+);

@@ -6,6 +6,8 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useWeekPlan } from '../hooks/useWeekPlan';
 import { useGroceryList } from '../hooks/useGroceryList';
 import { useMealImage } from '../hooks/useMealImage';
+import { useUsage } from '../hooks/useUsage';
+import { usePaywallStore } from '../stores/paywallStore';
 
 import type { GeneratedMeal } from '../types/meal';
 
@@ -326,6 +328,8 @@ function InlineMealCard({ meal }: { meal: GeneratedMeal }) {
   const { addItem } = useGroceryList();
   const [addedMissing, setAddedMissing] = useState(false);
   const { url: imageUrl, generating: imageGenerating, error: imageError, generate: generateImage } = useMealImage(meal.name);
+  const { isPremium } = useUsage();
+  const showPaywall = usePaywallStore((s) => s.show);
 
   function handleAddMissing() {
     const missing = meal.ingredients.filter((i) => !i.have);
@@ -440,22 +444,34 @@ function InlineMealCard({ meal }: { meal: GeneratedMeal }) {
       )}
 
       <div className="px-4 py-2.5 border-t border-border/50 flex gap-2">
-        <button
-          type="button"
-          onClick={() => generateImage(meal)}
-          disabled={imageGenerating}
-          className={`text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
-            imageUrl
-              ? 'bg-terracotta/10 text-terracotta border border-terracotta/30'
-              : 'bg-white text-text-secondary border border-border hover:bg-cream'
-          } disabled:opacity-40`}
-        >
-          {imageGenerating
-            ? <RefreshCw size={12} className="animate-spin" />
-            : <ImageIcon size={12} />
-          }
-          {imageGenerating ? 'Generating...' : imageUrl ? 'Regenerate' : 'Image'}
-        </button>
+        {isPremium ? (
+          <button
+            type="button"
+            onClick={() => generateImage(meal)}
+            disabled={imageGenerating}
+            className={`text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
+              imageUrl
+                ? 'bg-terracotta/10 text-terracotta border border-terracotta/30'
+                : 'bg-white text-text-secondary border border-border hover:bg-cream'
+            } disabled:opacity-40`}
+          >
+            {imageGenerating
+              ? <RefreshCw size={12} className="animate-spin" />
+              : <ImageIcon size={12} />
+            }
+            {imageGenerating ? 'Generating...' : imageUrl ? 'Regenerate' : 'Image'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => showPaywall('premium_only')}
+            className="text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 bg-cream text-text-secondary border border-border opacity-50 cursor-not-allowed"
+            title="Premium feature"
+          >
+            <ImageIcon size={12} />
+            Premium
+          </button>
+        )}
         <button
           type="button"
           onClick={handleAddMissing}
@@ -582,6 +598,8 @@ function SavedRecipeCard({
   const { addItem } = useGroceryList();
   const [addedMissing, setAddedMissing] = useState(false);
   const { url: imageUrl, generating: imageGenerating, error: imageError, generate: generateImage } = useMealImage(meal.name);
+  const { isPremium } = useUsage();
+  const showPaywall = usePaywallStore((s) => s.show);
 
   const missingCount = meal.ingredients.filter((i) => !i.have).length;
 
@@ -720,22 +738,34 @@ function SavedRecipeCard({
           </div>
 
           <div className="border-t border-border px-5 py-2.5 flex gap-2">
-            <button
-              type="button"
-              onClick={() => generateImage(meal)}
-              disabled={imageGenerating}
-              className={`text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
-                imageUrl
-                  ? 'bg-terracotta/10 text-terracotta border border-terracotta/30'
-                  : 'bg-cream text-text-secondary border border-border hover:bg-cream-dark'
-              } disabled:opacity-40`}
-            >
-              {imageGenerating
-                ? <RefreshCw size={12} className="animate-spin" />
-                : <ImageIcon size={12} />
-              }
-              {imageGenerating ? 'Generating...' : imageUrl ? 'Regenerate' : 'Image'}
-            </button>
+            {isPremium ? (
+              <button
+                type="button"
+                onClick={() => generateImage(meal)}
+                disabled={imageGenerating}
+                className={`text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
+                  imageUrl
+                    ? 'bg-terracotta/10 text-terracotta border border-terracotta/30'
+                    : 'bg-cream text-text-secondary border border-border hover:bg-cream-dark'
+                } disabled:opacity-40`}
+              >
+                {imageGenerating
+                  ? <RefreshCw size={12} className="animate-spin" />
+                  : <ImageIcon size={12} />
+                }
+                {imageGenerating ? 'Generating...' : imageUrl ? 'Regenerate' : 'Image'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => showPaywall('premium_only')}
+                className="text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 bg-cream text-text-secondary border border-border opacity-50 cursor-not-allowed"
+                title="Premium feature"
+              >
+                <ImageIcon size={12} />
+                Premium
+              </button>
+            )}
             <button
               type="button"
               onClick={handleAddMissing}

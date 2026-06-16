@@ -29,8 +29,16 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   const { body, token, headers, ...rest } = options;
   const url = `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 
+  let tz: string;
+  try {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    tz = 'UTC';
+  }
+
   const finalHeaders: Record<string, string> = {
     Accept: 'application/json',
+    'X-Timezone': tz,
     ...(headers as Record<string, string> | undefined),
   };
   if (body !== undefined) {
@@ -57,11 +65,17 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   }
 
   if (!res.ok) {
+    const code =
+      typeof parsed === 'object' && parsed && 'code' in parsed
+        ? String((parsed as { code: unknown }).code)
+        : undefined;
     const message =
       typeof parsed === 'object' && parsed && 'error' in parsed
         ? String((parsed as { error: unknown }).error)
         : `Request failed: ${res.status}`;
-    throw new ApiError(res.status, parsed, message);
+    const err = new ApiError(res.status, parsed, message);
+    if (code) (err as ApiError & { code?: string }).code = code;
+    throw err;
   }
 
   return parsed as T;

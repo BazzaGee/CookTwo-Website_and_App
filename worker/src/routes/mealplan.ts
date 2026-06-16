@@ -74,6 +74,7 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const householdId = c.req.param('id') as string;
   const { generateMeal } = await import('../lib/ai');
   const { getPartners } = await import('./profiles');
+  const { getCoupleDietRules } = await import('../lib/diet-rules');
 
   await clearWeekPlan(c.env.DB, householdId);
 
@@ -88,6 +89,10 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const p2Goal = p2?.goal ?? null;
   const p1Body = p1?.tdee ? { name: p1.name, tdee: p1.tdee } : undefined;
   const p2Body = p2?.tdee ? { name: p2.name, tdee: p2.tdee } : undefined;
+
+  const p1Fasting = p1?.fastingMode ?? null;
+  const p2Fasting = p2?.fastingMode ?? null;
+  const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting);
 
   const pantryRes = await c.env.HOUSEHOLD_SYNC
     .get(c.env.HOUSEHOLD_SYNC.idFromName(householdId))
@@ -107,7 +112,7 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const meals: Array<{ dayOfWeek: DayOfWeek; mealName: string; mealData: string }> = [];
 
   for (const day of DAYS) {
-    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, partnerContext);
+    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, partnerContext, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups);
     if (meal) {
       meals.push({
         dayOfWeek: day,

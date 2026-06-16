@@ -13,6 +13,7 @@ export interface PartnerProfile {
   slot: 1 | 2;
   name: string;
   diet: Diet;
+  fastingMode: string | null;
   allergies: string;          // kept for backward compat, deprecated
   allergens: string[];         // structured list from partner_allergens table
   createdAt: number;
@@ -32,6 +33,7 @@ interface PartnerRow {
   slot: number;
   name: string;
   diet: string;
+  fasting_mode: string | null;
   allergies: string;
   created_at: number;
   updated_at: number;
@@ -59,6 +61,7 @@ function rowToProfile(row: PartnerRow): PartnerProfile {
     slot: row.slot as 1 | 2,
     name: row.name,
     diet: row.diet as Diet,
+    fastingMode: row.fasting_mode ?? null,
     allergies: row.allergies,
     allergens: [],
     createdAt: row.created_at,
@@ -120,6 +123,7 @@ export async function createPartner(
     slot,
     name,
     diet: 'omnivore',
+    fastingMode: null,
     allergies: (allergens ?? []).join(', '),
     allergens: allergens ?? [],
     createdAt: now,
@@ -171,7 +175,7 @@ export async function updatePartner(
   db: D1Database,
   partnerId: string,
   updates: {
-    name?: string; diet?: string; allergies?: string; allergens?: string[];
+    name?: string; diet?: string; fastingMode?: string | null; allergies?: string; allergens?: string[];
     weightKg?: number | null; heightCm?: number | null; age?: number | null;
     gender?: string | null; activityLevel?: string | null; goal?: string | null;
   },
@@ -187,6 +191,7 @@ export async function updatePartner(
 
   const name = updates.name ?? existing.name;
   const diet = updates.diet ?? existing.diet;
+  const fastingMode = updates.fastingMode !== undefined ? updates.fastingMode : existing.fasting_mode;
   const allergies = updates.allergies ?? existing.allergies;
   const weightKg = updates.weightKg !== undefined ? updates.weightKg : existing.weight_kg;
   const heightCm = updates.heightCm !== undefined ? updates.heightCm : existing.height_cm;
@@ -196,9 +201,9 @@ export async function updatePartner(
   const goal = updates.goal !== undefined ? updates.goal : existing.goal;
 
   await db.prepare(
-    `UPDATE partners SET name = ?, diet = ?, allergies = ?, weight_kg = ?, height_cm = ?, age = ?, gender = ?, activity_level = ?, goal = ?, updated_at = ? WHERE id = ?`,
+    `UPDATE partners SET name = ?, diet = ?, fasting_mode = ?, allergies = ?, weight_kg = ?, height_cm = ?, age = ?, gender = ?, activity_level = ?, goal = ?, updated_at = ? WHERE id = ?`,
   )
-    .bind(name, diet, allergies, weightKg, heightCm, age, gender, activityLevel, goal, now, partnerId)
+    .bind(name, diet, fastingMode, allergies, weightKg, heightCm, age, gender, activityLevel, goal, now, partnerId)
     .run();
 
   if (updates.allergens !== undefined) {
@@ -237,6 +242,7 @@ export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
   const body = (await c.req.json().catch(() => ({}))) as {
     name?: string;
     diet?: string;
+    fastingMode?: string | null;
     allergies?: string;
     allergens?: string[];
     weightKg?: number | null;
@@ -250,6 +256,7 @@ export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
   const profile = await updatePartner(c.env.DB, partnerId, {
     name: body.name?.trim(),
     diet: body.diet,
+    fastingMode: body.fastingMode,
     allergies: body.allergies,
     allergens: body.allergens,
     weightKg: body.weightKg,

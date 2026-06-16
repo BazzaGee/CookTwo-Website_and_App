@@ -23,7 +23,7 @@ createRoot(rootEl).render(
   <StrictMode>
     <AccessGate>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter basename="/PWA">
+        <BrowserRouter basename="/">
           <App />
         </BrowserRouter>
       </QueryClientProvider>

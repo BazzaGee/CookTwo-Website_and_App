@@ -6,6 +6,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Response> {
   const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const joinCode = typeof body.joinCode === 'string' && /^\d{6}$/.test(body.joinCode) ? body.joinCode : null;
 
   if (!email || !EMAIL_RE.test(email)) {
     return c.json({ error: 'Please enter a valid email address.' }, 400);
@@ -13,7 +14,7 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
 
   const existing = await c.env.DB.prepare('SELECT * FROM waitlist WHERE email = ?')
     .bind(email)
-    .first<{ id: number; email: string; verified: number; verify_token: string | null; access_token: string | null }>();
+    .first<{ id: number; email: string; verified: number; verify_token: string | null; access_token: string | null; join_code: string | null }>();
 
   const verifyToken = crypto.randomUUID();
   const siteUrl = c.env.SITE_URL || 'https://cooktwo.app';
@@ -22,15 +23,29 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
     if (existing.verified) {
       return c.json({ status: 'already_verified', message: "You're already verified! Check your inbox for the access link." });
     }
-    await c.env.DB.prepare('UPDATE waitlist SET verify_token = ? WHERE id = ?')
-      .bind(verifyToken, existing.id)
-      .run();
+    if (joinCode && !existing.join_code) {
+      await c.env.DB.prepare('UPDATE waitlist SET verify_token = ?, join_code = ? WHERE id = ?')
+        .bind(verifyToken, joinCode, existing.id)
+        .run();
+    } else {
+      await c.env.DB.prepare('UPDATE waitlist SET verify_token = ? WHERE id = ?')
+        .bind(verifyToken, existing.id)
+        .run();
+    }
   } else {
-    await c.env.DB.prepare(
-      'INSERT INTO waitlist (email, verify_token) VALUES (?, ?)',
-    )
-      .bind(email, verifyToken)
-      .run();
+    if (joinCode) {
+      await c.env.DB.prepare(
+        'INSERT INTO waitlist (email, verify_token, join_code) VALUES (?, ?, ?)',
+      )
+        .bind(email, verifyToken, joinCode)
+        .run();
+    } else {
+      await c.env.DB.prepare(
+        'INSERT INTO waitlist (email, verify_token) VALUES (?, ?)',
+      )
+        .bind(email, verifyToken)
+        .run();
+    }
   }
 
   const verifyUrl = `${siteUrl}/api/waitlist/verify?token=${verifyToken}`;
@@ -53,7 +68,7 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
 
   const row = await c.env.DB.prepare('SELECT * FROM waitlist WHERE verify_token = ?')
     .bind(token)
-    .first<{ id: number; email: string; verified: number; access_token: string | null }>();
+    .first<{ id: number; email: string; verified: number; access_token: string | null; join_code: string | null }>();
 
   if (!row) {
     return htmlResponse('This verification link is invalid or has expired.', 404);
@@ -61,6 +76,7 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
 
   const siteUrl = c.env.SITE_URL || 'https://cooktwo.app';
   const pwaUrl = c.env.PWA_URL || `${siteUrl}/PWA`;
+  const joinSuffix = row.join_code ? `&join=${row.join_code}` : '';
 
   if (!row.verified) {
     const accessToken = crypto.randomUUID();
@@ -69,7 +85,7 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
     )
       .bind(accessToken, row.id)
       .run();
-    return Response.redirect(`${pwaUrl}?access=${accessToken}`, 302);
+    return Response.redirect(`${pwaUrl}?access=${accessToken}${joinSuffix}`, 302);
   }
 
   if (!row.access_token) {
@@ -77,10 +93,10 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
     await c.env.DB.prepare('UPDATE waitlist SET access_token = ? WHERE id = ?')
       .bind(accessToken, row.id)
       .run();
-    return Response.redirect(`${pwaUrl}?access=${accessToken}`, 302);
+    return Response.redirect(`${pwaUrl}?access=${accessToken}${joinSuffix}`, 302);
   }
 
-  return Response.redirect(`${pwaUrl}?access=${row.access_token}`, 302);
+  return Response.redirect(`${pwaUrl}?access=${row.access_token}${joinSuffix}`, 302);
 }
 
 export async function handleValidateAccess(c: Context<{ Bindings: Env }>): Promise<Response> {

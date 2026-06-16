@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import type { Env } from '../env';
 import { chatWithAI, type ChatResponse } from '../lib/ai';
 import { getPartners, type Diet } from './profiles';
+import { getCoupleDietRules } from '../lib/diet-rules';
 import { readBearer } from '../lib/jwt';
 
 const CLASSIFY_KEYWORDS: Array<{ category: string; words: string[] }> = [
@@ -61,7 +62,13 @@ export async function handleMealChat(c: Context<{ Bindings: Env }>): Promise<Res
     slot: p.slot as 1 | 2,
   }));
 
-  const response = await chatWithAI(c.env, pantryItems, partnerContext, history, userMessage);
+  const p1Diet = profiles.find((p) => p.slot === 1)?.diet ?? 'omnivore';
+  const p2Diet = profiles.find((p) => p.slot === 2)?.diet ?? 'omnivore';
+  const p1Fasting = profiles.find((p) => p.slot === 1)?.fastingMode ?? null;
+  const p2Fasting = profiles.find((p) => p.slot === 2)?.fastingMode ?? null;
+  const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting);
+
+  const response = await chatWithAI(c.env, pantryItems, partnerContext, history, userMessage, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups);
 
   const results: ChatResponse = { message: response.message };
 

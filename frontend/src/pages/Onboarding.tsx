@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createHousehold, joinHousehold } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
 import { apiFetch } from '../lib/api';
 import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
-type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'created' | 'join-code' | 'partner-check' | 'ready';
+type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'plan' | 'created' | 'join-code' | 'partner-check' | 'ready';
 
 const DIETS: readonly Diet[] = ['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'gluten-free'] as const;
 const GOALS: readonly Goal[] = ['lose', 'maintain', 'gain', 'none'] as const;
@@ -55,6 +55,15 @@ export default function Onboarding() {
   const [isSoloMode, setIsSoloMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const joinParam = searchParams.get('join');
+    if (joinParam && /^\d{6}$/.test(joinParam)) {
+      setInviteCodeDigits(joinParam.split(''));
+      setStep('join-code');
+    }
+  }, [searchParams]);
 
   async function handleJoin() {
     const code = inviteCodeDigits.join('');
@@ -101,6 +110,10 @@ export default function Onboarding() {
       return;
     }
     setError(null);
+    setStep('plan');
+  }
+
+  function handlePlanContinue() {
     if (isSoloMode) {
       handleSoloCreate();
     } else {
@@ -289,6 +302,13 @@ export default function Onboarding() {
               onSkip={handlePantryContinue}
               submitting={submitting}
               error={error}
+            />
+          )}
+
+          {step === 'plan' && (
+            <PlanStep
+              onContinue={handlePlanContinue}
+              onBack={() => setStep('pantry')}
             />
           )}
 
@@ -926,6 +946,9 @@ function CreatedStep({
       <p className="text-text-secondary text-sm text-center mt-4">
         You can also share this code later from the app header.
       </p>
+      <p className="text-text-secondary/60 text-[11px] text-center mt-3">
+        Free plan · 10 AI requests/day shared with your partner
+      </p>
     </div>
   );
 }
@@ -1002,6 +1025,51 @@ function ReadyStep({
       )}
 
       <PrimaryButton onClick={onContinue}>Start cooking</PrimaryButton>
+      <p className="text-text-secondary/60 text-[11px] text-center mt-3">
+        Free plan · 10 AI requests/day shared with your partner
+      </p>
+    </div>
+  );
+}
+
+function PlanStep({
+  onContinue,
+  onBack,
+}: {
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex flex-col">
+      <Wordmark />
+
+      <div className="mb-8">
+        <h2 className="text-text-primary text-2xl font-semibold tracking-tight">
+          Your daily AI plan
+        </h2>
+        <p className="text-text-secondary text-sm mt-2">
+          Every kitchen starts with <strong className="text-text-primary">10 AI requests per day</strong>, shared between you and your partner. Use them however you like — chat, plan meals, or generate recipes.
+        </p>
+      </div>
+
+      <div className="bg-white border border-border rounded-2xl p-5 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2 h-2 rounded-full bg-sage" />
+          <h3 className="text-text-primary font-semibold text-sm">Premium</h3>
+        </div>
+        <p className="text-text-secondary text-sm leading-relaxed">
+          Get <strong className="text-text-primary">70 AI requests</strong> and <strong className="text-text-primary">3 AI-generated meal images</strong> per day — that's 7× more. $4.99/month or $44.99/year. Cancel anytime.
+        </p>
+      </div>
+
+      <p className="text-text-secondary text-xs text-center mb-6">
+        You can upgrade anytime in Settings → Plan.
+      </p>
+
+      <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+      <div className="mt-2 text-center">
+        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
+      </div>
     </div>
   );
 }

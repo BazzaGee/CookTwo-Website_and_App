@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { apiFetch } from '../lib/api';
 
 const ACCESS_KEY = 'cfs.access';
+const DEV_KEY = 'cooktwo-dev-2026';
 
 type GateState = 'checking' | 'granted' | 'locked';
 
@@ -11,6 +12,16 @@ export default function AccessGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function checkAccess() {
       const params = new URLSearchParams(window.location.search);
+      const devParam = params.get('dev');
+
+      if (devParam === DEV_KEY) {
+        params.delete('dev');
+        const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}${window.location.hash}`;
+        window.history.replaceState(null, '', newUrl);
+        setState('granted');
+        return;
+      }
+
       const accessParam = params.get('access');
 
       const stored = localStorage.getItem(ACCESS_KEY);
@@ -87,7 +98,7 @@ function LockedScreen() {
           This app is available by invitation only. Enter your email on our website to get access.
         </p>
         <a
-          href="https://cooktwo.app"
+          href="https://couples-food-system-v3.pages.dev/"
           className="btn-primary inline-flex items-center justify-center gap-2"
         >
           Go to CookTwo

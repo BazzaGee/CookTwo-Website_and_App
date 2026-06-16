@@ -1,48 +1,80 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProfiles, type Diet, type Gender, type ActivityLevel, type Goal, type PartnerProfile } from '../hooks/useProfiles';
+import { useProfiles, type Gender, type ActivityLevel, type Goal, type PartnerProfile } from '../hooks/useProfiles';
+import { useDietList } from '../hooks/useDietInfo';
+import { DIET_CATEGORIES, type DietCatalogEntry } from '../types/diet';
 import { useAuthStore } from '../stores/authStore';
 import { linkWithPartner } from '../hooks/useAuth';
+import UpgradeSection from '../components/UpgradeSection';
+import DietBrowser from '../components/DietBrowser';
 
-const DIETS: readonly Diet[] = ['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'gluten-free'] as const;
 const GENDERS: readonly Gender[] = ['male', 'female', 'other'] as const;
 const ACTIVITY_LEVELS: readonly ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active', 'very_active'] as const;
 const GOALS: readonly Goal[] = ['lose', 'maintain', 'gain'] as const;
 
-const DIET_LABELS: Record<Diet, string> = {
-  omnivore: 'No restrictions',
-  vegetarian: 'Vegetarian',
-  vegan: 'Vegan',
-  pescatarian: 'Pescatarian',
-  keto: 'Keto',
-  paleo: 'Paleo',
-  'gluten-free': 'Gluten-free',
-};
-
 const GENDER_LABELS: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
 const ACTIVITY_LABELS: Record<ActivityLevel, string> = { sedentary: 'Sedentary', light: 'Light exercise', moderate: 'Moderate exercise', active: 'Active', very_active: 'Very active' };
-const GOAL_LABELS: Record<Goal, string> = { lose: 'Lose weight', maintain: 'Maintain weight', gain: 'Gain muscle', none: 'Just eat well' };
+const GOAL_LABELS: Record<Goal, string> = { lose: 'Lose weight', maintain: 'Maintain weight', gain: 'Gain muscle', none: 'Just eat well' } as Record<Goal, string>;
+
+const FASTING_PROTOCOLS: Array<{ value: string | null; label: string }> = [
+  { value: null, label: 'No fasting schedule' },
+  { value: '16-8', label: '16:8 — 16h fast, 8h eating window' },
+  { value: '18-6', label: '18:6 — 18h fast, 6h eating window' },
+  { value: '20-4', label: '20:4 — Warrior Diet (4h window)' },
+  { value: '5-2', label: '5:2 — 2 fasting days per week' },
+  { value: 'eat-stop-eat', label: 'Eat-Stop-Eat — 24h fasts' },
+  { value: 'adf', label: 'Alternate Day Fasting' },
+  { value: 'omad', label: 'OMAD — One Meal A Day' },
+];
+
+const FASTING_LABELS: Record<string, string> = {
+  '16-8': '16:8', '18-6': '18:6', '20-4': '20:4', '5-2': '5:2',
+  'eat-stop-eat': 'Eat-Stop-Eat', 'adf': 'Alternate Day', 'omad': 'OMAD',
+};
 
 export default function ProfilesTab() {
   const navigate = useNavigate();
   const { isLoading, myProfile, otherProfile, updateProfile } = useProfiles();
+  const { data: dietList = [] } = useDietList();
   const setSession = useAuthStore((s) => s.setSession);
   const [editing, setEditing] = useState(false);
   const [editingBody, setEditingBody] = useState(false);
   const [formName, setFormName] = useState('');
-  const [formDiet, setFormDiet] = useState<Diet>('omnivore');
+  const [formDiet, setFormDiet] = useState<string>('omnivore');
   const [formWeight, setFormWeight] = useState('');
   const [formHeight, setFormHeight] = useState('');
   const [formAge, setFormAge] = useState('');
   const [formGender, setFormGender] = useState<Gender>('male');
   const [formActivity, setFormActivity] = useState<ActivityLevel>('sedentary');
   const [formGoal, setFormGoal] = useState<Goal>('maintain');
+  const [formFasting, setFormFasting] = useState<string | null>(null);
   const [allergenChips, setAllergenChips] = useState<string[]>([]);
   const [newAllergen, setNewAllergen] = useState('');
   const [saving, setSaving] = useState(false);
   const [linkDigits, setLinkDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
+  const [browsingDiet, setBrowsingDiet] = useState<string | null>(null);
+
+  const dietLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const d of dietList) map[d.dietKey] = d.displayLabel;
+    return map;
+  }, [dietList]);
+
+  const dietsByCategory = useMemo(() => {
+    const groups: Record<string, DietCatalogEntry[]> = {};
+    for (const d of dietList) {
+      const cat = d.category;
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(d);
+    }
+    return groups;
+  }, [dietList]);
+
+  function getDietLabel(key: string): string {
+    return dietLabelMap[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
+  }
 
   function setLinkDigit(index: number, value: string) {
     const cleaned = value.replace(/\D/g, '').slice(-1);
@@ -105,6 +137,7 @@ export default function ProfilesTab() {
     setFormGender(profile.gender ?? 'male');
     setFormActivity(profile.activityLevel ?? 'sedentary');
     setFormGoal(profile.goal ?? 'maintain');
+    setFormFasting(profile.fastingMode ?? null);
     setEditing(true);
     setEditingBody(false);
   }
@@ -117,6 +150,7 @@ export default function ProfilesTab() {
       await updateProfile(myProfile.id, {
         name: formName.trim() || myProfile.name,
         diet: formDiet,
+        fastingMode: formFasting,
         allergies: dedupedAllergens.join(', '),
         allergens: dedupedAllergens,
         weightKg: formWeight ? parseFloat(formWeight) : null,
@@ -151,6 +185,8 @@ export default function ProfilesTab() {
 
   return (
     <div className="px-6 py-4 space-y-8">
+      <UpgradeSection />
+
       <div>
         <h1 className="text-text-primary text-3xl font-semibold tracking-tight">
           Who are we cooking for?
@@ -176,6 +212,10 @@ export default function ProfilesTab() {
         formGender={formGender}
         formActivity={formActivity}
         formGoal={formGoal}
+        formFasting={formFasting}
+        dietsByCategory={dietsByCategory}
+        getDietLabel={getDietLabel}
+        onBrowseDiet={setBrowsingDiet}
         onFormNameChange={setFormName}
         onFormDietChange={setFormDiet}
         onFormAllergensChange={setAllergenChips}
@@ -185,6 +225,7 @@ export default function ProfilesTab() {
         onFormGenderChange={setFormGender}
         onFormActivityChange={setFormActivity}
         onFormGoalChange={setFormGoal}
+        onFormFastingChange={setFormFasting}
         newAllergenInput={newAllergen}
         setNewAllergenInput={setNewAllergen}
         onToggleBody={() => setEditingBody(!editingBody)}
@@ -248,6 +289,10 @@ export default function ProfilesTab() {
           </div>
         </details>
       )}
+
+      {browsingDiet && (
+        <DietBrowser dietKey={browsingDiet} onClose={() => setBrowsingDiet(null)} />
+      )}
     </div>
   );
 }
@@ -268,6 +313,10 @@ function ProfileCard({
   formGender,
   formActivity,
   formGoal,
+  formFasting,
+  dietsByCategory,
+  getDietLabel,
+  onBrowseDiet,
   onFormNameChange,
   onFormDietChange,
   onFormAllergensChange,
@@ -277,6 +326,7 @@ function ProfileCard({
   onFormGenderChange,
   onFormActivityChange,
   onFormGoalChange,
+  onFormFastingChange,
   newAllergenInput,
   setNewAllergenInput,
   onToggleBody,
@@ -290,7 +340,7 @@ function ProfileCard({
   editingBody?: boolean;
   saving?: boolean;
   formName?: string;
-  formDiet?: Diet;
+  formDiet?: string;
   formAllergens?: string[];
   formWeight?: string;
   formHeight?: string;
@@ -298,8 +348,12 @@ function ProfileCard({
   formGender?: Gender;
   formActivity?: ActivityLevel;
   formGoal?: Goal;
+  formFasting?: string | null;
+  dietsByCategory?: Record<string, DietCatalogEntry[]>;
+  getDietLabel?: (key: string) => string;
+  onBrowseDiet?: (dietKey: string) => void;
   onFormNameChange?: (v: string) => void;
-  onFormDietChange?: (v: Diet) => void;
+  onFormDietChange?: (v: string) => void;
   onFormAllergensChange?: (v: string[]) => void;
   onFormWeightChange?: (v: string) => void;
   onFormHeightChange?: (v: string) => void;
@@ -307,6 +361,7 @@ function ProfileCard({
   onFormGenderChange?: (v: Gender) => void;
   onFormActivityChange?: (v: ActivityLevel) => void;
   onFormGoalChange?: (v: Goal) => void;
+  onFormFastingChange?: (v: string | null) => void;
   newAllergenInput?: string;
   setNewAllergenInput?: (v: string) => void;
   onToggleBody?: () => void;
@@ -357,12 +412,46 @@ function ProfileCard({
             <select
               id="profile-diet"
               value={formDiet}
-              onChange={(e) => onFormDietChange?.(e.target.value as Diet)}
+              onChange={(e) => onFormDietChange?.(e.target.value)}
               className="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
             >
-              {DIETS.map((d) => (
-                <option key={d} value={d}>
-                  {DIET_LABELS[d]}
+              {dietsByCategory && Object.entries(dietsByCategory).map(([cat, diets]) => (
+                <optgroup key={cat} label={DIET_CATEGORIES[cat] || cat}>
+                  {diets.map((d) => (
+                    <option key={d.dietKey} value={d.dietKey}>
+                      {d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+              {(!dietsByCategory || Object.keys(dietsByCategory).length === 0) && (
+                <option value={formDiet}>{getDietLabel?.(formDiet || 'omnivore') || formDiet}</option>
+              )}
+            </select>
+            {onBrowseDiet && formDiet && (
+              <button
+                type="button"
+                onClick={() => onBrowseDiet(formDiet)}
+                className="text-sage text-xs font-medium mt-1.5 hover:text-sage-dark transition-colors"
+              >
+                Learn more about {getDietLabel?.(formDiet) || 'this diet'} →
+              </button>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="profile-fasting" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
+              Eating schedule
+            </label>
+            <select
+              id="profile-fasting"
+              value={formFasting ?? ''}
+              onChange={(e) => onFormFastingChange?.(e.target.value || null)}
+              className="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
+            >
+              {FASTING_PROTOCOLS.map((p) => (
+                <option key={p.value ?? 'none'} value={p.value ?? ''}>
+                  {p.label}
                 </option>
               ))}
             </select>
@@ -552,8 +641,13 @@ function ProfileCard({
           <div>
             <p className="text-text-secondary text-xs tracking-wide uppercase">Diet</p>
             <p className="text-text-primary text-base font-medium">
-              {DIET_LABELS[profile.diet]}
+              {getDietLabel?.(profile.diet) || profile.diet}
             </p>
+            {profile.fastingMode && (
+              <p className="text-text-secondary text-sm mt-0.5">
+                ⏰ {FASTING_LABELS[profile.fastingMode] || profile.fastingMode}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-text-secondary text-xs tracking-wide uppercase">Allergies</p>

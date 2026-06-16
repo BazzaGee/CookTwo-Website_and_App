@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
-export type Diet = 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'paleo' | 'gluten-free';
+export type Diet = string;
 export type Gender = 'male' | 'female' | 'other';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 export type Goal = 'lose' | 'maintain' | 'gain' | 'none';
@@ -20,6 +20,7 @@ export interface PartnerProfile {
   slot: 1 | 2;
   name: string;
   diet: Diet;
+  fastingMode: string | null;
   allergies: string;
   allergens: string[];
   createdAt: number;
@@ -51,7 +52,7 @@ export function useProfiles() {
   });
 
   const updateProfile = useCallback(
-    async (partnerId: string, updates: { name?: string; diet?: string; allergies?: string; allergens?: string[]; weightKg?: number | null; heightCm?: number | null; age?: number | null; gender?: string | null; activityLevel?: string | null; goal?: string | null }) => {
+    async (partnerId: string, updates: { name?: string; diet?: string; fastingMode?: string | null; allergies?: string; allergens?: string[]; weightKg?: number | null; heightCm?: number | null; age?: number | null; gender?: string | null; activityLevel?: string | null; goal?: string | null }) => {
       const result = await apiFetch<PartnerProfile>(
         `/api/household/${householdId}/profiles/${partnerId}`,
         {

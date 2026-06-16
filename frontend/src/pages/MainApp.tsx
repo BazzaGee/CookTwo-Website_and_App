@@ -6,6 +6,7 @@ import { InstallBanner } from '../components/InstallBanner';
 import { ShareCodeButton } from '../components/ShareCodeButton';
 import { NotificationToast } from '../components/NotificationToast';
 import { NotificationBell } from '../components/NotificationBell';
+import UsageChip from '../components/UsageChip';
 import { useProfiles } from '../hooks/useProfiles';
 
 const tabs = [
@@ -56,7 +57,8 @@ export default function MainApp() {
             <p className="text-text-secondary text-xs leading-tight">Our shared kitchen</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <UsageChip />
           <NotificationBell />
           <SyncIndicator />
           <ShareCodeButton />

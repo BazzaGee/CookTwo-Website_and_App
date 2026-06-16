@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { chatWithAI, assertMealIsSafe, type GeneratedMeal, type PartnerContext } from '../lib/ai';
+import type { TDEEResult } from '../lib/tdee';
 
 const tdee: TDEEResult = { bmr: 1700, tdee: 2200, targetCalories: 1700 };
 
@@ -8,15 +9,18 @@ const testEnv = {
   DEEPSEEK_KEY: 'test-key',
   ALIBABA_KEY: '',
   ZAI_KEY: '',
+  OPENROUTER_KEY: '',
   DB: null as unknown as D1Database,
+  DIET_RESEARCH: null as unknown as R2Bucket,
   HOUSEHOLD_SYNC: null as unknown as DurableObjectNamespace,
   INVITE_STORE: null as unknown as DurableObjectNamespace,
   JWT_SECRET: 'test',
   VAPID_PUBLIC_KEY: '',
   VAPID_PRIVATE_KEY: '',
+  RESEND_API_KEY: '',
+  RESEND_FROM: '',
   SITE_URL: '',
   PWA_URL: '',
-  RESEND_FROM: '',
 };
 
 function makeProfiles(overrides?: Partial<PartnerContext>): PartnerContext[] {

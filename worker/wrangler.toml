@@ -21,12 +21,16 @@ database_name = "couples-food-system"
 database_id = "a1d7c319-cd3f-4f82-9d97-6e63eff19fca"
 migrations_dir = "migrations"
 
+[[r2_buckets]]
+binding = "DIET_RESEARCH"
+bucket_name = "cupla-diet-research"
+
 [vars]
 AI_PROVIDER = "deepseek"
 VAPID_PUBLIC_KEY = "BGvuzRtY6I_rrv2HXWdg9zFD2Tb8LlkywOScoPLlx9xb66b0wxa0YuNt1U3XaU-MrmC_4ZHWQS3Y9ye5RHsvix8"
-SITE_URL = "https://cooktwo.app"
-PWA_URL = "https://cooktwo.app/PWA"
-RESEND_FROM = "CookTwo <onboarding@resend.dev>"
+SITE_URL = "https://couples-food-system-api.byte-digital.workers.dev"
+PWA_URL = "https://cfs-app.pages.dev"
+RESEND_FROM = "CookTwo <Krystle@cooktwo.com>"
 
 [env.staging]
 name = "couples-food-system-api-staging"

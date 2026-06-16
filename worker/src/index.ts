@@ -8,9 +8,13 @@ import { handleGetWeekPlan, handleGenerateWeekPlan, handleConfirmMeal } from './
 import { handleGetRecipes, handleSaveRecipe, handleDeleteRecipe } from './routes/recipes';
 import { handleMealChat } from './routes/mealChat';
 import { handleSubscribe, handleVerify, handleValidateAccess } from './routes/waitlist';
+import { handleListDiets, handleGetDiet, handleListArticles, handleGetArticle } from './routes/diet-info';
+import { getCoupleDietRules } from './lib/diet-rules';
 import { generateMeal, type GeneratedMeal } from './lib/ai';
 import { generateMealImage } from './lib/image-gen';
 import { parsePantryWithAI } from './lib/ai-pantry-parser';
+import { getUsageState, withQuotaAI, withQuotaImage, tryReserveAI, refundAI, tryReserveImage, refundImage, checkPremiumGate } from './lib/usage';
+import { isStripeConfigured, createCheckoutSession, createPortalSession, verifyAndParseWebhook, applyWebhookEvent, StripeNotConfiguredError, updateStripeCustomerId } from './lib/billing';
 import type { Env } from './env';
 import type { Category } from './durable-objects/HouseholdSync';
 
@@ -38,6 +42,7 @@ app.use('*', cors({
     'https://cfs-app.pages.dev',
     'https://couples-food-system-v3.pages.dev',
     'https://cooktwo.app',
+    'https://cooktwo.com',
   ],
   credentials: true,
 }));
@@ -55,6 +60,12 @@ app.get('/health', (c) => c.text('ok'));
 app.post('/api/waitlist/subscribe', (c) => handleSubscribe(c));
 app.get('/api/waitlist/verify', (c) => handleVerify(c));
 app.post('/api/waitlist/validate-access', (c) => handleValidateAccess(c));
+
+// ─── Diet reference data (public, no auth) ────────────────────────────────────
+app.get('/api/diets', (c) => handleListDiets(c));
+app.get('/api/diets/:dietKey', (c) => handleGetDiet(c));
+app.get('/api/diets/:dietKey/articles', (c) => handleListArticles(c));
+app.get('/api/diets/:dietKey/articles/:fileSlug', (c) => handleGetArticle(c));
 
 function getStub(c: Context<{ Bindings: Env }>, householdId: string): DurableObjectStub {
   const id = c.env.HOUSEHOLD_SYNC.idFromName(householdId);
@@ -80,6 +91,93 @@ function jsonError(message: string, status = 400): Response {
     headers: { 'content-type': 'application/json' },
   });
 }
+
+function getTz(c: Context<{ Bindings: Env }>): string {
+  return c.req.header('X-Timezone') || c.req.header('x-timezone') || 'UTC';
+}
+
+app.get('/api/billing/status', (c) => {
+  return c.json({ configured: isStripeConfigured(c.env) });
+});
+
+app.post('/api/billing/stripe/webhook', async (c) => {
+  const rawBody = await c.req.text();
+  const signature = c.req.header('stripe-signature') || '';
+  if (!signature) return c.json({ error: 'missing signature' }, 400);
+
+  try {
+    const event = await verifyAndParseWebhook(c.env, rawBody, signature);
+    await applyWebhookEvent(c.env.DB, event);
+    return c.json({ received: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'webhook error';
+    console.error('Stripe webhook error:', message);
+    return c.json({ error: message }, 400);
+  }
+});
+
+app.get('/api/household/:id/usage', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const householdId = c.req.param('id') as string;
+  const tz = getTz(c);
+  const state = await getUsageState(c.env.DB, householdId, tz);
+  return c.json(state);
+});
+
+app.post('/api/household/:id/billing/checkout', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const householdId = c.req.param('id') as string;
+  const body = (await c.req.json().catch(() => ({}))) as { plan?: string };
+  const plan = body.plan === 'yearly' ? 'yearly' : 'monthly';
+
+  try {
+    const { url } = await createCheckoutSession(
+      c.env,
+      householdId,
+      plan,
+      `${c.env.SITE_URL || 'https://cooktwo.com'}/profiles?upgraded=true`,
+      `${c.env.SITE_URL || 'https://cooktwo.com'}/profiles`,
+    );
+    return c.json({ url });
+  } catch (err) {
+    if (err instanceof StripeNotConfiguredError) {
+      return c.json({ error: 'Stripe not configured', code: 'stripe_not_configured' }, 503);
+    }
+    const message = err instanceof Error ? err.message : 'checkout error';
+    return c.json({ error: message }, 500);
+  }
+});
+
+app.post('/api/household/:id/billing/portal', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const householdId = c.req.param('id') as string;
+
+  const sub = await c.env.DB.prepare(
+    'SELECT stripe_customer_id FROM household_subscriptions WHERE household_id = ?'
+  ).bind(householdId).first<{ stripe_customer_id: string | null }>();
+
+  if (!sub?.stripe_customer_id) {
+    return c.json({ error: 'No customer found' }, 404);
+  }
+
+  try {
+    const { url } = await createPortalSession(
+      c.env,
+      sub.stripe_customer_id,
+      `${c.env.SITE_URL || 'https://cooktwo.com'}/profiles`,
+    );
+    return c.json({ url });
+  } catch (err) {
+    if (err instanceof StripeNotConfiguredError) {
+      return c.json({ error: 'Stripe not configured', code: 'stripe_not_configured' }, 503);
+    }
+    const message = err instanceof Error ? err.message : 'portal error';
+    return c.json({ error: message }, 500);
+  }
+});
 
 app.post('/api/household/create', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as {
@@ -436,18 +534,27 @@ app.post('/api/household/:id/reclassify', async (c) => {
   if (denied) return denied;
 
   const householdId = c.req.param('id') as string;
-  const body = (await c.req.json().catch(() => ({}))) as { scope?: 'pantry' | 'items' | 'all' };
-  const scope = body.scope || 'all';
-  const stub = getStub(c, householdId);
+  const tz = getTz(c);
 
-  const provider = (c.env.AI_PROVIDER || 'deepseek') as 'deepseek' | 'alibaba' | 'zai';
-  const apiKey = (c.env as unknown as Record<string, unknown>)[
-    provider === 'alibaba' ? 'ALIBABA_KEY' : provider === 'zai' ? 'ZAI_KEY' : 'DEEPSEEK_KEY'
-  ] as string;
-
-  if (!apiKey) {
-    return c.json({ error: 'AI not configured' }, 503);
+  const reserved = await tryReserveAI(c.env.DB, householdId, tz, 1);
+  if (!reserved) {
+    return c.json({ error: 'quota_exceeded', message: 'No AI requests left for today. Upgrade for 70/day.', code: 'quota_exceeded' }, 402);
   }
+
+  try {
+    const body = (await c.req.json().catch(() => ({}))) as { scope?: 'pantry' | 'items' | 'all' };
+    const scope = body.scope || 'all';
+    const stub = getStub(c, householdId);
+
+    const provider = (c.env.AI_PROVIDER || 'deepseek') as 'deepseek' | 'alibaba' | 'zai';
+    const apiKey = (c.env as unknown as Record<string, unknown>)[
+      provider === 'alibaba' ? 'ALIBABA_KEY' : provider === 'zai' ? 'ZAI_KEY' : 'DEEPSEEK_KEY'
+    ] as string;
+
+    if (!apiKey) {
+      await refundAI(c.env.DB, householdId, 1);
+      return c.json({ error: 'AI not configured' }, 503);
+    }
 
   const updatedItems: Array<{ id: string; type: 'pantry' | 'item'; category: Category; isFood: boolean; name: string }> = [];
 
@@ -523,7 +630,11 @@ app.post('/api/household/:id/reclassify', async (c) => {
     }
   }
 
-  return c.json({ reclassified: updatedItems, count: updatedItems.length });
+    return c.json({ reclassified: updatedItems, count: updatedItems.length });
+  } catch (err) {
+    await refundAI(c.env.DB, householdId, 1);
+    throw err;
+  }
 });
 
 app.post('/api/household/:id/meal-plan/generate', async (c) => {
@@ -531,28 +642,45 @@ app.post('/api/household/:id/meal-plan/generate', async (c) => {
   if (denied) return denied;
 
   const householdId = c.req.param('id') as string;
-  const profiles = await getPartners(c.env.DB, householdId);
+  const tz = getTz(c);
 
-  const pantryRes = await getStub(c, householdId).fetch('https://do/pantry');
-  const pantryItems = (await pantryRes.json()) as Array<{ name: string; quantity: string }>;
-
-  const p1 = profiles.find((p) => p.slot === 1);
-  const p2 = profiles.find((p) => p.slot === 2);
-  const p1Diet = p1?.diet ?? 'omnivore';
-  const p2Diet = p2?.diet ?? 'omnivore';
-  const p1Allergens = p1?.allergens ?? [];
-  const p2Allergens = p2?.allergens ?? [];
-  const p1Goal = p1?.goal ?? null;
-  const p2Goal = p2?.goal ?? null;
-
-  const p1Body = p1?.tdee ? { name: p1.name, tdee: p1.tdee } : undefined;
-  const p2Body = p2?.tdee ? { name: p2.name, tdee: p2.tdee } : undefined;
-
-  const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, profiles.map((p) => ({ name: p.name, diet: p.diet as Diet, allergens: p.allergens, tdee: p.tdee, goal: p.goal, activityLevel: p.activityLevel, slot: p.slot as 1 | 2 })));
-  if (!meal) {
-    return c.json({ error: 'AI meal generation failed. Please try again later.' }, 503);
+  const reserved = await tryReserveAI(c.env.DB, householdId, tz, 1);
+  if (!reserved) {
+    return c.json({ error: 'quota_exceeded', message: 'No AI requests left for today. Upgrade for 70/day.', code: 'quota_exceeded' }, 402);
   }
-  return c.json(meal);
+
+  try {
+    const profiles = await getPartners(c.env.DB, householdId);
+
+    const pantryRes = await getStub(c, householdId).fetch('https://do/pantry');
+    const pantryItems = (await pantryRes.json()) as Array<{ name: string; quantity: string }>;
+
+    const p1 = profiles.find((p) => p.slot === 1);
+    const p2 = profiles.find((p) => p.slot === 2);
+    const p1Diet = p1?.diet ?? 'omnivore';
+    const p2Diet = p2?.diet ?? 'omnivore';
+    const p1Allergens = p1?.allergens ?? [];
+    const p2Allergens = p2?.allergens ?? [];
+    const p1Goal = p1?.goal ?? null;
+    const p2Goal = p2?.goal ?? null;
+
+    const p1Body = p1?.tdee ? { name: p1.name, tdee: p1.tdee } : undefined;
+    const p2Body = p2?.tdee ? { name: p2.name, tdee: p2.tdee } : undefined;
+
+    const p1Fasting = p1?.fastingMode ?? null;
+    const p2Fasting = p2?.fastingMode ?? null;
+    const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting);
+
+    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, profiles.map((p) => ({ name: p.name, diet: p.diet as Diet, allergens: p.allergens, tdee: p.tdee, goal: p.goal, activityLevel: p.activityLevel, slot: p.slot as 1 | 2 })), dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups);
+    if (!meal) {
+      await refundAI(c.env.DB, householdId, 1);
+      return c.json({ error: 'AI meal generation failed. Please try again later.' }, 503);
+    }
+    return c.json(meal);
+  } catch (err) {
+    await refundAI(c.env.DB, householdId, 1);
+    throw err;
+  }
 });
 
 app.get('/api/household/:id/meal-plan/week', async (c) => {
@@ -564,7 +692,20 @@ app.get('/api/household/:id/meal-plan/week', async (c) => {
 app.post('/api/household/:id/meal-plan/week/generate', async (c) => {
   const denied = await requireAuth(c);
   if (denied) return denied;
-  return handleGenerateWeekPlan(c);
+  const householdId = c.req.param('id') as string;
+  const tz = getTz(c);
+
+  const reserved = await tryReserveAI(c.env.DB, householdId, tz, 7);
+  if (!reserved) {
+    return c.json({ error: 'quota_exceeded', message: 'Not enough AI requests. Need 7 to generate a full week. Upgrade for 70/day.', code: 'quota_exceeded' }, 402);
+  }
+
+  try {
+    return await handleGenerateWeekPlan(c);
+  } catch (err) {
+    await refundAI(c.env.DB, householdId, 7);
+    throw err;
+  }
 });
 
 app.post('/api/household/:id/meal-plan/confirm', async (c) => {
@@ -576,20 +717,57 @@ app.post('/api/household/:id/meal-plan/confirm', async (c) => {
 app.post('/api/household/:id/meal-chat', async (c) => {
   const denied = await requireAuth(c);
   if (denied) return denied;
-  return handleMealChat(c);
+  const householdId = c.req.param('id') as string;
+  const tz = getTz(c);
+
+  const reserved = await tryReserveAI(c.env.DB, householdId, tz, 1);
+  if (!reserved) {
+    return c.json({ error: 'quota_exceeded', message: 'No AI requests left for today. Upgrade for 70/day.', code: 'quota_exceeded' }, 402);
+  }
+
+  try {
+    return await handleMealChat(c);
+  } catch (err) {
+    await refundAI(c.env.DB, householdId, 1);
+    throw err;
+  }
 });
 
 app.post('/api/household/:id/meal-image', async (c) => {
   const denied = await requireAuth(c);
   if (denied) return denied;
 
-  const meal = await c.req.json<GeneratedMeal>();
-  if (!meal.name) return jsonError('meal name is required', 400);
+  const householdId = c.req.param('id') as string;
+  const tz = getTz(c);
 
-  const url = await generateMealImage(c.env, meal);
-  if (!url) return c.json({ error: 'Image generation failed. Please try again later.' }, 503);
+  const tier = await checkPremiumGate(c.env.DB, householdId);
+  if (tier !== 'premium') {
+    return c.json({ error: 'premium_only', message: 'Image generation is a Premium feature.', code: 'premium_only' }, 403);
+  }
 
-  return c.json({ url });
+  const reserved = await tryReserveImage(c.env.DB, householdId, tz);
+  if (!reserved) {
+    return c.json({ error: 'image_quota_exceeded', message: 'You\'ve used all 3 image generations for today. Resets at midnight.', code: 'image_quota_exceeded' }, 403);
+  }
+
+  try {
+    const meal = await c.req.json<GeneratedMeal>();
+    if (!meal.name) {
+      await refundImage(c.env.DB, householdId);
+      return jsonError('meal name is required', 400);
+    }
+
+    const url = await generateMealImage(c.env, meal);
+    if (!url) {
+      await refundImage(c.env.DB, householdId);
+      return c.json({ error: 'Image generation failed. Please try again later.' }, 503);
+    }
+
+    return c.json({ url });
+  } catch (err) {
+    await refundImage(c.env.DB, householdId);
+    throw err;
+  }
 });
 
 app.get('/api/household/:id/recipes', async (c) => {

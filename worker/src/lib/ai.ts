@@ -70,6 +70,7 @@ export function buildPrompt(
   partner2Goal?: Goal | null,
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
+  dietRulesPrompt?: string,
 ): string {
   const pantryList = pantryItems.map((i) => {
     const qty = i.quantityValue && i.quantityUnit ? `${i.quantityValue} ${i.quantityUnit}` : (i.quantity || '');
@@ -106,7 +107,7 @@ Rules:
 - The meal must work for BOTH dietary preferences${allergenRule}${goalRule}
 - Prioritize using pantry ingredients
 - Give specific portion sizes for each partner's plate
-- Output ONLY valid JSON, no markdown, no explanation
+- Output ONLY valid JSON, no markdown, no explanation${dietRulesPrompt ? `\n\n${dietRulesPrompt}` : ''}
 
 JSON format:
 {
@@ -140,7 +141,7 @@ Rules:
 - The meal must work for BOTH dietary preferences (if one is vegetarian, the meal must be vegetarian)${allergenRule}${goalRule}
 - Prioritize using pantry ingredients
 - Keep it simple and realistic
-- Output ONLY valid JSON, no markdown, no explanation
+- Output ONLY valid JSON, no markdown, no explanation${dietRulesPrompt ? `\n\n${dietRulesPrompt}` : ''}
 
 JSON format:
 {
@@ -265,6 +266,35 @@ export function assertMealIsSafe(meal: GeneratedMeal, profiles: PartnerContext[]
   return true;
 }
 
+export function assertMealCompliesWithDiet(
+  meal: GeneratedMeal,
+  classifierTerms: Record<string, string>,
+  restrictedGroups: Set<string>,
+): boolean {
+  if (restrictedGroups.size === 0 || Object.keys(classifierTerms).length === 0) return true;
+
+  const tokens = getMealTextTokens(meal);
+  const violations: string[] = [];
+
+  for (const token of tokens) {
+    for (const [ingredient, foodGroup] of Object.entries(classifierTerms)) {
+      if (tokenMatchesAllergen(token, ingredient)) {
+        if (restrictedGroups.has(foodGroup)) {
+          violations.push(`${ingredient} → ${foodGroup}`);
+          break;
+        }
+      }
+    }
+  }
+
+  if (violations.length > 0) {
+    console.error(`Diet compliance guard blocked: ${violations.join(', ')} in meal "${meal.name}"`);
+    return false;
+  }
+
+  return true;
+}
+
 export async function generateMeal(
   env: Env,
   pantryItems: Array<{ name: string; quantity: string; category?: string; quantityValue?: number | null; quantityUnit?: string }>,
@@ -277,10 +307,13 @@ export async function generateMeal(
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
   profiles?: PartnerContext[],
+  dietRulesPrompt?: string,
+  dietClassifierTerms?: Record<string, string>,
+  dietRestrictedGroups?: Set<string>,
 ): Promise<GeneratedMeal | null> {
   const provider = (env.AI_PROVIDER || 'deepseek') as keyof typeof MODEL_CHAINS;
   const models = MODEL_CHAINS[provider] || MODEL_CHAINS.deepseek;
-  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Allergens, partner2Allergens, partner1Goal, partner2Goal, partner1Body, partner2Body);
+  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Allergens, partner2Allergens, partner1Goal, partner2Goal, partner1Body, partner2Body, dietRulesPrompt);
 
   for (const model of models) {
     try {
@@ -312,6 +345,12 @@ export async function generateMeal(
 
         if (profiles && !assertMealIsSafe(meal, profiles)) {
           return null;
+        }
+
+        if (dietClassifierTerms && dietRestrictedGroups && dietRestrictedGroups.size > 0) {
+          if (!assertMealCompliesWithDiet(meal, dietClassifierTerms, dietRestrictedGroups)) {
+            return null;
+          }
         }
 
         return meal;
@@ -381,6 +420,7 @@ function buildAllergenList(profiles: PartnerContext[]): { combinedList: string; 
 export function buildChatSystemPrompt(
   pantryItems: Array<{ name: string; quantity: string; category?: string; quantityValue?: number | null; quantityUnit?: string }>,
   profiles: PartnerContext[],
+  dietRulesPrompt?: string,
 ): string {
   const pantryList = pantryItems.map((i) => {
     const qty = i.quantityValue && i.quantityUnit ? `${i.quantityValue} ${i.quantityUnit}` : (i.quantity || '');
@@ -415,6 +455,7 @@ Rules:
 ${hasAllergens ? `- STRICTLY AVOID any trace of these allergens: ${combinedList}. This is critical — meals must be 100% free of these items. Also avoid known derivatives: if an allergen is on the list, its oils, flours, butters, and extracts are also forbidden.` : ''}
 ${hasAnyGoal ? `- Respect each partner's body goal when choosing meals and portions (higher protein for muscle gain, lower calorie density for weight loss, balanced for maintenance). This is critical.` : ''}
 ${hasBothTdee ? `- When both partners have calorie targets, include plating instructions with different portion sizes for each partner.\n- Use the same recipe but adjust quantities so each person hits their target calories.` : ''}
+${dietRulesPrompt ? `\n${dietRulesPrompt}` : ''}
 
 Response format — you MUST respond with valid JSON only, no markdown:
 {
@@ -508,8 +549,11 @@ export async function chatWithAI(
   profiles: PartnerContext[],
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
   userMessage: string,
+  dietRulesPrompt?: string,
+  dietClassifierTerms?: Record<string, string>,
+  dietRestrictedGroups?: Set<string>,
 ): Promise<ChatResponse> {
-  const systemPrompt = buildChatSystemPrompt(pantryItems, profiles);
+  const systemPrompt = buildChatSystemPrompt(pantryItems, profiles, dietRulesPrompt);
   const raw = await callDeepSeekChat(env, systemPrompt, history, userMessage);
 
   if (!raw) {
@@ -522,8 +566,14 @@ export async function chatWithAI(
     if (!parsed.message || typeof parsed.message !== 'string') return null;
     if (parsed.meal && profiles.length > 0) {
       if (!assertMealIsSafe(parsed.meal, profiles)) {
-        console.log('Meal blocked by safety guard (allergen/diet violation)');
+        console.log('Meal blocked by safety guard (allergen violation)');
         return { message: 'The generated meal contains ingredients that conflict with one or more partner allergies. Please try a different request or rephrase what you\'re looking for.' };
+      }
+      if (dietClassifierTerms && dietRestrictedGroups && dietRestrictedGroups.size > 0) {
+        if (!assertMealCompliesWithDiet(parsed.meal, dietClassifierTerms, dietRestrictedGroups)) {
+          console.log('Meal blocked by diet compliance guard');
+          return { message: 'The generated meal contains ingredients that conflict with the selected dietary preferences. Please try a different request.' };
+        }
       }
     }
     return parsed;
