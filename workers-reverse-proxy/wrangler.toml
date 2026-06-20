@@ -1,0 +1,23 @@
+name = "cooktwo-domain-router"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Zone-level routes: this Worker handles all traffic to cooktwo.com / cooktwo.app
+# (and their www. subdomains) and reverse-proxies to the correct Pages project.
+# Wrangler deploys these routes automatically (uses workers_routes:write scope).
+[[routes]]
+pattern = "cooktwo.com/*"
+zone_name = "cooktwo.com"
+
+[[routes]]
+pattern = "www.cooktwo.com/*"
+zone_name = "cooktwo.com"
+
+[[routes]]
+pattern = "cooktwo.app/*"
+zone_name = "cooktwo.app"
+
+[[routes]]
+pattern = "www.cooktwo.app/*"
+zone_name = "cooktwo.app"
