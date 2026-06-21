@@ -1,9 +1,25 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import faqData from '../data/faq.json';
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqData.faq.flatMap(section =>
+    section.questions.map(item => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  )
+};
 ---
 
 <BaseLayout title="FAQ | CookTwo" description="Questions answered about CookTwo — the collaborative adaptive nutrition app for couples. Learn about product features, technology stack, and pricing.">
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
 
   <section class="section-padding bg-cream">
     <div class="container-custom text-center">

@@ -6,6 +6,19 @@ import EarlyAccessButton from '../components/forms/EarlyAccessButton.astro';
 import PhoneFrame from '../components/app-mocks/PhoneFrame.astro';
 import Adaptive from '../components/app-mocks/Adaptive.astro';
 
+const softwareApplicationSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "CookTwo",
+  "operatingSystem": "iOS 16.4+, Android",
+  "applicationCategory": "LifestyleApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "4.99",
+    "priceCurrency": "USD"
+  }
+};
+
 const { features, steps } = featuresData;
 
 const beforeItems = [
@@ -29,6 +42,8 @@ const afterItems = [
   title="CookTwo | One Dinner. Two Plates. Zero Arguments."
   description="CookTwo is the collaborative adaptive nutrition app for couples. AI-powered meal planning, shared grocery lists, and personalized portions — one meal, two plates."
 >
+
+<script type="application/ld+json" set:html={JSON.stringify(softwareApplicationSchema)}></script>
 
   <!-- Hero -->
   <section class="section-padding bg-cream relative overflow-hidden">

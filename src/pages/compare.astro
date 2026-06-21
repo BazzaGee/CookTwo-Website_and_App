@@ -1,10 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import comparisonData from '../data/comparison.json';
+
 const { categories, competitors } = comparisonData.comparison;
+
+const compareSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Compare CookTwo",
+  "url": "https://cooktwo.com/compare",
+  "description": "See how CookTwo compares to Healthspan, Yummo, PlateMates, Fitia, Clove, and AnyList. The only app combining adaptive cooking, real-time sync, pantry-first AI, and couples-first design."
+};
 ---
 
 <BaseLayout title="Compare | CookTwo" description="See how CookTwo compares to Healthspan, Yummo, PlateMates, Fitia, Clove, and AnyList. The only app combining adaptive cooking, real-time sync, pantry AI, and couples-first design.">
+<script type="application/ld+json" set:html={JSON.stringify(compareSchema)}></script>
 
   <section class="section-padding bg-cream">
     <div class="container-custom text-center">

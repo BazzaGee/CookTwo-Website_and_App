@@ -10,6 +10,28 @@ const { title, description, canonicalURL, ogImage } = Astro.props;
 const siteURL = 'https://cooktwo.com';
 const canonical = canonicalURL ? `${siteURL}${canonicalURL}` : Astro.url;
 const ogImg = ogImage || `${siteURL}/images/hero/og-homepage.webp`;
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CookTwo",
+  "url": "https://cooktwo.com",
+  "logo": "https://cooktwo.com/images/logo/logo-icon.png",
+  "description": "Collaborative adaptive nutrition app for couples — one meal, two plates.",
+  "foundingDate": "2025",
+  "founder": {
+    "@type": "Person",
+    "name": "Barry"
+  }
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "CookTwo",
+  "url": "https://cooktwo.com",
+  "description": "Collaborative adaptive nutrition app for couples."
+};
 ---
 
 <meta charset="utf-8" />
@@ -55,3 +77,5 @@ const ogImg = ogImage || `${siteURL}/images/hero/og-homepage.webp`;
 
 <!-- Cloudflare Web Analytics — beacon token replaced in Phase 4 with the real token from the CF Pages project settings -->
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "PLACEHOLDER_REPLACE_IN_PHASE_4"}'></script>
+<script type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
+<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
