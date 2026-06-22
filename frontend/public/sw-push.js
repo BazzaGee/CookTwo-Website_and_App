@@ -3,10 +3,10 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data?.json() ?? {};
   } catch {
-    data = { title: 'Cupla', body: event.data?.text() ?? 'New activity' };
+    data = { title: 'CookTwo', body: event.data?.text() ?? 'New activity' };
   }
 
-  const title = data.title || 'Cupla';
+  const title = data.title || 'CookTwo';
   const options = {
     body: data.body || '',
     icon: data.icon || '/icon-192.png',

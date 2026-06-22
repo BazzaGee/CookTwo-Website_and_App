@@ -2,6 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
+export interface RegularItem {
+  name: string;
+  count: number;
+  brand: string;
+  quantityValue: number | null;
+  quantityUnit: string;
+}
+
 const QUERY_KEY = (householdId: string) => ['regulars', householdId] as const;
 
 export function useRegulars() {
@@ -12,7 +20,7 @@ export function useRegulars() {
   const { data: regulars = [] } = useQuery({
     queryKey: QUERY_KEY(householdId),
     queryFn: () =>
-      apiFetch<Array<{ name: string; count: number }>>(`/api/household/${householdId}/regulars`, { token }),
+      apiFetch<RegularItem[]>(`/api/household/${householdId}/regulars`, { token }),
     enabled: Boolean(householdId && token),
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,

@@ -34,6 +34,12 @@ export interface PartnerProfile {
   tdee: TDEEResult | null;
 }
 
+const FALLBACK_PARTNER_NAME = 'Your partner';
+
+export function resolvePartnerName(profiles: PartnerProfile[], slot: 1 | 2): string {
+  return profiles.find((p) => p.slot === slot)?.name ?? FALLBACK_PARTNER_NAME;
+}
+
 const QUERY_KEY = (householdId: string) => ['profiles', householdId] as const;
 
 export function useProfiles() {

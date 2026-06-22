@@ -539,7 +539,7 @@ function categorize(name: string): { category: Category; confidence: number; nee
   const second = scores[1];
 
   if (best.score === 0) {
-    return { category: 'Other', confidence: 0.2, needsReview: true };
+    return { category: 'Pantry', confidence: 0.2, needsReview: true };
   }
 
   const dominance = second && second.score > 0 ? best.score / (best.score + second.score) : 1.0;
@@ -564,7 +564,7 @@ function categorize(name: string): { category: Category; confidence: number; nee
     confidence = Math.min(confidence, 0.6);
   }
 
-  const needsReview = confidence < 0.65 || best.category === 'Other';
+  const needsReview = confidence < 0.65;
 
   return { category: best.category, confidence: Math.round(confidence * 100) / 100, needsReview };
 }
@@ -578,7 +578,7 @@ function determineIsFood(category: Category, confidence: number): boolean {
 function regexParse(raw: string): ParsedPantryItem {
   const trimmed = raw.trim();
   if (!trimmed) {
-    return { name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Other', isFood: true, confidence: 0.3, needsReview: true };
+    return { name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Pantry', isFood: true, confidence: 0.3, needsReview: true };
   }
 
   const { value, unit, remaining } = extractQuantity(trimmed);
@@ -613,7 +613,7 @@ export async function parsePantryItem(
 ): Promise<ParsedPantryItem> {
   const trimmed = raw.trim();
   if (!trimmed) {
-    return { name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Other', isFood: true, confidence: 0.3, needsReview: true };
+    return { name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Pantry', isFood: true, confidence: 0.3, needsReview: true };
   }
 
   const inputHash = await computeHash(trimmed);
@@ -675,7 +675,7 @@ export async function parsePantryBatch(
   for (let i = 0; i < rawInputs.length; i++) {
     const trimmed = rawInputs[i]?.trim();
     if (!trimmed) {
-      results.push({ name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Other', isFood: true, confidence: 0.3, needsReview: true });
+      results.push({ name: '', quantityValue: null, quantityUnit: '', brand: '', category: 'Pantry', isFood: true, confidence: 0.3, needsReview: true });
       continue;
     }
 

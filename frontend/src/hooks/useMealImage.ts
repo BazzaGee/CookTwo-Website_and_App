@@ -3,7 +3,7 @@ import { apiFetch } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 import type { GeneratedMeal } from '../types/meal';
 
-const CACHE_PREFIX = 'cupla_meal_img_';
+const CACHE_PREFIX = 'cooktwo_meal_img_';
 const MAX_CACHE = 10;
 
 function sanitizeKey(name: string): string {
@@ -59,6 +59,10 @@ function setCached(householdId: string, mealName: string, url: string) {
   } catch {
     // ignore
   }
+}
+
+export function cacheMealImage(householdId: string, mealName: string, url: string): void {
+  setCached(householdId, mealName, url);
 }
 
 export interface ImageState {

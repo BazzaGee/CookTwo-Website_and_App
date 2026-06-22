@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, ShoppingBag, Sparkles } from 'lucide-react';
 import { ItemRow } from './ItemRow';
 import type { Category, GroceryItem } from '../types/grocery';
@@ -10,10 +10,9 @@ const CATEGORY_EMOJIS: Record<Category, string> = {
   Pantry: '🫙',
   Household: '🏠',
   'Personal Care': '🧴',
-  Other: '📦',
 };
 
-const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'];
+const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care'];
 
 interface Props {
   items: GroceryItem[];
@@ -27,6 +26,21 @@ interface Props {
 
 export function ShoppingList({ items, onToggle, onDelete, onMoveToPantry, isMovingToPantry, onAskAI, isAILoading }: Props) {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<Category>>(new Set());
+  const [showSortPulse, setShowSortPulse] = useState(false);
+  const prevLoadingRef = useRef(false);
+  const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (prevLoadingRef.current && !isAILoading) {
+      setShowSortPulse(true);
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      pulseTimerRef.current = setTimeout(() => setShowSortPulse(false), 1500);
+    }
+    prevLoadingRef.current = isAILoading;
+    return () => {
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+    };
+  }, [isAILoading]);
 
   const checkedItems = items.filter((i) => i.isChecked);
   const checkedFoodCount = checkedItems.filter((i) => i.isFood).length;
@@ -51,7 +65,7 @@ export function ShoppingList({ items, onToggle, onDelete, onMoveToPantry, isMovi
   }
 
   const allExpanded = collapsedCategories.size === 0;
-  const activeCategories = CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c));
+  const activeCategories = CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c || (c === 'Pantry' && (i.category as string) === 'Other')));
   const allCollapsed = activeCategories.every((c) => collapsedCategories.has(c));
 
   return (
@@ -108,7 +122,7 @@ export function ShoppingList({ items, onToggle, onDelete, onMoveToPantry, isMovi
             type="button"
             onClick={onAskAI}
             disabled={isAILoading}
-            className="flex items-center gap-1.5 text-xs font-medium text-terracotta-dark hover:text-terracotta bg-terracotta/10 hover:bg-terracotta/20 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
+            className={`flex items-center gap-1.5 text-xs font-medium text-terracotta-dark hover:text-terracotta bg-terracotta/10 hover:bg-terracotta/20 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 ${showSortPulse ? 'brand-pulse' : ''}`}
           >
             <Sparkles size={12} />
             {isAILoading ? 'AI sorting…' : 'AI sort check'}
@@ -118,7 +132,7 @@ export function ShoppingList({ items, onToggle, onDelete, onMoveToPantry, isMovi
 
       <div className="space-y-2">
         {CATEGORY_ORDER.map((category) => {
-          const categoryItems = items.filter((i) => i.category === category);
+          const categoryItems = items.filter((i) => i.category === category || (category === 'Pantry' && (i.category as string) === 'Other'));
           if (categoryItems.length === 0) return null;
 
           const unchecked = categoryItems.filter((i) => !i.isChecked);
@@ -138,15 +152,9 @@ export function ShoppingList({ items, onToggle, onDelete, onMoveToPantry, isMovi
                 </span>
                 <span className="text-base" aria-hidden>{CATEGORY_EMOJIS[category]}</span>
                 <span className="text-text-primary text-sm font-semibold flex-1 text-left">{category}</span>
-                {category === 'Other' ? (
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                    {unchecked.length} item{unchecked.length !== 1 ? 's' : ''}
-                  </span>
-                ) : (
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta-dark">
-                    {unchecked.length > 0 ? `${unchecked.length} to buy` : 'done'}
-                  </span>
-                )}
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta-dark">
+                  {unchecked.length > 0 ? `${unchecked.length} to buy` : 'done'}
+                </span>
               </button>
 
               {!isCollapsed && (

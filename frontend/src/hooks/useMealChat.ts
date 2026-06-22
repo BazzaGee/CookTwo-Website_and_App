@@ -1,8 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '../lib/api';
+import { apiFetch, getWsBaseUrl } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
+import { cacheMealImage } from './useMealImage';
 import type { GeneratedMeal } from '../types/meal';
+import type { SyncEvent } from '../types/grocery';
+
+export type MealGenerationMode = 'auto' | 'cook_from_pantry' | 'generate_freely';
+
+export interface ClarificationOption {
+  id: MealGenerationMode;
+  label: string;
+  hint?: string;
+}
+
+export interface ChatClarification {
+  kind: 'pantry_diet_conflict' | 'empty_pantry' | 'no_safe_items';
+  conflictingItems: string[];
+  allergenBlocked: boolean;
+  options: ClarificationOption[];
+}
 
 export interface ChatMessage {
   id: string;
@@ -11,6 +28,7 @@ export interface ChatMessage {
   meal?: GeneratedMeal;
   addedToPantry?: string[];
   addedToList?: string[];
+  clarification?: ChatClarification;
   timestamp: number;
 }
 
@@ -21,9 +39,10 @@ interface ServerResponse {
     addToPantry?: string[];
     addToList?: string[];
   };
+  clarification?: ChatClarification;
 }
 
-const STORAGE_KEY = 'cupla_chat_messages';
+const STORAGE_KEY = 'cooktwo_chat_messages';
 
 function loadMessages(): ChatMessage[] {
   try {
@@ -41,7 +60,7 @@ function saveMessages(msgs: ChatMessage[]) {
 
 function loadIdCounter(): number {
   try {
-    const saved = localStorage.getItem('cupla_chat_counter');
+    const saved = localStorage.getItem('cooktwo_chat_counter');
     if (saved) return parseInt(saved, 10) || 0;
   } catch { /* ignore */ }
   return 0;
@@ -49,7 +68,7 @@ function loadIdCounter(): number {
 
 function saveIdCounter(n: number) {
   try {
-    localStorage.setItem('cupla_chat_counter', String(n));
+      localStorage.setItem('cooktwo_chat_counter', String(n));
   } catch { /* ignore */ }
 }
 
@@ -61,6 +80,8 @@ export function useMealChat() {
   const queryClient = useQueryClient();
   const householdId = session?.householdId ?? '';
   const token = session?.token ?? '';
+  const partnerId = session?.partner.id ?? '';
+  const partnerSlot = session?.partner.slot ?? 1;
 
   const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [isTyping, setIsTyping] = useState(false);
@@ -81,8 +102,79 @@ export function useMealChat() {
     }
   }
 
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (!householdId || !token || !partnerId) return;
+    let cancelled = false;
+
+    function connect() {
+      if (cancelled) return;
+      const params = new URLSearchParams({
+        token,
+        partnerId,
+        slot: String(partnerSlot),
+      });
+      const url = `${getWsBaseUrl()}/api/household/${householdId}/ws?${params.toString()}`;
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data) as SyncEvent;
+          if (event.type !== 'meal_generated' && event.type !== 'recipe_added') return;
+
+          if (event.type === 'meal_generated') {
+            if (event.generatedByPartnerId === partnerId) return;
+            const meal = { ...event.meal, savedRecipeId: event.recipeId } as GeneratedMeal;
+            if (event.imageUrl && householdId) {
+              cacheMealImage(householdId, event.meal.name, event.imageUrl);
+            }
+            queryClient.invalidateQueries({ queryKey: ['recipes', householdId] });
+            const syntheticMsg: ChatMessage = {
+              id: `sync-${event.at}-${Math.random().toString(36).slice(2, 8)}`,
+              role: 'assistant',
+              content: event.generatedByName
+                ? `${event.generatedByName} just generated a meal${event.aiMessage ? `: ${event.aiMessage}` : ''}`
+                : (event.aiMessage ?? 'A new meal was generated'),
+              meal,
+              timestamp: event.at,
+            };
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === syntheticMsg.id)) return prev;
+              const updated = [...prev, syntheticMsg];
+              saveMessages(updated);
+              return updated;
+            });
+          } else if (event.type === 'recipe_added') {
+            queryClient.invalidateQueries({ queryKey: ['recipes', householdId] });
+          }
+        } catch {
+          // ignore malformed
+        }
+      };
+
+      ws.onclose = () => {
+        if (cancelled) return;
+        setTimeout(connect, 3000);
+      };
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    connect();
+    return () => {
+      cancelled = true;
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [householdId, token, partnerId, partnerSlot, queryClient]);
+
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, opts?: { mode?: MealGenerationMode }) => {
       if (!householdId || !token || !text.trim()) return;
 
       const userMsg: ChatMessage = {
@@ -108,7 +200,7 @@ export function useMealChat() {
           `/api/household/${householdId}/meal-chat`,
           {
             method: 'POST',
-            body: { message: text.trim(), history },
+            body: { message: text.trim(), history, mode: opts?.mode ?? 'auto' },
             token,
           },
         );
@@ -120,6 +212,7 @@ export function useMealChat() {
           meal: result.meal,
           addedToPantry: result.actions?.addToPantry,
           addedToList: result.actions?.addToList,
+          clarification: result.clarification,
           timestamp: Date.now(),
         };
 
@@ -129,6 +222,9 @@ export function useMealChat() {
 
         if (result.actions?.addToPantry?.length || result.actions?.addToList?.length) {
           invalidateRelated();
+        }
+        if (result.meal) {
+          queryClient.invalidateQueries({ queryKey: ['recipes', householdId] });
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to get response');
@@ -141,7 +237,7 @@ export function useMealChat() {
 
   const clearChat = useCallback(() => {
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-    try { localStorage.removeItem('cupla_chat_counter'); } catch { /* ignore */ }
+    try { localStorage.removeItem('cooktwo_chat_counter'); } catch { /* ignore */ }
     setMessages([]);
     setError(null);
     idCounter = 0;

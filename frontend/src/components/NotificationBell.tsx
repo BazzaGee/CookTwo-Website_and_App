@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import { useNotificationStore } from '../stores/notificationStore';
 import { PartnerDot } from './PartnerDot';
+import { useProfiles, resolvePartnerName } from '../hooks/useProfiles';
 
 function timeAgo(ts: number): string {
   const seconds = Math.floor((Date.now() - ts) / 1000);
@@ -21,6 +22,7 @@ export function NotificationBell() {
   const unreadCount = useNotificationStore((s) => s.unreadCount());
   const markAsRead = useNotificationStore((s) => s.markAsRead);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const { profiles } = useProfiles();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -91,7 +93,7 @@ export function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-text-primary leading-snug">
-                          <span className="font-semibold">{n.partnerName}</span>{' '}
+                          <span className="font-semibold">{resolvePartnerName(profiles, n.partnerSlot)}</span>{' '}
                           {n.action}
                           {n.itemName && (
                             <>

@@ -5,7 +5,11 @@ const STORAGE_KEY = 'cfs.offline.queue';
 export interface QueuedAction {
   id: string;
   type: 'addItem';
-  payload: { name: string };
+  payload: {
+    name: string;
+    addedByPartnerId: string;
+    addedByPartnerSlot: 1 | 2;
+  };
   timestamp: number;
 }
 
@@ -60,8 +64,8 @@ export async function drainQueue(
         },
         body: JSON.stringify({
           name: action.payload.name,
-          addedByPartnerId: 'offline',
-          addedByPartnerSlot: 1,
+          addedByPartnerId: action.payload.addedByPartnerId,
+          addedByPartnerSlot: action.payload.addedByPartnerSlot,
         }),
       });
 

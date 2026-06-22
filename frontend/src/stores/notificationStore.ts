@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface AppNotification {
   id: string;
-  partnerName: string;
   partnerSlot: 1 | 2;
   action: string;
   itemName: string;
@@ -27,6 +26,14 @@ interface NotificationState {
   markAllRead: () => void;
   clear: () => void;
   dismissToast: (id: string) => void;
+}
+
+const PERSIST_VERSION = 1;
+
+type LegacyNotification = AppNotification & { partnerName?: string };
+
+function stripLegacyName(notifications: unknown[]): AppNotification[] {
+  return (notifications as LegacyNotification[]).map(({ partnerName: _drop, ...rest }) => rest);
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -89,10 +96,18 @@ export const useNotificationStore = create<NotificationState>()(
     }),
     {
       name: 'cfs.notifications',
+      version: PERSIST_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         notifications: state.notifications,
       }),
+      migrate: (persisted, version) => {
+        const state = persisted as { notifications?: unknown[] };
+        if (version < PERSIST_VERSION && Array.isArray(state?.notifications)) {
+          return { ...state, notifications: stripLegacyName(state.notifications) };
+        }
+        return state as NotificationState;
+      },
     },
   ),
 );

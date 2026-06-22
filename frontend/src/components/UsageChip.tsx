@@ -19,10 +19,25 @@ export default function UsageChip() {
   const paywall = usePaywallStore((s) => s.show);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [showPulse, setShowPulse] = useState(false);
+  const prevUsedRef = useRef<number | null>(null);
+  const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     checkStripeStatus();
   }, [checkStripeStatus]);
+
+  useEffect(() => {
+    if (usage && prevUsedRef.current !== null && usage.usedToday > prevUsedRef.current) {
+      setShowPulse(true);
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      pulseTimerRef.current = setTimeout(() => setShowPulse(false), 1500);
+    }
+    if (usage) prevUsedRef.current = usage.usedToday;
+    return () => {
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+    };
+  }, [usage?.usedToday]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -44,7 +59,7 @@ export default function UsageChip() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${
+        className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${showPulse ? 'brand-pulse' : ''} ${
           usage.tier === 'premium'
             ? 'bg-sage/15 text-sage hover:bg-sage/25'
             : aiPct >= 80
@@ -70,7 +85,7 @@ export default function UsageChip() {
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="fixed left-1/2 -translate-x-1/2 top-20 w-[calc(100vw-2rem)] max-w-72 bg-white border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-text-primary text-sm font-semibold flex items-center gap-1.5">

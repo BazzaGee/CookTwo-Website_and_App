@@ -20,7 +20,6 @@ Categories (use EXACTLY one of these):
 - Pantry: dry goods, condiments, sauces, spices, baking supplies, bread, wraps, snacks, nuts, oils, pasta, rice, cereal, preserves, spreads, frozen processed foods (frozen pizza, frozen meals)
 - Household: cleaning products, paper goods, bin bags, kitchen supplies, light bulbs, batteries, garden supplies
 - Personal Care: toiletries, hygiene products, medications, vitamins, first aid, baby care, feminine hygiene
-- Other: only if nothing else fits
 
 For each item, return:
 - name: The core product name (lowercase, e.g., "milk", "cheddar", "onion")
@@ -65,7 +64,7 @@ Output: {"name":"cheddar","quantityValue":250,"quantityUnit":"g","brand":"Swiss"
 
 Output ONLY a valid JSON array, no markdown, no explanation.`;
 
-const PANTRY_MODEL_CHAIN = ['deepseek-v4-flash', 'deepseek-v4-pro'] as const;
+const PANTRY_MODEL_CHAIN = ['deepseek-v4-flash'] as const;
 
 export async function parsePantryWithAI(
   rawInputs: string[],
@@ -75,7 +74,7 @@ export async function parsePantryWithAI(
 ): Promise<ParsedPantryItem[]> {
   const prompt = `${AI_PARSING_PROMPT}\n\nInput: ${JSON.stringify(rawInputs)}`;
 
-  let baseUrl = 'https://api.deepseek.com/v1/chat/completions';
+  let baseUrl = 'https://api.deepseek.com/chat/completions';
   let authHeader = 'Authorization';
   let authPrefix = 'Bearer';
 
@@ -97,6 +96,7 @@ export async function parsePantryWithAI(
           model,
           max_tokens: 2048,
           messages: [{ role: 'user', content: prompt }],
+          thinking: { type: 'disabled' },
         }),
       });
 
@@ -116,7 +116,7 @@ export async function parsePantryWithAI(
           return parsed.map((item) => ({
             ...item,
             name: (item.name || '').trim(),
-            category: isValidCategory(item.category) ? item.category : 'Other',
+            category: isValidCategory(item.category) ? item.category : 'Pantry',
             isFood: typeof item.isFood === 'boolean' ? item.isFood : true,
             confidence: Math.min(Math.max(item.confidence ?? 0.5, 0), 1),
             needsReview: false,
@@ -140,7 +140,7 @@ function fallbackItem(input: string): ParsedPantryItem {
     quantityValue: null,
     quantityUnit: '',
     brand: '',
-    category: 'Other' as Category,
+    category: 'Pantry' as Category,
     isFood: true,
     confidence: 0.3,
     needsReview: true,
@@ -148,5 +148,5 @@ function fallbackItem(input: string): ParsedPantryItem {
 }
 
 function isValidCategory(value: string): value is Category {
-  return ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'].includes(value);
+  return ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care'].includes(value);
 }

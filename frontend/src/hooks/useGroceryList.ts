@@ -161,13 +161,13 @@ export function useGroceryList() {
   const addMutation = useMutation({
     mutationFn: (input: { name: string }) => {
       if (!isOnline) {
-        pushToQueue({ type: 'addItem', payload: { name: input.name.trim() } });
+        pushToQueue({ type: 'addItem', payload: { name: input.name.trim(), addedByPartnerId: partnerId, addedByPartnerSlot: partnerSlot } });
         setQueueLen(getQueueLength());
         return Promise.resolve({
           id: `queued-${Date.now()}`,
           householdId,
           name: input.name.trim(),
-          category: 'Other' as const,
+          category: 'Pantry' as const,
           isChecked: false,
           isFood: true,
           brand: '',
@@ -264,6 +264,7 @@ export function useGroceryList() {
         return old.filter((i) => !deletedSet.has(i.id));
       });
       queryClient.invalidateQueries({ queryKey: ['pantry', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['regulars', householdId] });
     },
   });
 

@@ -8,7 +8,6 @@ const CATEGORY_LABELS: Record<Category, string> = {
   Pantry: '🫙 Pantry',
   Household: '🏠 Household',
   'Personal Care': '🧴 Personal Care',
-  Other: '📦 Other',
 };
 
 interface Props {

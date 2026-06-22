@@ -3,6 +3,7 @@ import { apiFetch } from '../lib/api';
 
 const ACCESS_KEY = 'cfs.access';
 const DEV_KEY = 'cooktwo-dev-2026';
+const AUTH_KEY = 'cfs.auth';
 
 type GateState = 'checking' | 'granted' | 'locked';
 
@@ -45,6 +46,20 @@ export default function AccessGate({ children }: { children: ReactNode }) {
           return;
         }
         localStorage.removeItem(ACCESS_KEY);
+      }
+
+      // Also grant access if there's a valid auth session (user already onboarded)
+      const authSession = localStorage.getItem(AUTH_KEY);
+      if (authSession) {
+        try {
+          const parsed = JSON.parse(authSession);
+          if (parsed?.state?.session?.token) {
+            setState('granted');
+            return;
+          }
+        } catch {
+          // ignore invalid JSON
+        }
       }
 
       setState('locked');

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 
 import { Sparkles, Clock, Plus, Check, CalendarDays, Bookmark, Send, ShoppingCart, Package, ChevronDown, ChevronUp, Trash2, ImageIcon, RefreshCw, AlertCircle, Mic } from 'lucide-react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useMealChat, type ChatMessage } from '../hooks/useMealChat';
+import { usePantry } from '../hooks/usePantry';
 import { useRecipes } from '../hooks/useRecipes';
 import { useWeekPlan } from '../hooks/useWeekPlan';
 import { useGroceryList } from '../hooks/useGroceryList';
@@ -80,7 +81,9 @@ export default function MealPlanTab() {
 
 function MealChatView() {
   const { messages, isTyping, error, sendMessage, clearChat } = useMealChat();
+  const { items: pantryItems } = usePantry();
   const [input, setInput] = useState('');
+  const [showModeChoice, setShowModeChoice] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const lastMsgRef = useRef<HTMLDivElement>(null);
   const { isSupported: micSupported, isListening, transcript, start: startListening, stop: stopListening, resetTranscript } = useSpeechRecognition();
@@ -139,14 +142,65 @@ function MealChatView() {
   }
 
   function handleGenerateMeal() {
-    sendMessage("Suggest a meal for tonight based on what we have in the pantry");
+    setShowModeChoice(true);
+  }
+
+  function handleChooseMode(mode: 'cook_from_pantry' | 'generate_freely') {
+    setShowModeChoice(false);
+    if (mode === 'cook_from_pantry') {
+      sendMessage("Suggest a meal using only what's in our pantry", { mode: 'cook_from_pantry' });
+    } else {
+      sendMessage("Suggest a meal for tonight and add anything we're missing to our shopping list", { mode: 'generate_freely' });
+    }
     setInput('');
   }
+
+  const pantryCount = pantryItems.filter((i) => i.isFood !== false).length;
 
   return (
     <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 220px)' }}>
       <div ref={listRef} className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && !isTyping && (
+        {showModeChoice && (
+          <div className="bg-white border border-border rounded-2xl p-4 space-y-2.5 shadow-sm">
+            <div className="text-center mb-1">
+              <p className="text-text-primary text-sm font-semibold">How should we plan this meal?</p>
+              <p className="text-text-secondary text-xs mt-0.5">Choose how you want to use your pantry.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleChooseMode('cook_from_pantry')}
+              disabled={pantryCount === 0 || isTyping}
+              className="w-full text-left text-sm font-medium py-2.5 px-3.5 rounded-xl border border-terracotta/40 bg-terracotta/5 text-terracotta hover:bg-terracotta hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-terracotta/5 disabled:hover:text-terracotta"
+            >
+              <span className="block">Cook with what we have</span>
+              <span className="block text-xs font-normal opacity-80 mt-0.5">
+                {pantryCount === 0
+                  ? 'Your pantry is empty — add ingredients first'
+                  : `Use only your ${pantryCount} pantry item${pantryCount === 1 ? '' : 's'}`}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleChooseMode('generate_freely')}
+              disabled={isTyping}
+              className="w-full text-left text-sm font-medium py-2.5 px-3.5 rounded-xl border border-sage/40 bg-sage/5 text-sage hover:bg-sage hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="block">Suggest a meal — I'll shop</span>
+              <span className="block text-xs font-normal opacity-80 mt-0.5">
+                Plan a meal and add anything missing to your shopping list
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowModeChoice(false)}
+              className="w-full text-center text-xs text-text-secondary hover:text-text-primary py-1 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {messages.length === 0 && !isTyping && !showModeChoice && (
           <div className="text-center pt-12 pb-4">
             <div className="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mx-auto mb-5">
               <Sparkles size={28} className="text-terracotta" />
@@ -170,7 +224,7 @@ function MealChatView() {
 
         {messages.map((msg, i) => (
           <div key={msg.id} ref={i === messages.length - 1 ? lastMsgRef : undefined}>
-            <ChatBubble message={msg} />
+            <ChatBubble message={msg} onSelectOption={(label, mode) => sendMessage(label, { mode })} />
           </div>
         ))}
 
@@ -277,7 +331,7 @@ function MealChatView() {
   );
 }
 
-function ChatBubble({ message }: { message: ChatMessage }) {
+function ChatBubble({ message, onSelectOption }: { message: ChatMessage; onSelectOption?: (label: string, mode: import('../hooks/useMealChat').MealGenerationMode) => void }) {
   const isUser = message.role === 'user';
 
   return (
@@ -292,6 +346,24 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isUser ? 'text-white' : 'text-text-primary'}`}>
           {message.content}
         </p>
+
+        {!isUser && message.clarification && message.clarification.options.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            {message.clarification.options.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onSelectOption?.(opt.label, opt.id)}
+                className="text-left text-sm font-medium py-2.5 px-3.5 rounded-xl border border-terracotta/40 bg-terracotta/5 text-terracotta hover:bg-terracotta hover:text-white active:scale-[0.98] transition-all"
+              >
+                <span className="block">{opt.label}</span>
+                {opt.hint && (
+                  <span className="block text-xs font-normal opacity-80 mt-0.5">{opt.hint}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {!isUser && message.meal && (
           <div className="mt-3">
@@ -476,10 +548,15 @@ function InlineMealCard({ meal }: { meal: GeneratedMeal }) {
           type="button"
           onClick={handleAddMissing}
           disabled={missingCount === 0 || addedMissing}
-          className="flex-1 bg-terracotta text-white text-xs font-medium py-2 px-3 rounded-lg hover:bg-terracotta-dark active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+          className={`flex-1 text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:cursor-default ${
+            missingCount === 0
+              ? 'bg-sage/10 text-sage border border-sage/30'
+              : addedMissing
+                ? 'bg-sage/10 text-sage border border-sage/30'
+                : 'bg-terracotta text-white hover:bg-terracotta-dark active:scale-[0.98] disabled:opacity-40'
+          }`}
         >
-          <Plus size={12} />
-          {addedMissing ? 'Added' : `Add ${missingCount} to list`}
+          {missingCount === 0 ? <><Check size={12} /> All in pantry</> : addedMissing ? <><Check size={12} /> Added</> : <><Plus size={12} /> Add {missingCount} to list</>}
         </button>
         <button
           type="button"
@@ -770,10 +847,15 @@ function SavedRecipeCard({
               type="button"
               onClick={handleAddMissing}
               disabled={missingCount === 0 || addedMissing}
-              className="flex-1 bg-terracotta text-white text-xs font-medium py-2 px-3 rounded-lg hover:bg-terracotta-dark active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              className={`flex-1 text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:cursor-default ${
+                missingCount === 0
+                  ? 'bg-sage/10 text-sage border border-sage/30'
+                  : addedMissing
+                    ? 'bg-sage/10 text-sage border border-sage/30'
+                    : 'bg-terracotta text-white hover:bg-terracotta-dark active:scale-[0.98] disabled:opacity-40'
+              }`}
             >
-              <Plus size={12} />
-              {addedMissing ? 'Added' : `Add ${missingCount} to list`}
+              {missingCount === 0 ? <><Check size={12} /> All in pantry</> : addedMissing ? <><Check size={12} /> Added</> : <><Plus size={12} /> Add {missingCount} to list</>}
             </button>
             <button
               type="button"
@@ -795,8 +877,9 @@ function SavedRecipeCard({
 }
 
 function WeekView() {
-  const { isGenerating, generateWeek, getMeal, hasPlan } = useWeekPlan();
+  const { isGenerating, generateWeek, getMeal, hasPlan, error } = useWeekPlan();
   const { addItem } = useGroceryList();
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'any'>('dinner');
 
   async function handlePopulateList() {
     const allMissing = new Set<string>();
@@ -832,12 +915,31 @@ function WeekView() {
         <p className="text-text-primary text-xl font-semibold mb-2">
           Plan the whole week
         </p>
-        <p className="text-text-secondary text-base leading-relaxed max-w-sm mx-auto mb-8">
-          One tap generates 7 dinners. Missing ingredients go straight to your grocery list.
+        <p className="text-text-secondary text-base leading-relaxed max-w-sm mx-auto mb-6">
+          One tap generates 7 meals. Missing ingredients go straight to your grocery list.
         </p>
+        <div className="flex justify-center gap-2 mb-6">
+          {(['breakfast', 'lunch', 'dinner', 'any'] as const).map((mt) => (
+            <button
+              key={mt}
+              type="button"
+              onClick={() => setMealType(mt)}
+              className={`text-xs font-medium py-2 px-4 rounded-full capitalize transition-colors ${
+                mealType === mt
+                  ? 'bg-terracotta text-white'
+                  : 'bg-white text-text-secondary border border-border hover:bg-cream'
+              }`}
+            >
+              {mt}
+            </button>
+          ))}
+        </div>
+        {error && (
+          <p className="text-error text-sm mb-4">{error}</p>
+        )}
         <button
           type="button"
-          onClick={generateWeek}
+          onClick={() => generateWeek(mealType)}
           disabled={isGenerating}
           className="bg-terracotta text-white font-medium py-4 px-8 rounded-2xl hover:bg-terracotta-dark active:scale-[0.99] transition-all inline-flex items-center gap-2 disabled:opacity-50"
         >
@@ -856,6 +958,25 @@ function WeekView() {
         </div>
         <p className="text-text-primary text-lg font-medium">Planning your week…</p>
         <p className="text-text-secondary text-sm mt-2">This takes a moment.</p>
+      </div>
+    );
+  }
+
+  if (error && !hasPlan) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <AlertCircle size={28} className="text-error" />
+        </div>
+        <p className="text-text-primary text-lg font-medium mb-2">Something went wrong</p>
+        <p className="text-error text-sm mb-6">{error}</p>
+        <button
+          type="button"
+          onClick={() => generateWeek(mealType)}
+          className="bg-terracotta text-white font-medium py-3 px-6 rounded-xl hover:bg-terracotta-dark active:scale-[0.99] transition-all"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -900,7 +1021,7 @@ function WeekView() {
 
       <button
         type="button"
-        onClick={generateWeek}
+        onClick={() => generateWeek(mealType)}
         className="w-full bg-cream text-text-secondary font-medium py-3 px-6 rounded-xl border border-border hover:bg-cream-dark transition-colors flex items-center justify-center gap-2"
       >
         <Sparkles size={16} />

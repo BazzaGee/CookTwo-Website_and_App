@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useAuthStore } from '../stores/authStore';
 import type { SyncEvent, PartnerSlot, GroceryItem } from '../types/grocery';
-import { useProfiles } from './useProfiles';
 
 function eventToFingerprint(event: SyncEvent): string {
   if ('item' in event && event.item) return `${event.type}|${event.item.id}`;
@@ -55,16 +54,7 @@ const NOTIFICATION_EVENTS = new Set([
 
 export function useNotifications() {
   const mySlot = useAuthStore((s) => s.session?.partner.slot ?? 1);
-  const { profiles } = useProfiles();
   const addNotification = useNotificationStore((s) => s.addNotification);
-
-  const getPartnerName = useCallback(
-    (slot: PartnerSlot): string => {
-      const profile = profiles.find((p) => p.slot === slot);
-      return profile?.name ?? (slot === 1 ? 'Partner 1' : 'Partner 2');
-    },
-    [profiles],
-  );
 
   const processEvent = useCallback(
     (event: SyncEvent) => {
@@ -78,7 +68,6 @@ export function useNotifications() {
       if (!actionInfo) return;
 
       addNotification({
-        partnerName: getPartnerName(eventSlot),
         partnerSlot: eventSlot,
         action: actionInfo.action,
         itemName: actionInfo.itemName,
@@ -86,7 +75,7 @@ export function useNotifications() {
         eventFingerprint: eventToFingerprint(event),
       });
     },
-    [mySlot, getPartnerName, addNotification],
+    [mySlot, addNotification],
   );
 
   return { processEvent };

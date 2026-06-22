@@ -11,10 +11,9 @@ const CATEGORY_EMOJIS: Record<Category, string> = {
   Pantry: '🫙',
   Household: '🏠',
   'Personal Care': '🧴',
-  Other: '📦',
 };
 
-const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'];
+const CATEGORY_ORDER: Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care'];
 
 export default function PantryTab() {
   const { items, addItem, deleteItem, isLoading, reclassifyWithAI, isAIReclassifying } = usePantry();
@@ -54,11 +53,11 @@ export default function PantryTab() {
 
   const needsReviewCount = items.filter((i) => i.needsReview).length;
   const allExpanded = collapsedCategories.size === 0;
-  const activeCategories = CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c));
+  const activeCategories = CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c || (c === 'Pantry' && (i.category as string) === 'Other')));
   const allCollapsed = activeCategories.every((c) => collapsedCategories.has(c));
 
   const groupedItems = items.reduce<Record<Category, PantryItem[]>>((acc, item) => {
-    const cat = (item.category || 'Other') as Category;
+    const cat = ((item.category as string) === 'Other' ? 'Pantry' : (item.category || 'Pantry')) as Category;
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;

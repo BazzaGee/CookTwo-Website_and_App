@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X, ShoppingCart, Check, Trash2, ArrowRight } from 'lucide-react';
 import { useNotificationStore } from '../stores/notificationStore';
 import { PartnerDot } from './PartnerDot';
+import { useProfiles, resolvePartnerName } from '../hooks/useProfiles';
 
 const ACTION_ICONS: Record<string, typeof ShoppingCart> = {
   added: ShoppingCart,
@@ -17,6 +18,7 @@ const AUTO_DISMISS_MS = 4000;
 export function NotificationToast() {
   const toastQueue = useNotificationStore((s) => s.toastQueue);
   const dismissToast = useNotificationStore((s) => s.dismissToast);
+  const { profiles } = useProfiles();
   const [visible, setVisible] = useState<string | null>(null);
   const [exiting, setExiting] = useState<string | null>(null);
 
@@ -50,10 +52,10 @@ export function NotificationToast() {
   const isVisible = visible === current.id;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+    <div className="fixed top-0 inset-x-0 z-50 flex justify-center pointer-events-none px-4 pt-[max(1rem,env(safe-area-inset-top))]">
       <div
         className={`
-          pointer-events-auto mx-auto max-w-md
+          pointer-events-auto w-full max-w-md
           bg-white rounded-xl shadow-lg border border-border
           px-4 py-3 flex items-center gap-3
           transition-all duration-300 ease-out
@@ -63,7 +65,7 @@ export function NotificationToast() {
         <PartnerDot slot={current.partnerSlot} />
         <div className="flex-1 min-w-0">
           <p className="text-sm text-text-primary leading-snug">
-            <span className="font-semibold">{current.partnerName}</span>{' '}
+            <span className="font-semibold">{resolvePartnerName(profiles, current.partnerSlot)}</span>{' '}
             {current.action}
             {current.itemName && (
               <>

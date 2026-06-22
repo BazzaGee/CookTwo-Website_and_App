@@ -2,6 +2,7 @@ import type { Env } from '../env';
 import { parsePantryItemSync, type ParsedPantryItem } from '../lib/pantry-parser';
 import type { PushProvider, PushPayload } from '../lib/push-provider';
 import { WebPushProvider } from '../lib/push-web';
+import type { GeneratedMeal } from '../lib/ai';
 
 export type Category = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Household' | 'Personal Care' | 'Other';
 
@@ -48,6 +49,8 @@ export type SyncEvent =
   | { type: 'pantry_added'; item: PantryItem }
   | { type: 'pantry_updated'; item: PantryItem }
   | { type: 'pantry_deleted'; id: string }
+  | { type: 'meal_generated'; meal: GeneratedMeal; imageUrl?: string; recipeId?: string; generatedBySlot: PartnerSlot; generatedByName?: string; generatedByPartnerId?: string; aiMessage?: string; at: number }
+  | { type: 'recipe_added'; recipeId: string; recipeName: string; at: number }
   | { type: 'hello'; partnerId: string; slot: PartnerSlot; at: number };
 
 interface GroceryItemRow {
@@ -145,7 +148,7 @@ const SCHEMA = `
     household_id TEXT NOT NULL,
     name TEXT NOT NULL,
     quantity TEXT NOT NULL DEFAULT '',
-    category TEXT NOT NULL DEFAULT 'Other',
+    category TEXT NOT NULL DEFAULT 'Pantry',
     quantity_value REAL DEFAULT NULL,
     quantity_unit TEXT DEFAULT '',
     brand TEXT DEFAULT '',
@@ -176,6 +179,33 @@ const SCHEMA = `
     created_at INTEGER NOT NULL,
     PRIMARY KEY (partner_id, endpoint)
   );
+
+  CREATE TABLE IF NOT EXISTS purchase_history (
+    id TEXT PRIMARY KEY,
+    household_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    brand TEXT NOT NULL DEFAULT '',
+    quantity_value REAL DEFAULT NULL,
+    quantity_unit TEXT DEFAULT '',
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_purchase_history_household ON purchase_history(household_id);
+  CREATE INDEX IF NOT EXISTS idx_purchase_history_name ON purchase_history(name, brand);
+
+  CREATE TABLE IF NOT EXISTS activity_log (
+    id TEXT PRIMARY KEY,
+    household_id TEXT NOT NULL,
+    partner_id TEXT,
+    partner_slot INTEGER,
+    partner_name TEXT,
+    action_type TEXT NOT NULL,
+    target_kind TEXT NOT NULL,
+    target_id TEXT,
+    target_name TEXT,
+    payload TEXT,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_activity_log_household_created ON activity_log(household_id, created_at DESC);
 `;
 
 interface ConnectedPartner {
@@ -235,6 +265,188 @@ export class HouseholdSync {
     if (this.pushProvider && event.type !== 'hello') {
       this.tryPushToDisconnected(event);
     }
+
+    if (event.type !== 'hello') {
+      this.logActivityFromEvent(event).catch((err) => {
+        console.error('activity_log insert failed:', err);
+      });
+    }
+  }
+
+  private async logActivityFromEvent(event: SyncEvent): Promise<void> {
+    const entry = this.eventToActivityEntry(event);
+    if (!entry) return;
+    this.state.storage.sql.exec(
+      `INSERT INTO activity_log
+        (id, household_id, partner_id, partner_slot, partner_name, action_type, target_kind, target_id, target_name, payload, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      entry.id,
+      entry.householdId,
+      entry.partnerId,
+      entry.partnerSlot,
+      entry.partnerName,
+      entry.actionType,
+      entry.targetKind,
+      entry.targetId,
+      entry.targetName,
+      entry.payload,
+      entry.createdAt,
+    );
+  }
+
+  private eventToActivityEntry(event: SyncEvent): {
+    id: string;
+    householdId: string;
+    partnerId: string | null;
+    partnerSlot: number | null;
+    partnerName: string | null;
+    actionType: string;
+    targetKind: string;
+    targetId: string | null;
+    targetName: string | null;
+    payload: string | null;
+    createdAt: number;
+  } | null {
+    const householdId = (this.state.id as { toString(): string }).toString();
+    const id = crypto.randomUUID();
+    const createdAt = Date.now();
+
+    switch (event.type) {
+      case 'item_added':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.item.addedByPartnerId,
+          partnerSlot: event.item.addedByPartnerSlot,
+          partnerName: null,
+          actionType: 'item_added',
+          targetKind: 'grocery_item',
+          targetId: event.item.id,
+          targetName: event.item.name,
+          payload: JSON.stringify({ category: event.item.category }),
+        };
+      case 'items_added':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.items[0]?.addedByPartnerId ?? null,
+          partnerSlot: event.items[0]?.addedByPartnerSlot ?? null,
+          partnerName: null,
+          actionType: 'items_added',
+          targetKind: 'grocery_item',
+          targetId: null,
+          targetName: `${event.items.length} items`,
+          payload: JSON.stringify({ names: event.items.map((i) => i.name) }),
+        };
+      case 'item_toggled':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.item.addedByPartnerId,
+          partnerSlot: event.item.addedByPartnerSlot,
+          partnerName: null,
+          actionType: event.item.isChecked ? 'item_checked' : 'item_unchecked',
+          targetKind: 'grocery_item',
+          targetId: event.item.id,
+          targetName: event.item.name,
+          payload: null,
+        };
+      case 'item_deleted':
+        return {
+          id, householdId, createdAt,
+          partnerId: null,
+          partnerSlot: null,
+          partnerName: null,
+          actionType: 'item_deleted',
+          targetKind: 'grocery_item',
+          targetId: event.id,
+          targetName: null,
+          payload: null,
+        };
+      case 'items_moved':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.pantryItems[0]?.addedByPartnerId ?? null,
+          partnerSlot: event.pantryItems[0]?.addedByPartnerSlot ?? null,
+          partnerName: null,
+          actionType: 'items_moved_to_pantry',
+          targetKind: 'grocery_item',
+          targetId: null,
+          targetName: `${event.deletedIds.length} items`,
+          payload: null,
+        };
+      case 'item_updated':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.item.addedByPartnerId,
+          partnerSlot: event.item.addedByPartnerSlot,
+          partnerName: null,
+          actionType: 'item_updated',
+          targetKind: 'grocery_item',
+          targetId: event.item.id,
+          targetName: event.item.name,
+          payload: null,
+        };
+      case 'pantry_added':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.item.addedByPartnerId,
+          partnerSlot: event.item.addedByPartnerSlot,
+          partnerName: null,
+          actionType: 'pantry_added',
+          targetKind: 'pantry_item',
+          targetId: event.item.id,
+          targetName: event.item.name,
+          payload: null,
+        };
+      case 'pantry_updated':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.item.addedByPartnerId,
+          partnerSlot: event.item.addedByPartnerSlot,
+          partnerName: null,
+          actionType: 'pantry_updated',
+          targetKind: 'pantry_item',
+          targetId: event.item.id,
+          targetName: event.item.name,
+          payload: null,
+        };
+      case 'pantry_deleted':
+        return {
+          id, householdId, createdAt,
+          partnerId: null,
+          partnerSlot: null,
+          partnerName: null,
+          actionType: 'pantry_deleted',
+          targetKind: 'pantry_item',
+          targetId: event.id,
+          targetName: null,
+          payload: null,
+        };
+      case 'meal_generated':
+        return {
+          id, householdId, createdAt,
+          partnerId: event.generatedByPartnerId ?? null,
+          partnerSlot: event.generatedBySlot,
+          partnerName: event.generatedByName ?? null,
+          actionType: 'meal_generated',
+          targetKind: 'meal',
+          targetId: event.recipeId ?? null,
+          targetName: event.meal.name,
+          payload: null,
+        };
+      case 'recipe_added':
+        return {
+          id, householdId, createdAt,
+          partnerId: null,
+          partnerSlot: null,
+          partnerName: null,
+          actionType: 'recipe_saved',
+          targetKind: 'recipe',
+          targetId: event.recipeId,
+          targetName: event.recipeName,
+          payload: null,
+        };
+      default:
+        return null;
+    }
   }
 
   private findConnectedSlots(): Set<number> {
@@ -276,17 +488,23 @@ export class HouseholdSync {
   private eventToPushPayload(event: SyncEvent): PushPayload | null {
     switch (event.type) {
       case 'item_added':
-        return { title: 'Cupla', body: `New item added: ${event.item.name}`, tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: `New item added: ${event.item.name}`, tag: 'cfs-grocery' };
       case 'items_added':
-        return { title: 'Cupla', body: `${event.items.length} item${event.items.length > 1 ? 's' : ''} added to shopping list`, tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: `${event.items.length} item${event.items.length > 1 ? 's' : ''} added to shopping list`, tag: 'cfs-grocery' };
       case 'item_toggled':
-        return { title: 'Cupla', body: `${event.item.name} ${event.item.isChecked ? 'checked off' : 'unchecked'}`, tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: `${event.item.name} ${event.item.isChecked ? 'checked off' : 'unchecked'}`, tag: 'cfs-grocery' };
       case 'item_deleted':
-        return { title: 'Cupla', body: 'An item was removed', tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: 'An item was removed', tag: 'cfs-grocery' };
       case 'items_moved':
-        return { title: 'Cupla', body: `${event.deletedIds.length} item${event.deletedIds.length > 1 ? 's' : ''} moved to pantry`, tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: `${event.deletedIds.length} item${event.deletedIds.length > 1 ? 's' : ''} moved to pantry`, tag: 'cfs-grocery' };
       case 'item_updated':
-        return { title: 'Cupla', body: `${event.item.name} was updated`, tag: 'cfs-grocery' };
+        return { title: 'CookTwo', body: `${event.item.name} was updated`, tag: 'cfs-grocery' };
+      case 'meal_generated': {
+        const who = event.generatedByName ? `${event.generatedByName} ` : '';
+        return { title: 'CookTwo', body: `${who}generated a meal: ${event.meal.name}`, tag: 'cfs-meal' };
+      }
+      case 'recipe_added':
+        return { title: 'CookTwo', body: `New recipe saved: ${event.recipeName}`, tag: 'cfs-recipe' };
       default:
         return null;
     }
@@ -411,6 +629,13 @@ export class HouseholdSync {
         return this.json(await this.getRegulars());
       }
 
+      if (path === '/activity' && method === 'GET') {
+        const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '50', 10) || 50, 1), 200);
+        const beforeParam = url.searchParams.get('before');
+        const before = beforeParam ? parseInt(beforeParam, 10) : null;
+        return this.json(await this.getActivity(limit, before));
+      }
+
       if (path === '/pantry' && method === 'GET') {
         return this.json(await this.getPantryItems());
       }
@@ -461,6 +686,15 @@ export class HouseholdSync {
         };
         const result = await this.subtractPantryForMeal(body.usedIngredients);
         return this.json(result);
+      }
+
+      if (path === '/meal-event' && method === 'POST') {
+        const body = (await request.json()) as SyncEvent;
+        if (body.type !== 'meal_generated' && body.type !== 'recipe_added') {
+          return this.json({ error: 'unsupported meal-event type' }, 400);
+        }
+        this.broadcast(body);
+        return this.json({ ok: true });
       }
 
       if (path === '/push/subscribe' && method === 'POST') {
@@ -516,11 +750,63 @@ export class HouseholdSync {
     return rows.map((row) => rowToItem(row));
   }
 
-  private async getRegulars(): Promise<Array<{ name: string; count: number }>> {
-    const cursor = this.state.storage.sql.exec<{ name: string; count: number }>(
-      'SELECT name, COUNT(*) as count FROM grocery_items GROUP BY name HAVING count > 1 ORDER BY count DESC LIMIT 15',
+  private async getRegulars(): Promise<Array<{ name: string; count: number; brand: string; quantityValue: number | null; quantityUnit: string }>> {
+    const cursor = this.state.storage.sql.exec<{ name: string; count: number; brand: string; quantityValue: number | null; quantityUnit: string }>(
+      `SELECT name, brand,
+              COUNT(*) as count,
+              (SELECT quantity_value FROM purchase_history ph2 WHERE ph2.name = ph.name AND ph2.brand = ph.brand ORDER BY ph2.created_at DESC LIMIT 1) as quantityValue,
+              (SELECT quantity_unit FROM purchase_history ph3 WHERE ph3.name = ph.name AND ph3.brand = ph.brand ORDER BY ph3.created_at DESC LIMIT 1) as quantityUnit
+       FROM purchase_history ph
+       GROUP BY name, brand
+       HAVING count > 2
+       ORDER BY count DESC
+       LIMIT 15`,
     );
     return Array.from(cursor);
+  }
+
+  private async getActivity(limit: number, before: number | null): Promise<Array<Record<string, unknown>>> {
+    const householdId = (this.state.id as { toString(): string }).toString();
+    interface ActivityDORow {
+      id: string;
+      household_id: string;
+      partner_id: string | null;
+      partner_slot: number | null;
+      partner_name: string | null;
+      action_type: string;
+      target_kind: string;
+      target_id: string | null;
+      target_name: string | null;
+      payload: string | null;
+      created_at: number;
+      [key: string]: string | number | null;
+    }
+    let cursor;
+    if (before !== null) {
+      cursor = this.state.storage.sql.exec<ActivityDORow>(
+        `SELECT * FROM activity_log WHERE household_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?`,
+        householdId, before, limit,
+      );
+    } else {
+      cursor = this.state.storage.sql.exec<ActivityDORow>(
+        `SELECT * FROM activity_log WHERE household_id = ? ORDER BY created_at DESC LIMIT ?`,
+        householdId, limit,
+      );
+    }
+    const rows = Array.from(cursor);
+    return rows.map((row) => ({
+      id: row.id,
+      householdId: row.household_id,
+      partnerId: row.partner_id,
+      partnerSlot: (row.partner_slot === 1 || row.partner_slot === 2) ? row.partner_slot : null,
+      partnerName: row.partner_name,
+      actionType: row.action_type,
+      targetKind: row.target_kind,
+      targetId: row.target_id,
+      targetName: row.target_name,
+      payload: row.payload,
+      createdAt: row.created_at,
+    }));
   }
 
   private async addItem(body: {
@@ -701,6 +987,18 @@ export class HouseholdSync {
 
       if (item.isFood) {
         const parsed = parsePantryItemSync(item.name);
+        const purchaseId = crypto.randomUUID();
+        this.state.storage.sql.exec(
+          `INSERT INTO purchase_history (id, household_id, name, brand, quantity_value, quantity_unit, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          purchaseId,
+          householdId,
+          parsed.name,
+          parsed.brand || item.brand || '',
+          parsed.quantityValue,
+          parsed.quantityUnit,
+          now,
+        );
         const pantryId = crypto.randomUUID();
         this.state.storage.sql.exec(
           `INSERT INTO pantry_items

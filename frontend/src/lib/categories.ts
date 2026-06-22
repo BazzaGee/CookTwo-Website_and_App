@@ -3,8 +3,8 @@
 
 import type { Category } from '../types/grocery';
 
-export const ALL_CATEGORIES: readonly Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care', 'Other'];
+export const ALL_CATEGORIES: readonly Category[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Personal Care'];
 
 export function classify(_name: string): Category {
-  return 'Other';
+  return 'Pantry';
 }

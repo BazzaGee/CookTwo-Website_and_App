@@ -31,12 +31,13 @@ export interface GeneratedMeal {
   ingredients: MealIngredient[];
   steps: string[];
   plating?: PlatingInstruction[];
+  savedRecipeId?: string;
 }
 
 const MODEL_CHAINS = {
   alibaba: ['qwen3.5-plus', 'qwen3.6-plus', 'moonshotai/kimi-k2.5'],
   zai: ['glm-5.1', 'glm-5', 'glm-5-turbo'],
-  deepseek: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+  deepseek: ['deepseek-v4-flash'],
 } as const;
 
 const PROVIDER_CONFIG = {
@@ -53,7 +54,7 @@ const PROVIDER_CONFIG = {
     secretRef: 'ZAI_KEY',
   },
   deepseek: {
-    baseUrl: 'https://api.deepseek.com/v1/chat/completions',
+    baseUrl: 'https://api.deepseek.com/chat/completions',
     authHeader: 'Authorization',
     authPrefix: 'Bearer',
     secretRef: 'DEEPSEEK_KEY',
@@ -71,7 +72,9 @@ export function buildPrompt(
   partner1Body?: { name: string; tdee: TDEEResult },
   partner2Body?: { name: string; tdee: TDEEResult },
   dietRulesPrompt?: string,
+  mealType?: string,
 ): string {
+  const mealLabel = mealType && mealType !== 'any' ? mealType : 'meal';
   const pantryList = pantryItems.map((i) => {
     const qty = i.quantityValue && i.quantityUnit ? `${i.quantityValue} ${i.quantityUnit}` : (i.quantity || '');
     const parts: string[] = [];
@@ -130,7 +133,7 @@ JSON format:
 }`;
   }
 
-  return `You are a meal planner for couples. Generate ONE dinner suggestion based on what they have.
+  return `You are a meal planner for couples. Generate ONE ${mealLabel} suggestion based on what they have.
 
 Pantry: ${pantryList}
 Partner 1: diet=${partner1Diet}${p1Allergens ? `, allergies=${p1Allergens}` : ''}${partner1Goal ? `, goal=${GOAL_LABELS[partner1Goal]}` : ''}
@@ -184,6 +187,7 @@ async function callProvider(
       model,
       max_tokens: 1536,
       messages: [{ role: 'user', content: prompt }],
+      ...(provider === 'deepseek' ? { thinking: { type: 'disabled' } } : {}),
     }),
   });
 
@@ -216,17 +220,6 @@ function getMealTextTokens(meal: GeneratedMeal): string[] {
     ...(meal.plating?.map((p) => p.plate) ?? []),
   ];
   return texts.map((t) => t.toLowerCase().trim());
-}
-
-function tokenMatchesAllergen(token: string, allergen: string): boolean {
-  const normalizedToken = token.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  const words = normalizedToken.split(/\s+/);
-  for (const word of words) {
-    if (word === allergen) return true;
-    if (allergen.length >= 4 && word.includes(allergen)) return true;
-    if (allergen.includes(word) && word.length > 3) return true;
-  }
-  return false;
 }
 
 export function assertMealIsSafe(meal: GeneratedMeal, profiles: PartnerContext[]): boolean {
@@ -310,10 +303,11 @@ export async function generateMeal(
   dietRulesPrompt?: string,
   dietClassifierTerms?: Record<string, string>,
   dietRestrictedGroups?: Set<string>,
+  mealType?: string,
 ): Promise<GeneratedMeal | null> {
   const provider = (env.AI_PROVIDER || 'deepseek') as keyof typeof MODEL_CHAINS;
   const models = MODEL_CHAINS[provider] || MODEL_CHAINS.deepseek;
-  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Allergens, partner2Allergens, partner1Goal, partner2Goal, partner1Body, partner2Body, dietRulesPrompt);
+  const prompt = buildPrompt(pantryItems, partner1Diet, partner2Diet, partner1Allergens, partner2Allergens, partner1Goal, partner2Goal, partner1Body, partner2Body, dietRulesPrompt, mealType);
 
   for (const model of models) {
     try {
@@ -371,6 +365,22 @@ export interface ChatResponse {
     addToPantry?: string[];
     addToList?: string[];
   };
+  clarification?: ChatClarification;
+}
+
+export type MealGenerationMode = 'auto' | 'cook_from_pantry' | 'generate_freely';
+
+export interface ClarificationOption {
+  id: MealGenerationMode;
+  label: string;
+  hint?: string;
+}
+
+export interface ChatClarification {
+  kind: 'pantry_diet_conflict' | 'empty_pantry' | 'no_safe_items';
+  conflictingItems: string[];
+  allergenBlocked: boolean;
+  options: ClarificationOption[];
 }
 
 export interface PartnerContext {
@@ -383,7 +393,7 @@ export interface PartnerContext {
   slot: 1 | 2;
 }
 
-const CROSS_REACTIVE_MAP: Record<string, string[]> = {
+export const CROSS_REACTIVE_MAP: Record<string, string[]> = {
   peanut: ['peanut oil', 'peanut butter', 'peanut flour', 'groundnuts', 'arachis', 'goober', 'beer nut'],
   shellfish: ['crab', 'lobster', 'shrimp', 'prawn', 'crayfish', 'scallop', 'clam', 'mussel', 'oyster', 'squid', 'calamari', 'octopus'],
   dairy: ['milk', 'cheese', 'yogurt', 'cream', 'butter', 'ghee', 'whey', 'casein', 'lactose', 'sour cream', 'ice cream', 'custard', 'pudding'],
@@ -395,6 +405,17 @@ const CROSS_REACTIVE_MAP: Record<string, string[]> = {
   sesame: ['sesame oil', 'tahini', 'hummus', 'sesame seed', 'halva'],
   sulfite: ['wine', 'vinegar', 'dried fruit', 'pickled', 'sulfite'],
 };
+
+export function tokenMatchesAllergen(token: string, allergen: string): boolean {
+  const normalizedToken = token.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = normalizedToken.split(/\s+/);
+  for (const word of words) {
+    if (word === allergen) return true;
+    if (allergen.length >= 4 && word.includes(allergen)) return true;
+    if (allergen.includes(word) && word.length > 3) return true;
+  }
+  return false;
+}
 
 function buildAllergenList(profiles: PartnerContext[]): { combinedList: string; hasAllergens: boolean; p1Line: string; p2Line: string } {
   const p1 = profiles.find((p) => p.slot === 1);
@@ -421,6 +442,7 @@ export function buildChatSystemPrompt(
   pantryItems: Array<{ name: string; quantity: string; category?: string; quantityValue?: number | null; quantityUnit?: string }>,
   profiles: PartnerContext[],
   dietRulesPrompt?: string,
+  mode?: MealGenerationMode,
 ): string {
   const pantryList = pantryItems.map((i) => {
     const qty = i.quantityValue && i.quantityUnit ? `${i.quantityValue} ${i.quantityUnit}` : (i.quantity || '');
@@ -437,7 +459,16 @@ export function buildChatSystemPrompt(
   const hasBothTdee = p1?.tdee && p2?.tdee;
   const hasAnyGoal = p1?.goal || p2?.goal;
 
-  return `You are Cupla's meal planner for couples. Your job is to help them decide what to cook together based on what they have and what they need.
+  let pantryRule: string;
+  if (mode === 'generate_freely') {
+    pantryRule = `- Ignore the pantry entirely. Generate a fresh meal and mark every ingredient as have=false. Put ALL ingredients in addToList so the user can buy them.`;
+  } else if (mode === 'cook_from_pantry') {
+    pantryRule = `- The user wants to cook ONLY from what is in the pantry. You MUST use ONLY ingredients that are listed in the pantry above, plus free staples (water, salt, pepper, cooking oil, olive oil). Do NOT include ANY other ingredient — not even "just a little" of something they don't have. Every ingredient you list must have have=true (or be one of those free staples). If a complete, realistic meal genuinely cannot be made from the pantry plus those free staples, do NOT invent a meal — reply with a short message naming the 1-2 items you would need to add, and OMIT the "meal" object entirely. Never use addToList in this mode.`;
+  } else {
+    pantryRule = `- Prioritize using pantry ingredients. When listing ingredients, mark have=true if in pantry, have=false if missing.`;
+  }
+
+  return `You are CookTwo's meal planner for couples. Your job is to help them decide what to cook together based on what they have and what they need.
 
 Pantry: ${pantryList}
 ${p1Line}
@@ -445,7 +476,7 @@ ${p2Line}
 
 Rules:
 - Be concise and direct. No greetings, no filler, no small talk. Get to the point.
-- Prioritize using pantry ingredients. When listing ingredients, mark have=true if in pantry, have=false if missing.
+${pantryRule}
 - If the user's request is vague and you need to decide between multiple good options, ask ONE brief question (cuisine preference? time limit? spice level?).
 - When you suggest a meal, include the full meal object in your response.
 - If ingredients are missing, put them in addToList so the user can buy them.
@@ -522,6 +553,7 @@ async function callDeepSeekChat(
           model,
           max_tokens: 2048,
           messages,
+          ...(provider === 'deepseek' ? { thinking: { type: 'disabled' } } : {}),
         }),
       });
 
@@ -552,8 +584,9 @@ export async function chatWithAI(
   dietRulesPrompt?: string,
   dietClassifierTerms?: Record<string, string>,
   dietRestrictedGroups?: Set<string>,
+  mode?: MealGenerationMode,
 ): Promise<ChatResponse> {
-  const systemPrompt = buildChatSystemPrompt(pantryItems, profiles, dietRulesPrompt);
+  const systemPrompt = buildChatSystemPrompt(pantryItems, profiles, dietRulesPrompt, mode);
   const raw = await callDeepSeekChat(env, systemPrompt, history, userMessage);
 
   if (!raw) {

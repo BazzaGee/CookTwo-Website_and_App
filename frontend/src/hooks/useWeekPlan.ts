@@ -16,6 +16,8 @@ export interface WeekPlanEntry {
 
 const WEEK_QUERY_KEY = (householdId: string) => ['meal-plan-week', householdId] as const;
 
+export type WeekMealType = 'breakfast' | 'lunch' | 'dinner' | 'any';
+
 export function useWeekPlan() {
   const session = useAuthStore((s) => s.session);
   const queryClient = useQueryClient();
@@ -31,16 +33,20 @@ export function useWeekPlan() {
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function generateWeek() {
+  async function generateWeek(mealType: WeekMealType = 'dinner') {
     if (!householdId || !token) return;
     setIsGenerating(true);
+    setError(null);
     try {
       const result = await apiFetch<WeekPlanEntry[]>(
         `/api/household/${householdId}/meal-plan/week/generate`,
-        { method: 'POST', token },
+        { method: 'POST', token, body: { mealType } },
       );
       queryClient.setQueryData(WEEK_QUERY_KEY(householdId), result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate week plan. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -60,6 +66,7 @@ export function useWeekPlan() {
     plan,
     isLoading,
     isGenerating,
+    error,
     generateWeek,
     getMeal,
     hasPlan: plan.length > 0,

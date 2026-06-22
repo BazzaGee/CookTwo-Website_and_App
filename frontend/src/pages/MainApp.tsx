@@ -17,10 +17,12 @@ const tabs = [
 
 export default function MainApp() {
   const session = useAuthStore((s) => s.session);
+  const clear = useAuthStore((s) => s.clear);
   const navigate = useNavigate();
   const { profiles } = useProfiles();
 
   function handleSignOut() {
+    clear();
     navigate('/onboarding', { replace: true });
   }
 
@@ -38,7 +40,8 @@ export default function MainApp() {
     <div className="min-h-full bg-cream flex flex-col">
       <NotificationToast />
       <InstallBanner />
-      <header className="px-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 flex items-center justify-between">
+      <header className="px-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 border-b-2 border-terracotta/40">
+        <div className="max-w-md mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex -space-x-1" aria-hidden>
             {p1 && (
@@ -81,13 +84,16 @@ export default function MainApp() {
             <LogOut size={18} />
           </button>
         </div>
+        </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-24 scroll-smooth-ios">
-        <Outlet />
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 scroll-smooth-ios">
+        <div className="max-w-md mx-auto w-full">
+          <Outlet />
+        </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-cream/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-cream/95 backdrop-blur border-t-2 border-sage/40 pb-[env(safe-area-inset-bottom)]">
         <ul className="flex justify-around max-w-md mx-auto">
           {tabs.map((tab) => (
             <li key={tab.to} className="flex-1">

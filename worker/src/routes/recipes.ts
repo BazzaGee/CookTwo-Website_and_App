@@ -1,5 +1,7 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { logToD1 } from '../lib/activity';
+import { readBearer } from '../lib/jwt';
 
 export interface SavedRecipe {
   id: string;
@@ -73,6 +75,19 @@ export async function handleSaveRecipe(c: Context<{ Bindings: Env }>) {
   }
 
   const recipe = await saveRecipe(c.env.DB, householdId, body.name, body.mealData);
+
+  const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
+  await logToD1(c.env.DB, {
+    householdId,
+    partnerId: claims?.partnerId ?? null,
+    partnerSlot: claims?.slot ?? null,
+    partnerName: claims?.displayName ?? null,
+    actionType: 'recipe_saved',
+    targetKind: 'recipe',
+    targetId: recipe.id,
+    targetName: recipe.name,
+  }).catch((err) => console.error('activity log failed:', err));
+
   return c.json(recipe, 201);
 }
 
@@ -97,5 +112,17 @@ export async function handleDeleteRecipe(c: Context<{ Bindings: Env }>) {
   if (!deleted) {
     return c.json({ error: 'recipe not found' }, 404);
   }
+
+  const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
+  await logToD1(c.env.DB, {
+    householdId,
+    partnerId: claims?.partnerId ?? null,
+    partnerSlot: claims?.slot ?? null,
+    partnerName: claims?.displayName ?? null,
+    actionType: 'recipe_deleted',
+    targetKind: 'recipe',
+    targetId: recipeId,
+  }).catch((err) => console.error('activity log failed:', err));
+
   return c.json({ deleted: true });
 }

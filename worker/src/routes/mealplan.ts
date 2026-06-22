@@ -1,8 +1,10 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { logToD1 } from '../lib/activity';
+import { readBearer } from '../lib/jwt';
 
 export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
-export type MealType = 'breakfast' | 'lunch' | 'dinner';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'any';
 
 export interface WeekMeal {
   id: string;
@@ -31,6 +33,7 @@ export async function saveWeekPlan(
   db: D1Database,
   householdId: string,
   meals: Array<{ dayOfWeek: DayOfWeek; mealName: string; mealData: string }>,
+  mealType: MealType = 'dinner',
 ): Promise<WeekMeal[]> {
   const now = Date.now();
   const results: WeekMeal[] = [];
@@ -39,16 +42,16 @@ export async function saveWeekPlan(
     const id = crypto.randomUUID();
     await db.prepare(
       `INSERT INTO meal_plans (id, household_id, day_of_week, meal_type, meal_name, meal_data, created_at)
-       VALUES (?, ?, ?, 'dinner', ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
-      .bind(id, householdId, meal.dayOfWeek, meal.mealName, meal.mealData, now)
+      .bind(id, householdId, meal.dayOfWeek, mealType, meal.mealName, meal.mealData, now)
       .run();
 
     results.push({
       id,
       householdId,
       dayOfWeek: meal.dayOfWeek,
-      mealType: 'dinner',
+      mealType,
       mealName: meal.mealName,
       mealData: meal.mealData,
       createdAt: now,
@@ -72,6 +75,8 @@ export async function handleGetWeekPlan(c: Context<{ Bindings: Env }>) {
 
 export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const householdId = c.req.param('id') as string;
+  const body = (await c.req.json().catch(() => ({}))) as { mealType?: MealType };
+  const mealType: MealType = body.mealType || 'dinner';
   const { generateMeal } = await import('../lib/ai');
   const { getPartners } = await import('./profiles');
   const { getCoupleDietRules } = await import('../lib/diet-rules');
@@ -112,7 +117,7 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
   const meals: Array<{ dayOfWeek: DayOfWeek; mealName: string; mealData: string }> = [];
 
   for (const day of DAYS) {
-    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, partnerContext, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups);
+    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, partnerContext, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, mealType);
     if (meal) {
       meals.push({
         dayOfWeek: day,
@@ -120,11 +125,24 @@ export async function handleGenerateWeekPlan(c: Context<{ Bindings: Env }>) {
         mealData: JSON.stringify(meal),
       });
     } else {
-      console.error(`AI failed to generate meal for ${day}. Skipping.`);
+      console.error(`AI failed to generate ${mealType} for ${day}. Skipping.`);
     }
   }
 
-  const saved = await saveWeekPlan(c.env.DB, householdId, meals);
+  const saved = await saveWeekPlan(c.env.DB, householdId, meals, mealType);
+
+  const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
+  await logToD1(c.env.DB, {
+    householdId,
+    partnerId: claims?.partnerId ?? null,
+    partnerSlot: claims?.slot ?? null,
+    partnerName: claims?.displayName ?? null,
+    actionType: 'week_plan_generated',
+    targetKind: 'meal',
+    targetName: `${meals.length} meals (${mealType})`,
+    payload: { days: meals.map((m) => ({ day: m.dayOfWeek, name: m.mealName })) },
+  }).catch((err) => console.error('activity log failed:', err));
+
   return c.json(saved);
 }
 
@@ -148,5 +166,18 @@ export async function handleConfirmMeal(c: Context<{ Bindings: Env }>) {
   });
 
   const data = (await result.json()) as { updated: string[]; removed: string[] };
+
+  const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
+  await logToD1(c.env.DB, {
+    householdId,
+    partnerId: claims?.partnerId ?? null,
+    partnerSlot: claims?.slot ?? null,
+    partnerName: claims?.displayName ?? null,
+    actionType: 'meal_confirmed',
+    targetKind: 'meal',
+    targetName: `${data.updated.length + data.removed.length} pantry items adjusted`,
+    payload: { updated: data.updated, removed: data.removed },
+  }).catch((err) => console.error('activity log failed:', err));
+
   return c.json(data);
 }

@@ -28,15 +28,16 @@ chatWithAI() (worker/src/lib/ai.ts)
        │
        ▼
 callDeepSeekChat() (worker/src/lib/ai.ts)
-  • Tries deepseek-v4-flash → deepseek-v4-pro (fallback)
-  • POST to api.deepseek.com/v1/chat/completions
+  • Uses deepseek-v4-flash only (no fallback to Pro)
+  • POST to api.deepseek.com/chat/completions
   • Returns raw response text or null
        │
-       ▼
+        ▼
 DeepSeek API
-  • Model: deepseek-v4-flash or deepseek-v4-pro
-  • Receives: system prompt + conversation history
-  • Returns: JSON with meal, ingredients, steps, macros
+   • Model: deepseek-v4-flash
+   • Thinking mode disabled (saves reasoning tokens)
+   • Receives: system prompt + conversation history
+   • Returns: JSON with meal, ingredients, steps, macros
 ```
 
 ## File map
@@ -95,11 +96,10 @@ VITE_WS_URL=wss://couples-food-system-api.byte-digital.workers.dev
 ## Model chain
 
 ```
-Primary:   deepseek-v4-flash
-Fallback:  deepseek-v4-pro
+Primary:   deepseek-v4-flash (only model used)
 ```
 
-`callDeepSeekChat()` tries models in order. If both fail, returns `null` and `chatWithAI()` returns an error message. **No mock data is ever returned.**
+`callDeepSeekChat()` uses only `deepseek-v4-flash`. If it fails, returns `null` and `chatWithAI()` returns an error message. **No mock data is ever returned.** V4 Pro is never called to minimise cost.
 
 The old `generateMeal()` function (used by `/meal-plan/generate` and week plan) also returns `null` on failure — no mock fallback.
 
@@ -152,10 +152,10 @@ cd worker && npx wrangler deploy
 ### Chat clears when switching tabs
 
 **Cause:** `useMealChat` stores messages in localStorage. If clearing, check:
-1. `loadMessages()` in `useMealChat.ts` reads from `localStorage.getItem('cupla_chat_messages')`
+1. `loadMessages()` in `useMealChat.ts` reads from `localStorage.getItem('cooktwo_chat_messages')`
 2. `saveMessages()` writes on every response
 
-**Fix:** If conversation is lost, check localStorage in DevTools → Application → Local Storage for key `cupla_chat_messages`. If missing, something cleared it.
+**Fix:** If conversation is lost, check localStorage in DevTools → Application → Local Storage for key `cooktwo_chat_messages`. If missing, something cleared it.
 
 ### Pages deployment shows old UI
 

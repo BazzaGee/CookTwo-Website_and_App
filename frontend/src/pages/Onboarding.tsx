@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createHousehold, joinHousehold } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
+import { useBilling } from '../hooks/useBilling';
 import { apiFetch } from '../lib/api';
 import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
@@ -358,7 +359,7 @@ function Wordmark() {
     <div className="text-center mb-12">
       <p className="text-sage text-xs font-medium tracking-[0.3em] uppercase">For one or two</p>
       <h1 className="text-text-primary text-3xl font-semibold tracking-tight mt-3">
-        Cupla
+        CookTwo
       </h1>
     </div>
   );
@@ -1039,6 +1040,9 @@ function PlanStep({
   onContinue: () => void;
   onBack: () => void;
 }) {
+  const { checkout, checkingOut } = useBilling();
+  const [planPeriod, setPlanPeriod] = useState<'monthly' | 'yearly'>('monthly');
+
   return (
     <div className="flex flex-col">
       <Wordmark />
@@ -1058,15 +1062,45 @@ function PlanStep({
           <h3 className="text-text-primary font-semibold text-sm">Premium</h3>
         </div>
         <p className="text-text-secondary text-sm leading-relaxed">
-          Get <strong className="text-text-primary">70 AI requests</strong> and <strong className="text-text-primary">3 AI-generated meal images</strong> per day — that's 7× more. $4.99/month or $44.99/year. Cancel anytime.
+          Get <strong className="text-text-primary">70 AI requests</strong> and <strong className="text-text-primary">3 AI-generated meal images</strong> per day — that's 7× more. Cancel anytime.
         </p>
+
+        <div className="flex bg-cream-dark rounded-xl p-1 mt-4 mb-4">
+          <button
+            type="button"
+            onClick={() => setPlanPeriod('monthly')}
+            className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+              planPeriod === 'monthly' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary'
+            }`}
+          >
+            $4.99/month
+          </button>
+          <button
+            type="button"
+            onClick={() => setPlanPeriod('yearly')}
+            className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+              planPeriod === 'yearly' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary'
+            }`}
+          >
+            $44.99/year
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => checkout(planPeriod)}
+          disabled={checkingOut}
+          className="w-full bg-sage text-white text-sm font-medium py-3 px-4 rounded-xl hover:bg-sage-dark active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+        >
+          {checkingOut ? 'Redirecting…' : `Upgrade to Premium · ${planPeriod === 'monthly' ? '$4.99/mo' : '$44.99/yr'}`}
+        </button>
       </div>
 
       <p className="text-text-secondary text-xs text-center mb-6">
-        You can upgrade anytime in Settings → Plan.
+        You can also upgrade anytime in Settings → Plan.
       </p>
 
-      <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+      <PrimaryButton onClick={onContinue}>Continue with free plan</PrimaryButton>
       <div className="mt-2 text-center">
         <SecondaryButton onClick={onBack}>Back</SecondaryButton>
       </div>

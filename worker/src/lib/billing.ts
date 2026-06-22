@@ -55,8 +55,6 @@ export async function createCheckoutSession(
 
   if (customerId) {
     params.customer = customerId;
-  } else {
-    params['customer_creation'] = 'always';
   }
 
   const res = await stripeApi(env, '/checkout/sessions', 'POST', params);
@@ -97,10 +95,6 @@ export async function verifyAndParseWebhook(
   if (!env.STRIPE_WEBHOOK_SECRET) throw new StripeNotConfiguredError();
 
   const tolerance = Math.floor(Date.now() / 1000) - 300;
-
-  const res = await stripeApi(env, '/webhook_endpoints', 'GET');
-  const endpoints = (await res.json()) as { data: Array<{ secret: string }> };
-
   const expectedSig = env.STRIPE_WEBHOOK_SECRET;
 
   const parts = signature.split(',');
@@ -110,6 +104,10 @@ export async function verifyAndParseWebhook(
     const [key, value] = part.split('=') as [string, string];
     if (key === 't') timestamp = parseInt(value, 10);
     if (key === 'v1') sigHex = value;
+  }
+
+  if (!timestamp || !sigHex) {
+    throw new Error('Webhook signature missing t or v1');
   }
 
   if (timestamp < tolerance) {
@@ -128,11 +126,9 @@ export async function verifyAndParseWebhook(
     false,
     ['verify'],
   );
-  const expectedSigBytes = hexToBytes(sigHex);
-  const actualSigBytes = await crypto.subtle.sign('HMAC', cryptoKey, payloadData);
-  const actualHex = bytesToHex(new Uint8Array(actualSigBytes));
 
-  if (actualHex !== sigHex) {
+  const valid = await crypto.subtle.verify('HMAC', cryptoKey, hexToBytes(sigHex), payloadData);
+  if (!valid) {
     throw new Error('Webhook signature mismatch');
   }
 
@@ -152,6 +148,7 @@ export async function updateStripeCustomerId(
 }
 
 export async function applyWebhookEvent(
+  env: Env,
   db: D1Database,
   event: { type: string; data: { object?: Record<string, unknown> } },
 ): Promise<void> {
@@ -169,7 +166,7 @@ export async function applyWebhookEvent(
       if (!householdId || mode !== 'subscription') return;
 
       const subRes = await stripeApi(
-        { STRIPE_SECRET_KEY: '' } as Env,
+        env,
         `/subscriptions/${subscriptionId}`,
         'GET',
       );
@@ -187,21 +184,26 @@ export async function applyWebhookEvent(
       }
 
       await db.prepare(
-        `UPDATE household_subscriptions
-            SET tier = 'premium',
-                daily_quota = 70,
-                daily_image_quota = 3,
-                used_today = 0,
-                images_used_today = 0,
-                stripe_customer_id = ?,
-                stripe_subscription_id = ?,
-                plan_period = ?,
-                current_period_end = ?,
-                status = 'active',
-                updated_at = ?
-          WHERE household_id = ?`,
+        `INSERT INTO household_subscriptions
+            (household_id, tier, plan_period, timezone, last_reset_date,
+             used_today, daily_quota, images_used_today, daily_image_quota,
+             stripe_customer_id, stripe_subscription_id, current_period_end,
+             cancel_at_period_end, status, created_at, updated_at)
+         VALUES (?, 'premium', ?, 'UTC', NULL, 0, 70, 0, 3, ?, ?, ?, 0, 'active', ?, ?)
+         ON CONFLICT(household_id) DO UPDATE SET
+             tier = 'premium',
+             daily_quota = 70,
+             daily_image_quota = 3,
+             used_today = 0,
+             images_used_today = 0,
+             stripe_customer_id = excluded.stripe_customer_id,
+             stripe_subscription_id = excluded.stripe_subscription_id,
+             plan_period = excluded.plan_period,
+             current_period_end = excluded.current_period_end,
+             status = 'active',
+             updated_at = excluded.updated_at`,
       )
-        .bind(customerId, subscriptionId, planPeriod, periodEnd, now, householdId)
+        .bind(householdId, planPeriod, customerId, subscriptionId, periodEnd, now, now)
         .run();
       break;
     }
@@ -270,8 +272,4 @@ function hexToBytes(hex: string): Uint8Array {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
   }
   return bytes;
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/authStore';
 import { linkWithPartner } from '../hooks/useAuth';
 import UpgradeSection from '../components/UpgradeSection';
 import DietBrowser from '../components/DietBrowser';
+import { ActivityLogSection } from '../components/ActivityLogSection';
 
 const GENDERS: readonly Gender[] = ['male', 'female', 'other'] as const;
 const ACTIVITY_LEVELS: readonly ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active', 'very_active'] as const;
@@ -289,6 +290,8 @@ export default function ProfilesTab() {
           </div>
         </details>
       )}
+
+      <ActivityLogSection />
 
       {browsingDiet && (
         <DietBrowser dietKey={browsingDiet} onClose={() => setBrowsingDiet(null)} />

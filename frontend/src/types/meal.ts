@@ -25,4 +25,5 @@ export interface GeneratedMeal {
   ingredients: MealIngredient[];
   steps: string[];
   plating?: PlatingInstruction[];
+  savedRecipeId?: string;
 }

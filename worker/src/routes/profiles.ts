@@ -1,6 +1,8 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
 import { calculateTDEE, type BodyProfile, type TDEEResult } from '../lib/tdee';
+import { logToD1 } from '../lib/activity';
+import { readBearer } from '../lib/jwt';
 
 export type Diet = 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'paleo' | 'gluten-free';
 export type Gender = 'male' | 'female' | 'other';
@@ -238,6 +240,7 @@ export async function handleGetProfiles(c: Context<{ Bindings: Env }>) {
 }
 
 export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
+  const householdId = c.req.param('id') as string;
   const partnerId = c.req.param('partnerId') as string;
   const body = (await c.req.json().catch(() => ({}))) as {
     name?: string;
@@ -268,5 +271,20 @@ export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
   });
 
   if (!profile) return c.json({ error: 'partner_not_found' }, 404);
+
+  const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
+  const changedFields = Object.keys(body).filter((k) => body[k as keyof typeof body] !== undefined);
+  await logToD1(c.env.DB, {
+    householdId,
+    partnerId,
+    partnerSlot: profile.slot,
+    partnerName: profile.name,
+    actionType: 'profile_updated',
+    targetKind: 'profile',
+    targetId: partnerId,
+    targetName: profile.name,
+    payload: { changedFields },
+  }).catch((err) => console.error('activity log failed:', err));
+
   return c.json(profile);
 }
