@@ -1,0 +1,280 @@
+---
+// src/pages/auth/pair.astro
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Your Partner - CookTwo</title>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-rose-500 mb-2">CookTwo</h1>
+      <p class="text-slate-600">Link your account with your partner</p>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+      <!-- Step 1: Show pairing code or enter partner's code -->
+      <div id="step-1" class="space-y-6">
+        <div class="text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
+            <svg class="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold mb-2">Connect with Your Partner</h2>
+          <p class="text-slate-600">Share this code with your partner, or enter their code below</p>
+        </div>
+        
+        <!-- Your Pairing Code -->
+        <div class="bg-slate-50 rounded-lg p-4 text-center">
+          <p class="text-sm text-slate-600 mb-2">Your pairing code:</p>
+          <div id="pairing-code" class="text-2xl font-bold text-slate-900 tracking-wider">
+            Loading...
+          </div>
+          <div class="mt-3 flex items-center justify-center gap-2">
+            <button id="copy-code" class="text-sm text-rose-500 hover:text-rose-600">
+              Copy code
+            </button>
+            <span class="text-slate-300">|</span>
+            <button id="share-link" class="text-sm text-rose-500 hover:text-rose-600 font-medium">
+              Share invite link
+            </button>
+          </div>
+          <p id="share-feedback" class="text-xs text-green-600 mt-2 hidden"></p>
+        </div>
+        
+        <!-- Enter Partner's Code -->
+        <div class="border-t border-slate-200 pt-6">
+          <p class="text-sm text-slate-600 mb-3">Have your partner's code?</p>
+          <form id="pairing-form" class="space-y-3">
+            <input 
+              type="text" 
+              id="partner-code" 
+              placeholder="Enter code (e.g., LOVE-FIRE-123)"
+              class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition uppercase"
+              required
+              pattern="[A-Z]+-[A-Z]+-\d{3}"
+            />
+            <div id="error-message" class="text-red-500 text-sm hidden"></div>
+            <button 
+              type="submit" 
+              id="submit-btn"
+              class="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 transition disabled:opacity-50"
+            >
+              Link Accounts
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Step 2: Success -->
+      <div id="step-2" class="hidden text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+          <svg class="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold mb-2">You're Connected!</h2>
+        <p class="text-slate-600 mb-6">You and your partner are now linked. Let's set up your shared calendar.</p>
+        <a 
+          href="/app" 
+          class="inline-block w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 transition text-center"
+        >
+          Go to App
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    import { nanoid } from 'nanoid';
+    
+    const pairingCodeEl = document.getElementById('pairing-code');
+    const copyBtn = document.getElementById('copy-code');
+    const shareBtn = document.getElementById('share-link');
+    const shareFeedback = document.getElementById('share-feedback');
+    const pairingForm = document.getElementById('pairing-form');
+    const errorMessage = document.getElementById('error-message');
+    const submitBtn = document.getElementById('submit-btn');
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    
+    // Generate pairing code
+    function generateCode() {
+      const words = ['LOVE', 'FIRE', 'MOON', 'STAR', 'WAVE', 'HEART', 'DREAM', 'SPARK'];
+      const w1 = words[Math.floor(Math.random() * words.length)];
+      const w2 = words[Math.floor(Math.random() * words.length)];
+      const num = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+      return `${w1}-${w2}-${num}`;
+    }
+    
+    // Load or generate pairing code
+    async function loadPairingCode() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      
+      // Check if already has code
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pairing_code, partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.partner_id) {
+        // Already paired, redirect to app
+        window.location.href = '/app';
+        return;
+      }
+      
+      if (profile?.pairing_code) {
+        pairingCodeEl.textContent = profile.pairing_code;
+      } else {
+        // Generate and save new code
+        const newCode = generateCode();
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            pairing_code: newCode,
+            pairing_code_expires_at: expiresAt.toISOString()
+          })
+          .eq('id', user.id);
+        
+        if (!error) {
+          pairingCodeEl.textContent = newCode;
+        }
+      }
+    }
+    
+    // Copy code to clipboard
+    copyBtn?.addEventListener('click', () => {
+      const code = pairingCodeEl.textContent;
+      if (code && code !== 'Loading...') {
+        navigator.clipboard.writeText(code);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy code', 2000);
+      }
+    });
+
+    // Share invite link via native share sheet
+    shareBtn?.addEventListener('click', async () => {
+      const code = pairingCodeEl.textContent;
+      if (!code || code === 'Loading...') return;
+
+      const url = `${window.location.origin}/auth/join?code=${encodeURIComponent(code)}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'CookTwo',
+            text: 'Join me on CookTwo!',
+            url,
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            await navigator.clipboard.writeText(url);
+            shareFeedback.textContent = 'Link copied to clipboard!';
+            shareFeedback.classList.remove('hidden');
+            setTimeout(() => shareFeedback.classList.add('hidden'), 3000);
+          }
+        }
+      } else {
+        await navigator.clipboard.writeText(url);
+        shareFeedback.textContent = 'Link copied to clipboard!';
+        shareFeedback.classList.remove('hidden');
+        setTimeout(() => shareFeedback.classList.add('hidden'), 3000);
+      }
+    });
+    
+    // Handle pairing submission
+    pairingForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const partnerCode = document.getElementById('partner-code').value.trim().toUpperCase();
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Linking...';
+      errorMessage.classList.add('hidden');
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        
+        // Find partner with this code
+        const { data: partner, error: findError } = await supabase
+          .from('profiles')
+          .select('id, partner_id, pairing_code_expires_at')
+          .eq('pairing_code', partnerCode)
+          .single();
+        
+        if (findError || !partner) {
+          throw new Error('Invalid pairing code. Please check and try again.');
+        }
+        
+        if (partner.id === user.id) {
+          throw new Error('You cannot pair with yourself!');
+        }
+        
+        if (partner.partner_id) {
+          throw new Error('This partner is already linked with someone else.');
+        }
+        
+        // Check if code expired
+        if (new Date(partner.pairing_code_expires_at) < new Date()) {
+          throw new Error('This pairing code has expired. Ask your partner to generate a new one.');
+        }
+        
+        // Link the accounts
+        const { error: updateError1 } = await supabase
+          .from('profiles')
+          .update({ partner_id: partner.id })
+          .eq('id', user.id);
+        
+        const { error: updateError2 } = await supabase
+          .from('profiles')
+          .update({ partner_id: user.id })
+          .eq('id', partner.id);
+        
+        if (updateError1 || updateError2) {
+          throw new Error('Failed to link accounts. Please try again.');
+        }
+        
+        // Show success
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        
+      } catch (err) {
+        errorMessage.textContent = err.message;
+        errorMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Link Accounts';
+      }
+    });
+    
+    // Check for invite code in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('code');
+    if (inviteCode) {
+      const codeInput = document.getElementById('partner-code');
+      if (codeInput) {
+        codeInput.value = inviteCode.toUpperCase();
+        codeInput.focus();
+      }
+    }
+
+    // Load on page mount
+    loadPairingCode();
+  </script>
+</body>
+</html>

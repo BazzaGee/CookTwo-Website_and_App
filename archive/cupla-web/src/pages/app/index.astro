@@ -1,0 +1,186 @@
+---
+// src/pages/app/index.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="p-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+      <p class="text-slate-600 mt-1">Here's what's happening with you and your partner</p>
+    </div>
+    
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Upcoming Events -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <span class="text-sm text-slate-500">This Week</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900" id="events-count">0</h3>
+        <p class="text-sm text-slate-600">Upcoming Events</p>
+      </div>
+      
+      <!-- Pending Tasks -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <span class="text-sm text-slate-500">Active</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900" id="tasks-count">0</h3>
+        <p class="text-sm text-slate-600">Pending Tasks</p>
+      </div>
+      
+      <!-- Next Date -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <span class="text-sm text-slate-500">Next</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900" id="next-date">--</h3>
+        <p class="text-sm text-slate-600">Days Until Date Night</p>
+      </div>
+      
+      <!-- Unread Messages -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <span class="text-sm text-slate-500">New</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900" id="messages-count">0</h3>
+        <p class="text-sm text-slate-600">Unread Messages</p>
+      </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-8">
+      <h2 class="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
+      <div class="flex flex-wrap gap-3">
+        <a href="/app/calendar" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Event
+        </a>
+        <a href="/app/todos" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Task
+        </a>
+        <a href="/app/dates" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Plan Date
+        </a>
+        <a href="/app/chat" class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Send Message
+        </a>
+      </div>
+    </div>
+    
+    <!-- Coming Soon Notice -->
+    <div class="bg-slate-100 rounded-xl p-8 text-center">
+      <h2 class="text-xl font-semibold text-slate-900 mb-2">Coming Soon</h2>
+      <p class="text-slate-600">
+        Calendar integration, to-do lists, date planner, chat, and more are being built. 
+        The foundation is ready - Phase 2 coming next!
+      </p>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    // Load dashboard data
+    async function loadDashboard() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      const coupleId = [user.id, profile.partner_id].sort().join('-');
+      
+      // Get upcoming events
+      const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .gte('start_time', new Date().toISOString())
+        .lte('start_time', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('start_time', { ascending: true });
+      
+      document.getElementById('events-count').textContent = events?.length || 0;
+      
+      // Get pending tasks
+      const { data: tasks } = await supabase
+        .from('todos')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .eq('is_completed', false);
+      
+      document.getElementById('tasks-count').textContent = tasks?.length || 0;
+      
+      // Get next date
+      const { data: dates } = await supabase
+        .from('events')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .eq('event_type', 'date')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(1);
+      
+      if (dates?.length > 0) {
+        const date = new Date(dates[0].start_time);
+        const now = new Date();
+        const diff = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+        document.getElementById('next-date').textContent = diff;
+      } else {
+        document.getElementById('next-date').textContent = '--';
+      }
+      
+      // Get unread messages
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('couple_id', coupleId)
+        .eq('is_read', false)
+        .neq('sender_id', user.id);
+      
+      document.getElementById('messages-count').textContent = count || 0;
+    }
+    
+    loadDashboard();
+  </script>
+</AppLayout>

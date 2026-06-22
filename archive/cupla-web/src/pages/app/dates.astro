@@ -1,0 +1,335 @@
+---
+// src/pages/app/dates.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-slate-900">Date Planner</h1>
+      <p class="text-slate-600">Plan quality time together</p>
+    </div>
+    
+    <!-- Date Goal Setting -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Date Frequency Goal</h2>
+      <div class="flex items-center gap-4">
+        <span class="text-slate-600">We want to go on a date every:</span>
+        <select id="date-goal" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          <option value="weekly">Week</option>
+          <option value="biweekly">2 Weeks</option>
+          <option value="monthly">Month</option>
+        </select>
+        <button id="save-goal-btn" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+          Save
+        </button>
+      </div>
+      <div id="goal-status" class="mt-4 p-3 bg-rose-50 rounded-lg hidden">
+        <p class="text-rose-700 text-sm"></p>
+      </div>
+    </div>
+    
+    <!-- Quick Plan Date -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Plan a Date</h2>
+      <form id="date-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">What would you like to do?</label>
+          <input type="text" id="date-idea" placeholder="e.g., Dinner at that new Italian place" required
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">When</label>
+            <input type="datetime-local" id="date-time" required
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Where</label>
+            <input type="text" id="date-location" placeholder="Restaurant name or address"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition">
+          Send Date Request
+        </button>
+      </form>
+    </div>
+    
+    <!-- Upcoming Dates -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+      <h2 class="text-lg font-semibold mb-4">Upcoming Dates</h2>
+      <div id="dates-container" class="space-y-3">
+        <div class="text-center text-slate-500 py-8">No dates planned yet</div>
+      </div>
+    </div>
+    
+    <!-- Date History -->
+    <div class="mt-6 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+      <h2 class="text-lg font-semibold mb-4">Date History</h2>
+      <div id="history-container" class="space-y-3">
+        <div class="text-center text-slate-500 py-4">No past dates yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accept/Decline Modal -->
+  <div id="response-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-2">Date Request</h2>
+      <p class="text-slate-600 mb-4" id="request-details"></p>
+      <div class="flex gap-3">
+        <button id="decline-date" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Decline</button>
+        <button id="accept-date" class="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    let coupleId;
+    let currentUserId;
+    let pendingDateId = null;
+    
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      currentUserId = user.id;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id, date_frequency_goal')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      coupleId = [user.id, profile.partner_id].sort().join('-');
+      
+      // Load date goal
+      if (profile.date_frequency_goal) {
+        document.getElementById('date-goal').value = profile.date_frequency_goal;
+      }
+      
+      await loadDates();
+      await loadHistory();
+      checkDateGoalStatus();
+    }
+    
+    async function loadDates() {
+      const { data: dates } = await supabase
+        .from('events')
+        .select('*, created_by')
+        .eq('couple_id', coupleId)
+        .eq('event_type', 'date')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true });
+      
+      const container = document.getElementById('dates-container');
+      
+      if (!dates?.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-8">No dates planned yet</div>';
+        return;
+      }
+      
+      container.innerHTML = dates.map(date => `
+        <div class="flex items-center justify-between p-4 bg-rose-50 rounded-lg border border-rose-100">
+          <div>
+            <h3 class="font-semibold text-slate-900">${date.title}</h3>
+            <p class="text-sm text-slate-600">${new Date(date.start_time).toLocaleString()}</p>
+            ${date.location ? `<p class="text-sm text-slate-500">📍 ${date.location}</p>` : ''}
+            ${date.status === 'pending_accept' ? '<span class="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">Waiting for response</span>' : ''}
+          </div>
+          ${date.status === 'pending_accept' && date.assigned_to === currentUserId ? `
+            <button onclick="showResponseModal('${date.id}', '${date.title}', '${date.start_time}')" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
+              Respond
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+    
+    async function loadHistory() {
+      const { data: history } = await supabase
+        .from('date_plan_history')
+        .select('*, event:events(title, start_time)')
+        .eq('couple_id', coupleId)
+        .order('planned_at', { ascending: false })
+        .limit(10);
+      
+      const container = document.getElementById('history-container');
+      
+      if (!history?.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-4">No past dates yet</div>';
+        return;
+      }
+      
+      container.innerHTML = history.map(h => `
+        <div class="flex items-center gap-3 p-3 border-b border-slate-100 last:border-0">
+          <div class="w-2 h-2 rounded-full ${h.status === 'completed' ? 'bg-green-500' : 'bg-slate-300'}"></div>
+          <div class="flex-1">
+            <p class="text-slate-900">${h.event?.title || 'Date'}</p>
+            <p class="text-sm text-slate-500">${new Date(h.event?.start_time).toLocaleDateString()}</p>
+          </div>
+          <span class="text-sm text-slate-500 capitalize">${h.status}</span>
+        </div>
+      `).join('');
+    }
+    
+    async function checkDateGoalStatus() {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('date_frequency_goal')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.date_frequency_goal) return;
+      
+      const daysMap = { weekly: 7, biweekly: 14, monthly: 30 };
+      const days = daysMap[profile.date_frequency_goal] || 7;
+      
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      const { data: recentDates } = await supabase
+        .from('events')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .eq('event_type', 'date')
+        .gte('start_time', cutoffDate.toISOString())
+        .limit(1);
+      
+      const statusEl = document.getElementById('goal-status');
+      const statusText = statusEl.querySelector('p');
+      
+      if (!recentDates?.length) {
+        statusEl.classList.remove('hidden');
+        statusText.textContent = `You haven't had a date in the last ${days} days. Time to plan one! 💕`;
+      } else {
+        statusEl.classList.add('hidden');
+      }
+    }
+    
+    window.showResponseModal = (id, title, startTime) => {
+      pendingDateId = id;
+      document.getElementById('request-details').textContent = 
+        `"${title}" on ${new Date(startTime).toLocaleString()}`;
+      document.getElementById('response-modal').classList.remove('hidden');
+      document.getElementById('response-modal').classList.add('flex');
+    };
+    
+    // Save date goal
+    document.getElementById('save-goal-btn')?.addEventListener('click', async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const goal = document.getElementById('date-goal').value;
+      
+      await supabase
+        .from('profiles')
+        .update({ date_frequency_goal: goal })
+        .eq('id', user.id);
+      
+      checkDateGoalStatus();
+    });
+    
+    // Plan date
+    document.getElementById('date-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      const eventData = {
+        couple_id: coupleId,
+        created_by: user.id,
+        title: document.getElementById('date-idea').value,
+        start_time: new Date(document.getElementById('date-time').value).toISOString(),
+        end_time: new Date(new Date(document.getElementById('date-time').value).getTime() + 3 * 60 * 60 * 1000).toISOString(),
+        location: document.getElementById('date-location').value,
+        event_type: 'date',
+        status: 'pending_accept',
+        assigned_to: profile.partner_id,
+      };
+      
+      const { data: event, error } = await supabase.from('events').insert([eventData]).select();
+      
+      if (!error && event) {
+        // Create date plan history
+        await supabase.from('date_plan_history').insert([{
+          couple_id: coupleId,
+          event_id: event[0].id,
+          planned_by: user.id,
+          status: 'pending',
+        }]);
+        
+        // Create notification for partner
+        await supabase.from('notifications').insert([{
+          user_id: profile.partner_id,
+          type: 'date_request',
+          title: 'New Date Request',
+          body: `Your partner wants to go on a date: "${eventData.title}"`,
+          related_id: event[0].id,
+          related_type: 'event',
+        }]);
+        
+        document.getElementById('date-form').reset();
+        loadDates();
+      }
+    });
+    
+    // Accept date
+    document.getElementById('accept-date')?.addEventListener('click', async () => {
+      if (!pendingDateId) return;
+      
+      await supabase
+        .from('events')
+        .update({ 
+          status: 'confirmed',
+          accepted_by: currentUserId,
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('id', pendingDateId);
+      
+      await supabase
+        .from('date_plan_history')
+        .update({ status: 'accepted' })
+        .eq('event_id', pendingDateId);
+      
+      document.getElementById('response-modal').classList.add('hidden');
+      document.getElementById('response-modal').classList.remove('flex');
+      pendingDateId = null;
+      loadDates();
+    });
+    
+    // Decline date
+    document.getElementById('decline-date')?.addEventListener('click', async () => {
+      if (!pendingDateId) return;
+      
+      await supabase
+        .from('events')
+        .update({ status: 'cancelled' })
+        .eq('id', pendingDateId);
+      
+      await supabase
+        .from('date_plan_history')
+        .update({ status: 'declined' })
+        .eq('event_id', pendingDateId);
+      
+      document.getElementById('response-modal').classList.add('hidden');
+      document.getElementById('response-modal').classList.remove('flex');
+      pendingDateId = null;
+      loadDates();
+    });
+    
+    init();
+  </script>
+</AppLayout>

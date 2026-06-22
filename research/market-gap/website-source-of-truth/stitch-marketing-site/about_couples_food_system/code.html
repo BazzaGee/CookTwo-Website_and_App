@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Story | Couples Food System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e8d0",
+                        "on-secondary-fixed": "#301400",
+                        "primary-fixed-dim": "#aad0ad",
+                        "surface-tint": "#44664a",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#615e57",
+                        "on-primary-fixed-variant": "#2d4e33",
+                        "on-tertiary-container": "#2f2e27",
+                        "on-primary-container": "#13341c",
+                        "inverse-surface": "#233524",
+                        "on-background": "#0e1f10",
+                        "primary-fixed": "#c6ecc8",
+                        "tertiary-container": "#98958c",
+                        "surface-dim": "#cae0c8",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#aad0ad",
+                        "on-primary-fixed": "#00210b",
+                        "surface-container-low": "#e4fae1",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#def4db",
+                        "on-tertiary-fixed": "#1d1c16",
+                        "on-tertiary-fixed-variant": "#494740",
+                        "surface-container-high": "#d8eed6",
+                        "background": "#ebffe7",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#febb8e",
+                        "inverse-on-surface": "#e1f7de",
+                        "tertiary-fixed-dim": "#cac6bd",
+                        "secondary-fixed": "#ffdcc6",
+                        "surface-bright": "#ebffe7",
+                        "on-surface-variant": "#424842",
+                        "secondary-fixed-dim": "#fbb88b",
+                        "tertiary-fixed": "#e7e2d8",
+                        "on-surface": "#0e1f10",
+                        "surface": "#ebffe7",
+                        "on-secondary-container": "#794925",
+                        "primary": "#44664a",
+                        "outline-variant": "#c2c8bf",
+                        "on-secondary-fixed-variant": "#693c19",
+                        "on-error-container": "#93000a",
+                        "outline": "#727971",
+                        "primary-container": "#7a9e7e",
+                        "secondary": "#85532e",
+                        "surface-variant": "#d3e8d0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "container-padding": "20px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h1-mobile": ["Plus Jakarta Sans"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "h3": ["Plus Jakarta Sans"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>body {
+    background-color: #ebffe7;
+    color: #0e1f10;
+    -webkit-font-smoothing: antialiased
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px)
+    }
+.grainy {
+    position: relative
+    }
+.grainy::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB3qpvPqol9NhgKjVZ1pDAF-jXx76PryGfDwYB9EPLgzAtGch8A79BvyEs48rrWhc2f2iW-TA-cqR4gjuQhDVnRwXrxYLnvV7WGQkCDZpJTR-yY7HeBMW6JjKpT7FH9pI1Lp8gAwzxvLX4DsSLFNSl-oanWoaL3TxzNEim9OAdR1sBfoE2Ua0TpoGT0ea_GaqG92stl8jng9imGpYYlJOQMoFIxsB_6E8C0t6eDKGGlFIMUPwtBBo7BbMrkDKlVO1rb9Nt7QmuQJVjb)
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md">
+<div class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-base">
+<button class="md:hidden text-primary active:scale-95 transition-transform duration-200" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="text-h3-mobile md:text-h3 font-h3 text-primary tracking-tight">Couples Food System</span>
+</div>
+<nav class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity font-body-md text-body-md" href="#">Our Ritual</a>
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity font-body-md text-body-md" href="#">Shared Kitchen</a>
+<a class="text-primary font-semibold font-body-md text-body-md" href="#">The Story</a>
+</nav>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-caps text-label-caps hover:opacity-80 active:scale-95 transition-all">
+                Join Free Beta
+            </button>
+</div>
+</header>
+<!-- Navigation Drawer (Mobile) -->
+<div class="fixed inset-0 z-[60] hidden" id="drawer">
+<div class="absolute inset-0 bg-black/20" onclick="toggleDrawer()"></div>
+<aside class="relative h-full w-80 bg-surface flex flex-col gap-base py-xl transition-transform duration-300 -translate-x-full" id="drawerContent">
+<div class="px-xl mb-lg">
+<span class="text-h2 font-h2 text-primary">Sunday Morning</span>
+</div>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined">auto_awesome</span> Our Ritual
+            </a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined">restaurant</span> Shared Kitchen
+            </a>
+<a class="bg-primary-container text-on-primary-container rounded-full mx-2 px-4 py-3 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">history_edu</span> The Story
+            </a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined">edit_calendar</span> Beta Access
+            </a>
+</aside>
+</div>
+<main class="pt-24 pb-20 grainy">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-container-padding py-xl text-center">
+<div class="mb-xl inline-block">
+<img alt="Sunday Morning Ritual" class="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-primary-container mx-auto" data-alt="A warm, sun-drenched kitchen scene with a focus on a simple wooden table where a couple's hands are preparing a fresh green salad together. The lighting is soft and golden, characteristic of a serene Sunday morning. The aesthetic is modern organic with muted sage greens and warm terracotta accents, emphasizing the collaborative and ritualistic nature of meal preparation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBogzbPrZtEb68zBljeTi6PErtirHxjPpdszMVeERdqJkhxdozhdDOTDNc_RB-Xt_AZ7QTOh8lx-2y-ykh8k7Wx6thrHOEKwTZA-lB0X_3PB2GD49XdbqcYx6I54m4GXQu6ctesdseKvEQtSSUCgL9bW_cLMa7cMFgf7n2Kk79eTmqECxgJ1nrE6fR24QtjHAT29u47HPlA_lCOHCn5wxQrslIbEmtlyDr7JhdTxjN_qGPzCNFnwWLp1WXwQvSsCJFCfc8LNpm_7EW-"/>
+</div>
+<h1 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-surface mb-base max-w-2xl mx-auto">
+                Transforming meal planning into a <span class="text-primary italic">shared ritual</span>.
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto opacity-80">
+                Born from the kitchen of two humans who wanted to cook better, together. Sunday Morning is a philosophy of collaborative, adaptive nutrition.
+            </p>
+</section>
+<!-- The Why (Asymmetric Layout) -->
+<section class="max-w-7xl mx-auto px-container-padding py-xl">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-xl items-center">
+<div class="md:col-span-7">
+<div class="bg-surface-container-low rounded-[40px] p-xl border border-outline-variant relative overflow-hidden">
+<div class="relative z-10">
+<span class="font-label-caps text-label-caps text-secondary mb-sm block">THE PROBLEM</span>
+<h2 class="font-h2 text-h2 text-on-surface mb-md">Nutrition shouldn't be a solo mission.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant space-y-4">
+                                Most fitness apps are designed for the individual—the "me" instead of the "us." They track data point-by-point, calorie-by-calorie, turning food into a math problem.
+                                <br/><br/>
+                                We realized that for couples, the biggest friction isn't what to eat, but the <span class="font-semibold text-primary">cognitive load of deciding together</span>. We wanted to build something that honors the shared experience of eating.
+                            </p>
+</div>
+<div class="absolute -bottom-10 -right-10 opacity-10">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+</div>
+</div>
+<div class="md:col-span-5 grid grid-cols-1 gap-lg">
+<div class="bg-primary-container/20 rounded-[32px] p-lg border border-primary-container/30">
+<span class="material-symbols-outlined text-primary mb-sm">favorite</span>
+<h3 class="font-h3 text-h3 text-primary mb-xs">Calm &amp; Intentional</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">No alerts, no guilt, no data-shaming. Just gentle nudges toward shared health.</p>
+</div>
+<div class="bg-secondary-container/20 rounded-[32px] p-lg border border-secondary-container/30">
+<span class="material-symbols-outlined text-secondary mb-sm">group</span>
+<h3 class="font-h3 text-h3 text-secondary mb-xs">Collaborative Logic</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Systems that learn both your preferences and merge them seamlessly into one plan.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Our Vision (Bento Grid Style) -->
+<section class="max-w-7xl mx-auto px-container-padding py-xl">
+<div class="text-center mb-xl">
+<h2 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1">The Pillars of Sunday Morning</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Pillar 1 -->
+<div class="md:col-span-2 bg-surface-container-highest rounded-[32px] overflow-hidden group">
+<div class="p-xl">
+<h3 class="font-h2 text-h2 text-on-primary-container mb-sm">Adaptive Synchronicity</h3>
+<p class="font-body-md text-body-md text-on-primary-container opacity-80 max-w-lg">
+                            Our system doesn't just suggest recipes; it adapts to your energy levels, grocery inventory, and fluctuating schedules as a unit.
+                        </p>
+</div>
+<div class="px-xl pb-xl">
+<img alt="Adaptive Planning" class="w-full h-48 object-cover rounded-2xl group-hover:scale-[1.02] transition-transform duration-500" data-alt="A clean and artistic top-down photograph of a minimalist kitchen counter with organic vegetables, a ceramic bowl, and a tablet showing a soft, sage-green user interface. The composition is airy and balanced, emphasizing modern minimalist living and a calm approach to healthy eating in a shared household." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0_ZcFjzYeYpIARyb_CrnbMVCJy3K3YvgfZ6dsFDjFFml7ROaY3B4JI2xbjh7bVU_J3c89pBwZX5KkXOnJk5TCjwBC9CXc1Pb76ExQk24biZCWmrm-wLq-HXCmzIIIPGNa-oDAsd3UjUbVqBgkbELHhzjoWwM2fbsBWZHyEov4XSixKgMg_AjSTjBXdej8LNGnwDtm6YqLlkVY5Fa-Vy3KtYPrh8yY_J5cgEmNhNqOmY9-qzOyaU5U4E-X3EpJWqrGIR0phVl98yxI"/>
+</div>
+</div>
+<!-- Pillar 2 -->
+<div class="bg-secondary-container rounded-[32px] p-xl flex flex-col justify-between text-on-secondary-container">
+<div>
+<span class="material-symbols-outlined text-4xl mb-md">eco</span>
+<h3 class="font-h3 text-h3 mb-sm">Minimalist Waste</h3>
+<p class="font-body-sm text-body-sm">Intelligent shopping lists that prioritize what's already in your pantry before suggesting new purchases.</p>
+</div>
+<div class="mt-lg">
+<span class="font-label-caps text-[48px] opacity-20 font-bold block leading-none">01</span>
+</div>
+</div>
+<!-- Pillar 3 -->
+<div class="bg-surface-container rounded-[32px] p-xl flex flex-col justify-between border border-outline-variant">
+<div>
+<span class="material-symbols-outlined text-primary text-4xl mb-md">volunteer_activism</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-sm">Shared Labor</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Breaking down recipes into 'prep together' workflows to make cooking a connection point.</p>
+</div>
+<div class="mt-lg">
+<span class="font-label-caps text-[48px] opacity-10 font-bold block leading-none text-primary">02</span>
+</div>
+</div>
+<!-- Pillar 4 -->
+<div class="md:col-span-2 bg-primary rounded-[32px] p-xl text-on-primary relative overflow-hidden">
+<div class="max-w-md relative z-10">
+<h3 class="font-h2 text-h2 mb-sm">Our Mission</h3>
+<p class="font-body-lg text-body-lg opacity-90">
+                            To replace the stress of "What's for dinner?" with the warmth of "Let's cook this together." We are building tools for the modern partnership.
+                        </p>
+</div>
+<div class="absolute -right-20 -bottom-20 opacity-10">
+<span class="material-symbols-outlined text-[300px]">auto_awesome</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Waitlist CTA -->
+<section class="max-w-5xl mx-auto px-container-padding py-xl text-center">
+<div class="bg-surface-container-low border border-outline-variant rounded-[48px] p-xl md:p-32">
+<h2 class="font-h2 text-h2 mb-md">Ready to start your ritual?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl max-w-lg mx-auto">
+                    We're currently in closed beta, refining the experience for a small cohort of intentional couples. Join the waitlist for the next wave of access.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md justify-center items-center">
+<input class="bg-surface border-outline-variant focus:ring-primary focus:border-primary rounded-full px-lg py-sm w-full max-w-xs font-body-md" placeholder="partner@email.com" type="email"/>
+<button class="bg-secondary text-on-secondary px-xl py-sm rounded-full font-label-caps text-label-caps hover:opacity-90 active:scale-95 transition-all w-full sm:w-auto shadow-lg shadow-secondary/20">
+                        Join Waitlist
+                    </button>
+</div>
+<p class="mt-lg font-body-sm text-body-sm text-on-surface-variant opacity-60">Join 1,200+ couples designing better lives.</p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container border-t border-outline-variant">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="flex flex-col gap-sm">
+<span class="font-h3 text-h3 text-primary">Sunday Morning Systems</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
+                    © 2024 Sunday Morning Systems. Transform meal planning into a shared ritual.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-primary mb-xs">Product</span>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">The Method</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Partner Access</a>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-primary mb-xs">Support</span>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+<div class="flex flex-col gap-md md:items-end">
+<div class="flex gap-md">
+<a class="text-primary hover:opacity-80 transition-opacity" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-primary hover:opacity-80 transition-opacity" href="#"><span class="material-symbols-outlined">diversity_3</span></a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            const content = document.getElementById('drawerContent');
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('-translate-x-full');
+                }, 10);
+            } else {
+                content.classList.add('-translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('hidden');
+                }, 300);
+            }
+        }
+    </script>
+</body></html>

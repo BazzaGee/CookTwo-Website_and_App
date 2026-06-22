@@ -1,0 +1,70 @@
+{
+  "comparisons": [
+    {
+      "feature": "Adaptive Portions (1 Meal, 2 Goals)",
+      "description": "Different portion sizes for each partner from the same meal, automatically optimized by AI",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Real-Time Shared Grocery List",
+      "description": "Instant sync between partners in under 100ms, no refreshing needed",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Pantry-Aware AI Generation",
+      "description": "AI suggests meals based on ingredients you already have at home",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Relationship 'We' Centric Design",
+      "description": "Every feature built for two people sharing one kitchen, not a solo user",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "No App Store Download Required",
+      "description": "Works in any browser instantly — share a link and start planning",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Offline Support with Auto-Sync",
+      "description": "Works without internet, queues changes, syncs when reconnected",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Dual Goal Optimization",
+      "description": "Same recipe automatically adjusted for weight loss vs muscle gain",
+      "weDo": true,
+      "othersDo": false
+    },
+    {
+      "feature": "Natural Language Pantry Input",
+      "description": "Type 'chicken, rice, spinach' and the AI understands your ingredients",
+      "weDo": true,
+      "othersDo": false
+    }
+  ],
+  "genericCompetitors": [
+    {
+      "type": "Popular meal planning apps",
+      "problem": "Built for one person. Single calorie target, single portion size, single grocery list. Great if you live alone. Useless if you're cooking for two with different goals."
+    },
+    {
+      "type": "Standard diet tracking apps",
+      "problem": "Know your macros but don't know your partner exists. Clinical, isolating, and ignore that cooking together should be a bonding experience."
+    },
+    {
+      "type": "Grocery list apps",
+      "problem": "Sync your shopping perfectly, but have zero idea what meals you're planning, what's in your pantry, or what your body needs."
+    },
+    {
+      "type": "AI meal generators",
+      "problem": "Plan for one person only. Don't understand couples, shared kitchens, or different dietary goals."
+    }
+  ]
+}

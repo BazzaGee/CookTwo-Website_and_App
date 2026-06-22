@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://couples-food-system.com/sitemap.xml

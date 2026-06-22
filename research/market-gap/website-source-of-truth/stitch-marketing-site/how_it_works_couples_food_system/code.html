@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How It Works - Couples Food System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#d3e8d0",
+                    "on-secondary-fixed": "#301400",
+                    "primary-fixed-dim": "#aad0ad",
+                    "surface-tint": "#44664a",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#615e57",
+                    "on-primary-fixed-variant": "#2d4e33",
+                    "on-tertiary-container": "#2f2e27",
+                    "on-primary-container": "#13341c",
+                    "inverse-surface": "#233524",
+                    "on-background": "#0e1f10",
+                    "primary-fixed": "#c6ecc8",
+                    "tertiary-container": "#98958c",
+                    "surface-dim": "#cae0c8",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#aad0ad",
+                    "on-primary-fixed": "#00210b",
+                    "surface-container-low": "#e4fae1",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#def4db",
+                    "on-tertiary-fixed": "#1d1c16",
+                    "on-tertiary-fixed-variant": "#494740",
+                    "surface-container-high": "#d8eed6",
+                    "background": "#ebffe7",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#febb8e",
+                    "inverse-on-surface": "#e1f7de",
+                    "tertiary-fixed-dim": "#cac6bd",
+                    "secondary-fixed": "#ffdcc6",
+                    "surface-bright": "#ebffe7",
+                    "on-surface-variant": "#424842",
+                    "secondary-fixed-dim": "#fbb88b",
+                    "tertiary-fixed": "#e7e2d8",
+                    "on-surface": "#0e1f10",
+                    "surface": "#ebffe7",
+                    "on-secondary-container": "#794925",
+                    "primary": "#44664a",
+                    "outline-variant": "#c2c8bf",
+                    "on-secondary-fixed-variant": "#693c19",
+                    "on-error-container": "#93000a",
+                    "outline": "#727971",
+                    "primary-container": "#7a9e7e",
+                    "secondary": "#85532e",
+                    "surface-variant": "#d3e8d0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "sm": "12px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h1-mobile": ["Plus Jakarta Sans"],
+                    "h2": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "h3": ["Plus Jakarta Sans"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .step-number {
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+        .workflow-line::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 48px;
+            bottom: -48px;
+            width: 2px;
+            background: linear-gradient(to bottom, #7a9e7e 0%, #c2c8bf 100%);
+            z-index: 0;
+        }
+        .workflow-line:last-child::before {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md">
+<div class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<span class="text-h3 font-h3 text-primary tracking-tight">Couples Food System</span>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-caps active:scale-95 transition-transform duration-200">
+                Join Free Beta
+            </button>
+</div>
+</header>
+<!-- Navigation Drawer (Off-screen by default, for mobile/desktop toggle simulation) -->
+<div class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm hidden transition-opacity" id="drawer">
+<aside class="h-full w-80 rounded-r-xl bg-surface flex flex-col gap-base py-xl shadow-xl">
+<div class="px-xl mb-lg">
+<h2 class="text-h2 font-h2 text-primary">Sunday Morning</h2>
+</div>
+<nav class="flex flex-col gap-xs">
+<a class="bg-primary-container text-on-primary-container rounded-full mx-2 px-4 py-3 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-body-lg text-body-lg">Our Ritual</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="font-body-lg text-body-lg">Shared Kitchen</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="edit_calendar">edit_calendar</span>
+<span class="font-body-lg text-body-lg">Beta Access</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="font-body-lg text-body-lg">The Story</span>
+</a>
+</nav>
+</aside>
+</div>
+<main class="pt-24 pb-xl px-container-padding max-w-3xl mx-auto">
+<!-- Hero Section -->
+<section class="text-center mb-xl">
+<h1 class="font-h1-mobile text-h1-mobile md:font-h1 md:text-h1 text-primary mb-md">How Sunday Morning Works</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto">
+                Transform the chaos of meal planning into a serene, shared ritual. Our five-step method is designed to bring you closer through the art of nourishment.
+            </p>
+</section>
+<!-- Workflow Section -->
+<section class="space-y-xl relative">
+<!-- Step 1 -->
+<div class="flex gap-lg relative workflow-line">
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-h2 step-number">1</div>
+</div>
+<div class="flex-1 pb-xl">
+<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant hover:border-primary transition-colors">
+<h3 class="font-h3 text-h3 text-primary mb-xs">Invite Partner</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Create your shared digital kitchen and sync with your partner's calendar. No more "what's for dinner?" texts at 5 PM.</p>
+<img alt="Invite partner" class="w-full h-48 object-cover rounded-lg" data-alt="A warm, soft-lit photo of a young couple laughing together over their smartphones in a bright, modern kitchen. The aesthetic is organic and minimalist, featuring sage green accents and cream-colored wood. The mood is intimate and collaborative, emphasizing seamless digital connection and shared joy in a home environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrzzWjSDPUhoV-W-AF9utJNPaJVkC8MKuenSr3Gc3nzHaCZVdZCQ_WrstMZtLKnzUZ0PCfQNZ1j98qujjrjbUpP6smPCaflqGhIOKQRkJaBtSXNfEb3LMNPAdURck9mZPcNjbpdBSaybhdu7QtpiGbtP-D-3qFJ6Kjn2PAkUvpAefD-jhBl1k7-8K78qGvqYesxQ9pU6ZATlcwg1ZKrbE5OwmyUiB-z7ZpCwMTgJnsQY_Mf4M9nWYgUkBrCpHv6EPIZLhcL9p2h2Z1"/>
+</div>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex gap-lg relative workflow-line">
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-h2 step-number">2</div>
+</div>
+<div class="flex-1 pb-xl">
+<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant hover:border-primary transition-colors">
+<h3 class="font-h3 text-h3 text-primary mb-xs">Set Goals</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Define your weekly budget, dietary preferences, and energy levels. We align your menu with your actual lifestyle.</p>
+<div class="flex gap-sm flex-wrap">
+<span class="bg-surface-container-highest text-primary px-md py-xs rounded-full text-body-sm font-semibold">Low Effort Weekdays</span>
+<span class="bg-surface-container-highest text-primary px-md py-xs rounded-full text-body-sm font-semibold">Healthy Dinners</span>
+<span class="bg-surface-container-highest text-primary px-md py-xs rounded-full text-body-sm font-semibold">Plant-Forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex gap-lg relative workflow-line">
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-h2 step-number">3</div>
+</div>
+<div class="flex-1 pb-xl">
+<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant hover:border-primary transition-colors">
+<h3 class="font-h3 text-h3 text-primary mb-xs">Stock Pantry</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Snap a photo of your shelves. Our AI inventories what you have, ensuring nothing goes to waste and shopping is simplified.</p>
+<img alt="Pantry inventory" class="w-full h-48 object-cover rounded-lg" data-alt="An aesthetically organized pantry with glass jars and wooden shelves, filled with grains and spices. The lighting is soft and natural, emphasizing a sense of calm and abundance. The color palette is earthy with sage green and terracotta highlights, creating a premium, modern organic feeling of a well-maintained shared kitchen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAagivG5693D4Mu0DAAShrdDQaHqmlNNuWgfs_DmQpqbLE7On2x8hBrcKmWSvTH7obmCRtVKSWBmrXbQ3EC_aniQU69tD-6UsRBljA3Iv7ydSxisjPO93OAOELImAK9h8qKSI1qdKiR3DqRRKhm-KWr_KAEi_KMR-E5VX3mIKnrbQgs4gqp5aBuNb6OYW6scmjl-ab_HsHuUi9WIZGJ7iMGu4hXcDrLNOcbnA0u1-F4cHPvjmWc4d3pIvr1yf1GLAnbZLJ6aZfW1XQU"/>
+</div>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="flex gap-lg relative workflow-line">
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-h2 step-number">4</div>
+</div>
+<div class="flex-1 pb-xl">
+<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant hover:border-primary transition-colors">
+<h3 class="font-h3 text-h3 text-primary mb-xs">Generate Meals</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Every Sunday morning, receive a curated plan. Review together, swap recipes, and approve your week in one click.</p>
+<div class="border-l-4 border-secondary pl-md py-xs italic text-on-surface-variant font-body-md">
+                            "This week: Lemon Herb Salmon for Tuesday, Sweet Potato Curry for Thursday."
+                        </div>
+</div>
+</div>
+</div>
+<!-- Step 5 -->
+<div class="flex gap-lg relative">
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-on-secondary font-h2 step-number">5</div>
+</div>
+<div class="flex-1">
+<div class="bg-surface-container-low rounded-xl p-lg border border-outline-variant hover:border-secondary transition-colors">
+<h3 class="font-h3 text-h3 text-secondary mb-xs">Cook Together</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Follow the split-task instructions. One preps, one sautés. It’s not just dinner; it’s quality time rediscovered.</p>
+<button class="bg-secondary text-on-secondary px-lg py-md rounded-full font-label-caps flex items-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="restaurant_menu">restaurant_menu</span>
+                            Cook Now
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Emotional Benefits Bento Grid -->
+<section class="mt-32 mb-xl">
+<h2 class="font-h2 text-h2 text-primary text-center mb-xl">More Than Just Food</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="bg-surface-container-high p-lg rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-4xl mb-md" data-icon="spa">spa</span>
+<h4 class="font-h3 text-h3 text-primary mb-sm">Zero Decision Fatigue</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Eliminate the daily stress of deciding what to eat. Reclaim 5+ hours of mental energy every week.</p>
+</div>
+<div class="bg-surface-container-high p-lg rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-4xl mb-md" data-icon="favorite">favorite</span>
+<h4 class="font-h3 text-h3 text-primary mb-sm">Deepened Connection</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Turn the most routine part of your day into an intentional collaborative experience that builds intimacy.</p>
+</div>
+<div class="md:col-span-2 bg-primary-container p-xl rounded-xl text-on-primary-container relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-h2 text-h2 mb-md">Shared Ritual, Shared Life</h4>
+<p class="font-body-lg text-body-lg max-w-lg">When you stop fighting over groceries, you start enjoying the meal. Our system isn't about recipes—it's about the rhythm of your home.</p>
+</div>
+<!-- Decorative element -->
+<div class="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="mt-32 text-center bg-surface-container-highest p-xl rounded-3xl border border-primary/20">
+<h2 class="font-h1-mobile text-h1-mobile text-primary mb-md">Ready for a Calm Kitchen?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-xl">Our beta is currently by-invite. Join the waitlist to be first in line for the next cohort of couples.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-md">
+<input class="px-xl py-md rounded-full bg-surface-container border border-outline focus:ring-2 focus:ring-primary focus:border-transparent outline-none min-w-[300px]" placeholder="Your email address" type="email"/>
+<button class="bg-primary text-on-primary px-xl py-md rounded-full font-h3 hover:opacity-90 transition-opacity">
+                    Join Free Beta
+                </button>
+</div>
+<p class="mt-md text-body-sm text-on-surface-variant opacity-70">Join 1,200+ couples already in the beta.</p>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container border-t border-outline-variant py-xl w-full">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="flex flex-col gap-sm">
+<span class="font-h3 text-h3 text-primary">Sunday Morning</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-80">© 2024 Sunday Morning Systems. Transform meal planning into a shared ritual.</p>
+</div>
+<div class="flex flex-col gap-sm">
+<h5 class="font-label-caps text-primary">The System</h5>
+<nav class="flex flex-col gap-xs">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">The Method</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Partner Access</a>
+</nav>
+</div>
+<div class="flex flex-col gap-sm">
+<h5 class="font-label-caps text-primary">Support</h5>
+<nav class="flex flex-col gap-xs">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Contact Support</a>
+</nav>
+</div>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for the navigation menu toggle (simulated)
+        const menuIcon = document.querySelector('[data-icon="menu"]');
+        const drawer = document.getElementById('drawer');
+        
+        menuIcon.addEventListener('click', () => {
+            drawer.classList.remove('hidden');
+            setTimeout(() => drawer.classList.add('opacity-100'), 10);
+        });
+
+        drawer.addEventListener('click', (e) => {
+            if (e.target === drawer) {
+                drawer.classList.add('hidden');
+                drawer.classList.remove('opacity-100');
+            }
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.workflow-line').forEach(el => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

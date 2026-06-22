@@ -1,0 +1,65 @@
+{
+  "faq": [
+    {
+      "category": "getting-started",
+      "question": "Is the beta really free?",
+      "answer": "Yes! Couples Food System is completely free during our Beta period. No credit card required. We just want your feedback to make the app perfect."
+    },
+    {
+      "category": "getting-started",
+      "question": "Do we need two separate accounts?",
+      "answer": "You'll each have your own login, but they link together securely to form one Shared Kitchen. This allows for individual goal-setting while keeping planning and shopping 100% collaborative."
+    },
+    {
+      "category": "getting-started",
+      "question": "What platforms are supported?",
+      "answer": "Couples Food System works on any device with a web browser — iPhone, Android, tablet, or desktop. No app store download needed. Just open the link and start planning."
+    },
+    {
+      "category": "features",
+      "question": "How does Adaptive Plating work?",
+      "answer": "You cook the exact same meal in one pan. At the end, our AI gives you visual plating guides — for example, suggesting Partner A takes a larger portion of protein, while Partner B adds extra rice and greens."
+    },
+    {
+      "category": "features",
+      "question": "What if we have the same dietary goals?",
+      "answer": "Even better! The app works perfectly for couples with identical goals too. You'll still benefit from shared grocery lists, pantry-aware AI, and the collaborative planning experience."
+    },
+    {
+      "category": "features",
+      "question": "How fast is the real-time sync?",
+      "answer": "Changes appear on your partner's device in under 100 milliseconds. That's faster than you can blink. Add milk at the store, and it shows up on your partner's phone at home almost instantly."
+    },
+    {
+      "category": "features",
+      "question": "Does it work offline?",
+      "answer": "Yes. If you lose signal in the supermarket (we've all been there), your changes queue locally and sync automatically when you reconnect. You'll never lose data."
+    },
+    {
+      "category": "beta",
+      "question": "Will it always be free?",
+      "answer": "During Beta, everything is free. After launch, core collaboration features (shared lists, basic planning) will remain free. Advanced AI features may become part of a premium tier — but Beta users will get special early access pricing."
+    },
+    {
+      "category": "beta",
+      "question": "When will the app be ready?",
+      "answer": "We're working hard to launch soon! Join the waitlist and you'll be among the first to know when we open access. Beta users will get priority access."
+    },
+    {
+      "category": "privacy",
+      "question": "How is our data protected?",
+      "answer": "We take privacy seriously. Your dietary data, health goals, and personal information are encrypted and never shared with third parties. Period."
+    },
+    {
+      "category": "privacy",
+      "question": "Do you sell our data?",
+      "answer": "Absolutely not. We will never sell, share, or monetize your personal data. Your kitchen stays your kitchen."
+    }
+  ],
+  "categories": [
+    { "id": "getting-started", "label": "Getting Started" },
+    { "id": "features", "label": "Features" },
+    { "id": "beta", "label": "Beta Program" },
+    { "id": "privacy", "label": "Privacy & Security" }
+  ]
+}

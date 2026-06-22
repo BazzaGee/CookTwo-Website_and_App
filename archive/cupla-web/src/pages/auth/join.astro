@@ -1,0 +1,87 @@
+---
+// src/pages/auth/join.astro
+export const prerender = false;
+
+import { createClient } from '@supabase/supabase-js';
+
+const code = Astro.url.searchParams.get('code');
+
+let inviterName: string | null = null;
+
+if (code) {
+  const supabaseUrl = import.meta.env.SUPABASE_URL;
+  const supabaseKey = import.meta.env.SUPABASE_ANON_KEY;
+  const sb = createClient(supabaseUrl, supabaseKey);
+
+  const { data } = await sb
+    .from('profiles')
+    .select('full_name, pairing_code_expires_at, partner_id')
+    .eq('pairing_code', code.toUpperCase())
+    .single();
+
+  if (data && !data.partner_id && new Date(data.pairing_code_expires_at) > new Date()) {
+    inviterName = data.full_name;
+  }
+}
+
+const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://cooktwo.com';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join CookTwo</title>
+  <meta property="og:title" content="Join CookTwo">
+  <meta property="og:description" content="CookTwo helps couples plan meals, share calendars, and stay organized together.">
+  <meta property="og:url" content={`${siteUrl}/auth/join${code ? `?code=${code}` : ''}`}>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-rose-500 mb-2">CookTwo</h1>
+      {inviterName ? (
+        <p class="text-xl text-slate-700">
+          <span class="font-semibold">{inviterName}</span> invited you to join!
+        </p>
+      ) : (
+        <p class="text-slate-600">You've been invited to join CookTwo</p>
+      )}
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+      <div class="text-center space-y-6">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-rose-100 rounded-full">
+          <svg class="w-10 h-10 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-semibold text-slate-900 mb-2">
+            Plan meals, share calendars, stay connected
+          </h2>
+          <p class="text-slate-600 text-sm">
+            CookTwo helps you and your partner manage meal plans, grocery lists, shared calendars, and more.
+          </p>
+        </div>
+
+        <a
+          href={`/auth/signup${code ? `?code=${code}` : ''}`}
+          class="block w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 transition text-center"
+        >
+          Create Account
+        </a>
+
+        <p class="text-sm text-slate-600">
+          Already have an account?
+          <a href={`/auth/login${code ? `?code=${code}` : ''}`} class="text-rose-500 hover:text-rose-600 font-medium">
+            Sign in
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

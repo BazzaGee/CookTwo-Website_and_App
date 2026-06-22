@@ -1,0 +1,69 @@
+## V2 Adaptation Note
+The strategic blueprint, market analysis, and positioning remain fully valid for V2. The meal picker workflow described here is V1 single-mode — for V2, see `V2_Design/V2_Meal_Picker_Spec.md` for the dual-mode specification.
+
+---
+
+Here is the complete, comprehensive master recap of your app strategy. (V1 Source — Adapted for V2)
+
+---
+
+# 🚀 PROJECT BLUEPRINT: The Shared Household Food OS
+
+## 1. The Core Paradigm Shift
+You are not building a meal planner. You are not building a diet tracker. 
+You are creating an entirely new software category: **Collaborative Adaptive Nutrition.**
+
+The core pain point you are solving is not "how to track calories." The pain point is **reducing the mental load and friction of feeding a multi-goal household.** People will pay for an app that stops the 5:00 PM *"What do you want for dinner? I don't know, what do you want?"* argument.
+
+## 2. The Competitive Landscape & The Gap
+The market is fragmented, with different apps owning isolated pieces of the puzzle, but none connecting them.
+*   **Fitia / Nutrola:** Owns multi-user macro adaptation, but feels like a clinical, single-player spreadsheet. It solves the *math*, but lacks the *emotion*.
+*   **Leanlife:** Owns the couple-first UX and markets to the "mental load," but lacks the deep AI generation and dynamic adaptive features.
+*   **Pantry AI Apps:** Own ingredient tracking and zero-waste generation, but have zero awareness of the relationship or biological goals of the humans eating the food.
+*   **Samsung Food / AnyList:** Owns shared grocery syncing and recipe aggregating, but is completely bloated and lacks individual biological adaptation.
+
+**The Gap:** No one sits in the center of the Venn diagram combining **What we have (Pantry AI)** + **What our bodies need (Fitia)** + **How we share a life together (Leanlife).**
+
+## 3. Your Ultimate Moat: "Adaptive Shared Cooking"
+Features can be copied; complex human workflows cannot. Your absolute biggest differentiator is **Adaptive Shared Cooking**.
+
+It solves the ultimate multi-goal household problem:
+*   **The Input:** *"We have chicken, rice, spinach. We have 20 minutes."*
+*   **The Constraints:** Partner A wants to lose weight (low carb). Partner B wants to build muscle (high protein).
+*   **The Output:** The AI generates **ONE** shared prep/cooking workflow, but provides **TWO** distinct plating instructions. *(e.g., Partner A eats the chicken over a bed of spinach; Partner B eats 1.5x the chicken over a full cup of rice).*
+
+You are doing the meal-prep math for them so they can just cook together and eat together.
+
+## 4. The MVP Scope (Avoiding the Data-Entry Death Trap)
+If users have to spend 20 minutes scanning barcodes to set up their fridge, the app will die. V1 must be **absurdly simple**.
+
+**The 5-Step Magic Workflow:**
+1.  **Invite Partner** (Immediate network effect).
+2.  **Set Constraints** (Partner A's goals vs. Partner B's goals).
+3.  **Natural Language Pantry Dump** (Type or dictate: *"We have ground beef, taco shells, half an onion, and tomatoes."*)
+4.  **Pick the Vibe** (Swipe to select the AI-generated meal).
+5.  **Output & Sync** (Generates the adaptive cooking flow, and instantly drops missing ingredients into a live-syncing grocery list).
+
+## 5. Design & UX Philosophy
+*   **No "Diet App" aesthetics:** Ditch the neon colors, rigid speedometers, and harsh red/green macro charts.
+*   **Design for Home:** Use warm tones, soft typography, and natural language.
+*   **Relationship-First:** Use "We" instead of "You." Frame notifications as nudges (*"Alex suggested Tacos for tonight. Approve?"*). Make it feel like a shared digital kitchen, not a medical chart.
+
+## 6. Go-To-Market (GTM) Strategy
+*   **The Target:** The partner currently bearing the "mental load" of household meal planning and grocery shopping. 
+*   **The Marketing Angles (TikTok/IG/Pinterest):**
+    *   *“The app that ends the 'what’s for dinner' argument.”*
+    *   *“How we eat the exact same dinner, but he gains muscle and I lose weight.”*
+    *   *“Stop doing macro math for two people.”*
+*   **The Framing:** You are selling marital harmony, time-saving, and stress relief—the food is just the medium.
+
+## 7. Monetization Structure
+*   **Free Tier (The Hook):** Shared grocery lists, basic shared meal planning, real-time sync. This locks the couple into the ecosystem.
+*   **Premium Tier ($8–$12/month per household):** The AI Magic. Natural language pantry-to-meal generation, automatic macro-splitting, and one-tap grocery list population.
+
+---
+
+### Final Verdict on the Vision
+This is a highly defensible, incredibly sharp business idea. By abandoning the crowded "diet app" space and pivoting to a **"Google Docs for food planning"** model, you bypass the massive giants and target a deeply emotional, highly lucrative pain point that is currently going entirely unsolved. 
+
+Your next step is purely execution: wireframe that 5-step simple MVP.

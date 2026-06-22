@@ -1,0 +1,41 @@
+---
+// src/pages/auth/callback.astro
+export const prerender = false;
+
+// Handle OAuth callback
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+</head>
+<body>
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    // Handle the OAuth callback
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        const code = sessionStorage.getItem('cooktwo_invite_code');
+        
+        // Check if user has a partner
+        supabase
+          .from('profiles')
+          .select('partner_id')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.partner_id) {
+              window.location.href = '/app';
+            } else if (code) {
+              window.location.href = `/auth/pair?code=${encodeURIComponent(code)}`;
+            } else {
+              window.location.href = '/auth/pair';
+            }
+          });
+      }
+    });
+  </script>
+</body>
+</html>

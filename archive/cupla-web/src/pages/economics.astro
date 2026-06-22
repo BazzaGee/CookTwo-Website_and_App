@@ -1,0 +1,897 @@
+---
+// src/pages/economics.astro - Internal Economics Analysis
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cupla Economics — Internal Analysis</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="description" content="Internal cost, pricing & profitability analysis for Cupla.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rose: {
+              50: '#F5E6DC',
+              100: '#F0D5C5',
+              200: '#E8BF9F',
+              500: '#C17D60',
+              600: '#A5664A',
+              700: '#8B4F3A',
+              800: '#6E3D2D',
+            },
+            green: {
+              50: '#E8F0E8',
+              200: '#B8D0B8',
+              500: '#8FA98F',
+              600: '#7A9E7E',
+              700: '#5D8A5F',
+            },
+            cream: {
+              DEFAULT: '#FEF9F2',
+              50: '#FFFDF9',
+              100: '#F5E6D3',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-cream text-slate-900 font-sans">
+
+  <!-- Fixed Header -->
+  <nav class="fixed top-0 w-full bg-cream/80 backdrop-blur-md border-b border-slate-200 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a href="/" class="text-slate-600 hover:text-slate-900 transition">&larr; Back to Home</a>
+        <span class="text-sm font-semibold text-slate-500 tracking-wide">CUPLA &middot; Internal Analysis</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-16">
+
+    <!-- Hero Section -->
+    <section class="relative py-20 lg:py-24 px-4 overflow-hidden" style="background-image: radial-gradient(circle, #B8D0B8 1px, transparent 1px); background-size: 24px 24px;">
+      <div class="max-w-4xl mx-auto text-center relative z-10">
+        <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">Cupla Economics</h1>
+        <p class="text-xl text-slate-600 mb-10">Internal Cost, Pricing &amp; Profitability Analysis</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-white rounded-xl shadow-md p-5">
+            <p class="text-sm text-slate-500 mb-1">Monthly Sub Profit</p>
+            <p class="text-2xl font-bold text-rose-500">NZ$6.06<span class="text-sm font-normal text-slate-400">/mo</span></p>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-5">
+            <p class="text-sm text-slate-500 mb-1">Yearly Sub Profit</p>
+            <p class="text-2xl font-bold text-rose-500">NZ$4.30<span class="text-sm font-normal text-slate-400">/mo</span></p>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-5">
+            <p class="text-sm text-slate-500 mb-1">Blended Annual</p>
+            <p class="text-2xl font-bold text-rose-500">NZ$64.26<span class="text-sm font-normal text-slate-400">/yr</span></p>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-5">
+            <p class="text-sm text-slate-500 mb-1">Breakeven Conv</p>
+            <p class="text-2xl font-bold text-rose-500">~4.7%</p>
+          </div>
+        </div>
+        <p class="text-sm text-slate-400">Data verified: June 22, 2026 &middot; Based on actual Stripe data (NZ$0.73/sale fee)</p>
+      </div>
+    </section>
+
+    <!-- Section 01: Pricing Tiers -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">01</span>
+          <h2 class="text-2xl font-bold">Pricing Tiers</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900 mb-1">Free</h3>
+            <p class="text-3xl font-bold text-slate-900 mb-4">$0<span class="text-sm font-normal text-slate-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-slate-600">
+              <li class="flex justify-between"><span>Requests/day</span><span class="font-medium">10</span></li>
+              <li class="flex justify-between"><span>Requests/month</span><span class="font-medium">300</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span>AI cost to Cupla</span><span class="font-medium text-rose-500">NZ$0.26/mo</span></li>
+            </ul>
+          </div>
+          <div class="bg-white border-2 border-rose-500 rounded-xl p-6 shadow-md relative">
+            <span class="absolute -top-3 left-4 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</span>
+            <h3 class="text-lg font-semibold text-slate-900 mb-1">Monthly</h3>
+            <p class="text-3xl font-bold text-slate-900 mb-4">US$4.99<span class="text-sm font-normal text-slate-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-slate-600">
+              <li class="flex justify-between"><span>Requests/day</span><span class="font-medium">70</span></li>
+              <li class="flex justify-between"><span>Requests/month</span><span class="font-medium">2,100</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span>AI cost</span><span class="font-medium text-rose-500">NZ$1.85/mo</span></li>
+            </ul>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900 mb-1">Yearly</h3>
+            <p class="text-3xl font-bold text-slate-900 mb-4">US$44.99<span class="text-sm font-normal text-slate-400">/yr</span></p>
+            <ul class="space-y-2 text-sm text-slate-600">
+              <li class="flex justify-between"><span>Requests/day</span><span class="font-medium">70</span></li>
+              <li class="flex justify-between"><span>Requests/month</span><span class="font-medium">2,100</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span>AI cost</span><span class="font-medium text-rose-500">NZ$1.85/mo</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 02: DeepSeek API Pricing -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">02</span>
+          <h2 class="text-2xl font-bold">DeepSeek API Pricing</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold">Model</th>
+                <th class="text-right px-4 py-3 font-semibold">Input (NZD)</th>
+                <th class="text-right px-4 py-3 font-semibold">Output (NZD)</th>
+                <th class="text-right px-4 py-3 font-semibold">Input (USD)</th>
+                <th class="text-right px-4 py-3 font-semibold">Output (USD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium">V4 Flash</td>
+                <td class="px-4 py-3 text-right">NZ$0.24</td>
+                <td class="px-4 py-3 text-right">NZ$0.48</td>
+                <td class="px-4 py-3 text-right">US$0.14</td>
+                <td class="px-4 py-3 text-right">US$0.28</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium">V4 Pro</td>
+                <td class="px-4 py-3 text-right">NZ$0.75</td>
+                <td class="px-4 py-3 text-right">NZ$1.49</td>
+                <td class="px-4 py-3 text-right">US$0.44</td>
+                <td class="px-4 py-3 text-right">US$0.87</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-slate-400 mt-3">Per 1M tokens. Pricing as of June 14, 2026. NZD at FX 1.7148.</p>
+        <div class="mt-6 bg-white rounded-xl p-5 border border-slate-200">
+          <h4 class="font-semibold text-slate-700 mb-3">Per-Request Cost Summary</h4>
+          <div class="grid sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="text-slate-500">V4 Flash (base)</p>
+              <p class="font-medium">NZ$0.00086 / US$0.00050 per request</p>
+              <p class="text-xs text-slate-400 mt-1">With 2.5% card FX: NZ$0.00088</p>
+            </div>
+            <div>
+              <p class="text-slate-500">V4 Pro (base)</p>
+              <p class="font-medium">NZ$0.00257 / US$0.00150 per request</p>
+              <p class="text-xs text-slate-400 mt-1">With 2.5% card FX: NZ$0.00263</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03: DeepSeek vs OpenAI -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">03</span>
+          <h2 class="text-2xl font-bold">DeepSeek vs OpenAI</h2>
+        </div>
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-5 mb-6">
+          <p class="text-rose-700 font-semibold">DeepSeek V4 Flash is 94.7x cheaper than GPT-5.5</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold">Metric</th>
+                <th class="text-right px-4 py-3 font-semibold">DeepSeek V4 Flash</th>
+                <th class="text-right px-4 py-3 font-semibold">GPT-5.5</th>
+                <th class="text-right px-4 py-3 font-semibold">Ratio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium">Input cost per 1M tokens</td>
+                <td class="px-4 py-3 text-right">NZ$0.24</td>
+                <td class="px-4 py-3 text-right">NZ$22.72</td>
+                <td class="px-4 py-3 text-right font-semibold text-rose-500">94.7x</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium">Output cost per 1M tokens</td>
+                <td class="px-4 py-3 text-right">NZ$0.48</td>
+                <td class="px-4 py-3 text-right">NZ$45.44</td>
+                <td class="px-4 py-3 text-right font-semibold text-rose-500">94.7x</td>
+              </tr>
+              <tr class="border-t border-slate-200 bg-slate-50/50">
+                <td class="px-4 py-3 font-medium" colspan="4">Cost Comparison &mdash; Free Tier (300 req/month)</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 pl-8">DeepSeek V4 Flash</td>
+                <td class="px-4 py-3 text-right" colspan="2">NZ$0.26/month</td>
+                <td class="px-4 py-3 text-right text-green-600 font-medium">Baseline</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 pl-8">GPT-5.5</td>
+                <td class="px-4 py-3 text-right" colspan="2">NZ$24.27/month</td>
+                <td class="px-4 py-3 text-right text-red-500 font-medium">93x more</td>
+              </tr>
+              <tr class="border-t border-slate-200 bg-slate-50/50">
+                <td class="px-4 py-3 font-medium" colspan="4">Cost Comparison &mdash; Paid Tier (2,100 req/month)</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 pl-8">DeepSeek V4 Flash</td>
+                <td class="px-4 py-3 text-right" colspan="2">NZ$1.85/month</td>
+                <td class="px-4 py-3 text-right text-green-600 font-medium">Baseline</td>
+              </tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50">
+                <td class="px-4 py-3 pl-8">GPT-5.5</td>
+                <td class="px-4 py-3 text-right" colspan="2">NZ$174.05/month</td>
+                <td class="px-4 py-3 text-right text-red-500 font-medium">94x more</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04: Per-Couple Economics -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">04</span>
+          <h2 class="text-2xl font-bold">Per-Couple Economics</h2>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <p class="text-amber-800 text-sm"><strong>Current Reality:</strong> Stripe auto-converts USD&rarr;NZD (~2.1% conversion fee). AI costs paid from NZD card (+2.5% foreign transaction fee). See <a href="#section-14" class="text-rose-500 underline">Section 14</a> for optimized payment flow.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Free Couple</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Revenue</span><span class="font-medium">NZ$0.00/mo</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">AI cost (incl. card FX)</span><span class="font-medium text-rose-500">-NZ$0.26/mo</span></div>
+              <div class="flex justify-between border-t border-slate-100 pt-2"><span class="font-semibold text-slate-900">Profit</span><span class="font-bold text-red-500">-NZ$0.26/mo</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Annual</span><span class="font-medium text-red-500">-NZ$3.17/yr</span></div>
+            </div>
+          </div>
+          <div class="bg-white border-2 border-rose-500 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Monthly Subscriber</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Revenue (Stripe NZD)</span><span class="font-medium">NZ$8.64/mo</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">AI cost (incl. card FX)</span><span class="font-medium text-rose-500">-NZ$1.85/mo</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Stripe fee (8.5%)</span><span class="font-medium text-rose-500">-NZ$0.73/mo</span></div>
+              <div class="flex justify-between border-t border-slate-100 pt-2"><span class="font-semibold text-slate-900">Profit</span><span class="font-bold text-green-600">NZ$6.06/mo</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Yearly Subscriber</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Revenue</span><span class="font-medium">NZ$77.91/yr</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">AI cost (incl. card FX)</span><span class="font-medium text-rose-500">-NZ$22.14/yr</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Stripe fee (5.4%)</span><span class="font-medium text-rose-500">-NZ$4.20/yr</span></div>
+              <div class="flex justify-between border-t border-slate-100 pt-2"><span class="font-semibold text-slate-900">Profit</span><span class="font-bold text-green-600">NZ$51.57/yr</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Monthly equiv.</span><span class="font-medium text-green-600">NZ$4.30/mo</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6">
+          <h4 class="font-semibold text-slate-900 mb-3">Blended Profit (60% Monthly / 40% Yearly)</h4>
+          <p class="text-sm text-slate-600 mb-2">Monthly sub: 60% &times; NZ$72.72 = NZ$43.63/yr</p>
+          <p class="text-sm text-slate-600 mb-2">Yearly Sub: 40% &times; NZ$51.57 = NZ$20.63/yr</p>
+          <p class="text-lg font-bold text-rose-500 mt-3">Blended Annual Profit per Couple: NZ$64.26/yr (NZ$5.36/mo)</p>
+        </div>
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-5">
+          <p class="text-rose-700 font-semibold">How many free couples does 1 paying couple subsidise?</p>
+          <p class="text-rose-600 mt-1">NZ$5.36/mo profit &divide; NZ$0.26/mo free cost = <strong>~21 free couples</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 05: Conversion Sensitivity Grid -->
+    <section class="py-16 px-4">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">05</span>
+          <h2 class="text-2xl font-bold">Conversion Sensitivity Grid</h2>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">Annual Gross Profit (NZD) &mdash; Includes real Stripe fees, card FX, and AI costs. Before CAC.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden text-right">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-3 py-3 font-semibold">Couples</th>
+                <th class="px-3 py-3 font-semibold">2%</th>
+                <th class="px-3 py-3 font-semibold">3%</th>
+                <th class="px-3 py-3 font-semibold">5%</th>
+                <th class="px-3 py-3 font-semibold">8%</th>
+                <th class="px-3 py-3 font-semibold bg-green-50">10%</th>
+                <th class="px-3 py-3 font-semibold">12%</th>
+                <th class="px-3 py-3 font-semibold">15%</th>
+                <th class="px-3 py-3 font-semibold">20%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">100</td><td class="px-3 py-2 text-red-500">-$182</td><td class="px-3 py-2 text-red-500">-$115</td><td class="px-3 py-2 text-green-600">$20</td><td class="px-3 py-2 text-green-600">$222</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$357</td><td class="px-3 py-2 text-green-600">$492</td><td class="px-3 py-2 text-green-600">$694</td><td class="px-3 py-2 text-green-600">$1,032</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">500</td><td class="px-3 py-2 text-red-500">-$911</td><td class="px-3 py-2 text-red-500">-$574</td><td class="px-3 py-2 text-green-600">$101</td><td class="px-3 py-2 text-green-600">$1,112</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$1,787</td><td class="px-3 py-2 text-green-600">$2,461</td><td class="px-3 py-2 text-green-600">$3,472</td><td class="px-3 py-2 text-green-600">$5,158</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">1,000</td><td class="px-3 py-2 text-red-500">-$1,821</td><td class="px-3 py-2 text-red-500">-$1,147</td><td class="px-3 py-2 text-green-600">$202</td><td class="px-3 py-2 text-green-600">$2,224</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$3,573</td><td class="px-3 py-2 text-green-600">$4,922</td><td class="px-3 py-2 text-green-600">$6,945</td><td class="px-3 py-2 text-green-600">$10,316</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">2,500</td><td class="px-3 py-2 text-red-500">-$4,554</td><td class="px-3 py-2 text-red-500">-$2,868</td><td class="px-3 py-2 text-green-600">$504</td><td class="px-3 py-2 text-green-600">$5,561</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$8,933</td><td class="px-3 py-2 text-green-600">$12,304</td><td class="px-3 py-2 text-green-600">$17,361</td><td class="px-3 py-2 text-green-600">$25,790</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">5,000</td><td class="px-3 py-2 text-red-500">-$9,107</td><td class="px-3 py-2 text-red-500">-$5,736</td><td class="px-3 py-2 text-green-600">$1,008</td><td class="px-3 py-2 text-green-600">$11,122</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$17,865</td><td class="px-3 py-2 text-green-600">$24,608</td><td class="px-3 py-2 text-green-600">$34,723</td><td class="px-3 py-2 text-green-600">$51,580</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">10,000</td><td class="px-3 py-2 text-red-500">-$18,214</td><td class="px-3 py-2 text-red-500">-$11,471</td><td class="px-3 py-2 text-green-600">$2,015</td><td class="px-3 py-2 text-green-600">$22,244</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$35,730</td><td class="px-3 py-2 text-green-600">$49,216</td><td class="px-3 py-2 text-green-600">$69,445</td><td class="px-3 py-2 text-green-600">$103,160</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">25,000</td><td class="px-3 py-2 text-red-500">-$45,535</td><td class="px-3 py-2 text-red-500">-$28,678</td><td class="px-3 py-2 text-green-600">$5,038</td><td class="px-3 py-2 text-green-600">$55,610</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$89,325</td><td class="px-3 py-2 text-green-600">$123,040</td><td class="px-3 py-2 text-green-600">$173,613</td><td class="px-3 py-2 text-green-600">$257,900</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">50,000</td><td class="px-3 py-2 text-red-500">-$91,070</td><td class="px-3 py-2 text-red-500">-$57,355</td><td class="px-3 py-2 text-green-600">$10,075</td><td class="px-3 py-2 text-green-600">$111,220</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$178,650</td><td class="px-3 py-2 text-green-600">$246,080</td><td class="px-3 py-2 text-green-600">$347,225</td><td class="px-3 py-2 text-green-600">$515,800</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">100,000</td><td class="px-3 py-2 text-red-500">-$182,140</td><td class="px-3 py-2 text-red-500">-$114,710</td><td class="px-3 py-2 text-green-600">$20,150</td><td class="px-3 py-2 text-green-600">$222,440</td><td class="px-3 py-2 text-green-600 bg-green-50/50">$357,300</td><td class="px-3 py-2 text-green-600">$492,160</td><td class="px-3 py-2 text-green-600">$694,450</td><td class="px-3 py-2 text-green-600">$1,031,600</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Break-even line: ~4.7% conversion rate</p>
+
+        <h4 class="text-lg font-semibold mt-10 mb-4">Monthly Profit Equivalent</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden text-right">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-3 py-3 font-semibold">Couples</th>
+                <th class="px-3 py-3 font-semibold">8%</th>
+                <th class="px-3 py-3 font-semibold bg-green-50">10%</th>
+                <th class="px-3 py-3 font-semibold">12%</th>
+                <th class="px-3 py-3 font-semibold">15%</th>
+                <th class="px-3 py-3 font-semibold">20%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">1,000</td><td class="px-3 py-2">$185</td><td class="px-3 py-2 bg-green-50/50">$298</td><td class="px-3 py-2">$410</td><td class="px-3 py-2">$579</td><td class="px-3 py-2">$860</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">5,000</td><td class="px-3 py-2">$927</td><td class="px-3 py-2 bg-green-50/50">$1,489</td><td class="px-3 py-2">$2,051</td><td class="px-3 py-2">$2,894</td><td class="px-3 py-2">$4,298</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">10,000</td><td class="px-3 py-2">$1,854</td><td class="px-3 py-2 bg-green-50/50">$2,978</td><td class="px-3 py-2">$4,101</td><td class="px-3 py-2">$5,787</td><td class="px-3 py-2">$8,597</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">25,000</td><td class="px-3 py-2">$4,634</td><td class="px-3 py-2 bg-green-50/50">$7,444</td><td class="px-3 py-2">$10,253</td><td class="px-3 py-2">$14,468</td><td class="px-3 py-2">$21,492</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">50,000</td><td class="px-3 py-2">$9,268</td><td class="px-3 py-2 bg-green-50/50">$14,888</td><td class="px-3 py-2">$20,507</td><td class="px-3 py-2">$28,935</td><td class="px-3 py-2">$42,983</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="text-left px-3 py-2 font-medium">100,000</td><td class="px-3 py-2">$18,537</td><td class="px-3 py-2 bg-green-50/50">$29,775</td><td class="px-3 py-2">$41,013</td><td class="px-3 py-2">$57,871</td><td class="px-3 py-2">$85,967</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 06: Path to NZ$150K -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">06</span>
+          <h2 class="text-2xl font-bold">Path to NZ$150K</h2>
+        </div>
+        <div class="overflow-x-auto mb-8">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold">Scenario</th>
+                <th class="text-right px-4 py-3 font-semibold">Conversion</th>
+                <th class="text-right px-4 py-3 font-semibold">Couples Needed</th>
+                <th class="text-right px-4 py-3 font-semibold">Downloads Needed</th>
+                <th class="text-right px-4 py-3 font-semibold">Timeline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">10% conv, no CAC</td><td class="px-4 py-3 text-right">10%</td><td class="px-4 py-3 text-right">42,000</td><td class="px-4 py-3 text-right">420,000</td><td class="px-4 py-3 text-right">6-10 mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">10% conv, NZ$2 CAC, 5% churn</td><td class="px-4 py-3 text-right">10%</td><td class="px-4 py-3 text-right">45,400</td><td class="px-4 py-3 text-right">454,000</td><td class="px-4 py-3 text-right">6-10 mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50 bg-green-50/50"><td class="px-4 py-3 font-medium">12% conv, NZ$2 CAC, 5% churn</td><td class="px-4 py-3 text-right">12%</td><td class="px-4 py-3 text-right font-semibold text-green-600">32,900</td><td class="px-4 py-3 text-right">274,000</td><td class="px-4 py-3 text-right">5-8 mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">15% conv, NZ$2 CAC, 5% churn</td><td class="px-4 py-3 text-right">15%</td><td class="px-4 py-3 text-right font-semibold text-green-600">23,300</td><td class="px-4 py-3 text-right">155,000</td><td class="px-4 py-3 text-right">4-6 mo</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5">
+          <h4 class="font-semibold text-slate-900 mb-2">Revenue at NZ$150K Target</h4>
+          <p class="text-sm text-slate-600 mb-2">Annual gross profit of NZ$150K requires maintaining the target number of paying couples for 12 months.</p>
+          <p class="text-sm text-slate-600">Note: Real Stripe fees (NZ$0.73/sale, ~8.5%) and 2.5% card FX on AI costs are included. Per-couple blended profit: NZ$64.26/yr.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 07: Churn & Lifetime Value -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">07</span>
+          <h2 class="text-2xl font-bold">Churn &amp; Lifetime Value</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-4">Monthly Churn Compounds</h4>
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200">
+                  <th class="text-left py-2 font-semibold text-slate-600">Monthly</th>
+                  <th class="text-right py-2 font-semibold text-slate-600">Annual</th>
+                  <th class="text-right py-2 font-semibold text-slate-600">Avg Lifetime</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-slate-100"><td class="py-2">3%</td><td class="py-2 text-right">30.6%</td><td class="py-2 text-right font-medium">33 months</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">5%</td><td class="py-2 text-right">46.0%</td><td class="py-2 text-right font-medium">20 months</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">8%</td><td class="py-2 text-right">63.2%</td><td class="py-2 text-right font-medium">12.5 months</td></tr>
+                <tr><td class="py-2">10%</td><td class="py-2 text-right">71.8%</td><td class="py-2 text-right font-medium">10 months</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-4">Blended LTV Per Couple (NZD)</h4>
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200">
+                  <th class="text-left py-2 font-semibold text-slate-600">Scenario</th>
+                  <th class="text-right py-2 font-semibold text-slate-600">LTV</th>
+                  <th class="text-right py-2 font-semibold text-slate-600">Max CAC (3:1)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-slate-100"><td class="py-2">Low churn (3%/25%)</td><td class="py-2 text-right font-medium text-green-600">NZ$204</td><td class="py-2 text-right">NZ$68</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">Normal (5%/35%)</td><td class="py-2 text-right font-medium text-green-600">NZ$132</td><td class="py-2 text-right">NZ$44</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">High (8%/50%)</td><td class="py-2 text-right font-medium text-green-600">NZ$87</td><td class="py-2 text-right">NZ$29</td></tr>
+                <tr><td class="py-2">Very high (10%/60%)</td><td class="py-2 text-right font-medium text-green-600">NZ$71</td><td class="py-2 text-right">NZ$24</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <h4 class="font-semibold text-slate-900 mb-3">LTV:CAC Ratio by Scenario</h4>
+          <div class="grid sm:grid-cols-2 gap-4 text-sm">
+            <div class="flex justify-between"><span class="text-slate-500">Low churn &mdash; CAC at NZ$68</span><span class="font-medium text-green-600">3.0:1</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Normal &mdash; CAC at NZ$44</span><span class="font-medium text-green-600">3.0:1</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">High &mdash; CAC at NZ$29</span><span class="font-medium text-green-600">3.0:1</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Very high &mdash; CAC at NZ$24</span><span class="font-medium text-green-600">3.0:1</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 08: Growth Trajectories - 3 Year -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">08</span>
+          <h2 class="text-2xl font-bold">Growth Trajectories &mdash; 3 Year</h2>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+          <p class="text-green-800 text-sm font-medium">All scenarios turn profitable within Year 1 at current AI-only cost structure.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-1">Conservative</h4>
+            <p class="text-xs text-slate-400 mb-4">10% conv, 5% churn, NZ$2 CAC</p>
+            <table class="w-full text-sm">
+              <thead><tr class="border-b border-slate-200"><th class="text-left py-2 font-semibold text-slate-600">Year</th><th class="text-right py-2 font-semibold text-slate-600">End Couples</th><th class="text-right py-2 font-semibold text-slate-600">Net Profit</th></tr></thead>
+              <tbody>
+                <tr class="border-b border-slate-100"><td class="py-2">1</td><td class="py-2 text-right">5,000</td><td class="py-2 text-right text-green-600">NZ$7,865</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">2</td><td class="py-2 text-right">15,000</td><td class="py-2 text-right text-green-600">NZ$23,590</td></tr>
+                <tr><td class="py-2">3</td><td class="py-2 text-right">30,000</td><td class="py-2 text-right text-green-600">NZ$47,170</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white border-2 border-rose-500 rounded-xl p-6 shadow-md">
+            <h4 class="font-semibold text-slate-900 mb-1">Expected</h4>
+            <p class="text-xs text-slate-400 mb-4">10% conv, 5% churn, NZ$2 CAC</p>
+            <table class="w-full text-sm">
+              <thead><tr class="border-b border-slate-200"><th class="text-left py-2 font-semibold text-slate-600">Year</th><th class="text-right py-2 font-semibold text-slate-600">End Couples</th><th class="text-right py-2 font-semibold text-slate-600">Net Profit</th></tr></thead>
+              <tbody>
+                <tr class="border-b border-slate-100"><td class="py-2">1</td><td class="py-2 text-right">10,000</td><td class="py-2 text-right text-green-600">NZ$15,730</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">2</td><td class="py-2 text-right">35,000</td><td class="py-2 text-right text-green-600">NZ$55,045</td></tr>
+                <tr><td class="py-2">3</td><td class="py-2 text-right">75,000</td><td class="py-2 text-right text-green-600">NZ$117,930</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-1">Aggressive</h4>
+            <p class="text-xs text-slate-400 mb-4">12% conv, 5% churn, NZ$2 CAC</p>
+            <table class="w-full text-sm">
+              <thead><tr class="border-b border-slate-200"><th class="text-left py-2 font-semibold text-slate-600">Year</th><th class="text-right py-2 font-semibold text-slate-600">End Couples</th><th class="text-right py-2 font-semibold text-slate-600">Net Profit</th></tr></thead>
+              <tbody>
+                <tr class="border-b border-slate-100"><td class="py-2">1</td><td class="py-2 text-right">20,000</td><td class="py-2 text-right text-green-600">NZ$58,432</td></tr>
+                <tr class="border-b border-slate-100"><td class="py-2">2</td><td class="py-2 text-right">60,000</td><td class="py-2 text-right text-green-600">NZ$191,632</td></tr>
+                <tr><td class="py-2">3</td><td class="py-2 text-right">150,000</td><td class="py-2 text-right text-green-600">NZ$503,584</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 09: Best / Expected / Worst -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">09</span>
+          <h2 class="text-2xl font-bold">Best / Expected / Worst</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold">Metric</th>
+                <th class="text-right px-4 py-3 font-semibold">Worst Case</th>
+                <th class="text-right px-4 py-3 font-semibold">Expected Case</th>
+                <th class="text-right px-4 py-3 font-semibold">Best Case</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Couples</td><td class="px-4 py-3 text-right">15,000</td><td class="px-4 py-3 text-right">55,000</td><td class="px-4 py-3 text-right">105,000</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Conversion rate</td><td class="px-4 py-3 text-right">5%</td><td class="px-4 py-3 text-right">10%</td><td class="px-4 py-3 text-right">12%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Monthly churn</td><td class="px-4 py-3 text-right">8%</td><td class="px-4 py-3 text-right">5%</td><td class="px-4 py-3 text-right">3%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">CAC per couple</td><td class="px-4 py-3 text-right">NZ$5</td><td class="px-4 py-3 text-right">NZ$2</td><td class="px-4 py-3 text-right">NZ$1</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Yearly uptake</td><td class="px-4 py-3 text-right">20%</td><td class="px-4 py-3 text-right">40%</td><td class="px-4 py-3 text-right">50%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50 bg-slate-50/50"><td class="px-4 py-3 font-medium">Annual gross profit</td><td class="px-4 py-3 text-right text-green-600">NZ$3,022</td><td class="px-4 py-3 text-right text-green-600">NZ$196,515</td><td class="px-4 py-3 text-right text-green-600">NZ$516,768</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Annual CAC cost</td><td class="px-4 py-3 text-right">NZ$50,544</td><td class="px-4 py-3 text-right">NZ$151,800</td><td class="px-4 py-3 text-right">NZ$32,274</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Annual net profit</td><td class="px-4 py-3 text-right font-bold text-red-500">-NZ$47,522</td><td class="px-4 py-3 text-right font-bold text-green-600">NZ$44,715</td><td class="px-4 py-3 text-right font-bold text-green-600">NZ$484,494</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10: FX Sensitivity -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">10</span>
+          <h2 class="text-2xl font-bold">FX Sensitivity</h2>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+          <h4 class="font-semibold text-amber-800 mb-2">Strong Natural Hedge</h4>
+          <p class="text-sm text-amber-700 mb-2">With AI text as the only variable cost (US$1.05/mo per couple vs US$4.99 revenue), the revenue-to-cost ratio is <strong>4.75:1</strong>. NZD weakness increases revenue far more than costs, providing a strong natural FX hedge.</p>
+          <p class="text-sm text-amber-700">See <a href="#section-14" class="text-rose-500 underline">Section 14</a> for payment flow optimization analysis.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-right px-3 py-3 font-semibold">USD/NZD Rate</th>
+                <th class="text-right px-3 py-3 font-semibold">Revenue (NZD)</th>
+                <th class="text-right px-3 py-3 font-semibold">Stripe Fee (NZD)</th>
+                <th class="text-right px-3 py-3 font-semibold">AI Cost (NZD)</th>
+                <th class="text-right px-3 py-3 font-semibold">Profit (NZD/mo)</th>
+                <th class="text-right px-3 py-3 font-semibold">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">1.55</td><td class="px-3 py-2 text-right">NZ$7.73</td><td class="px-3 py-2 text-right">NZ$0.69</td><td class="px-3 py-2 text-right">NZ$1.67</td><td class="px-3 py-2 text-right font-medium">NZ$5.38</td><td class="px-3 py-2 text-right text-red-500">-10.0%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">1.65</td><td class="px-3 py-2 text-right">NZ$8.23</td><td class="px-3 py-2 text-right">NZ$0.71</td><td class="px-3 py-2 text-right">NZ$1.78</td><td class="px-3 py-2 text-right font-medium">NZ$5.75</td><td class="px-3 py-2 text-right text-red-500">-3.8%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50 bg-green-50/50"><td class="px-3 py-2 text-right font-semibold">1.7148</td><td class="px-3 py-2 text-right">NZ$8.56</td><td class="px-3 py-2 text-right">NZ$0.73</td><td class="px-3 py-2 text-right">NZ$1.85</td><td class="px-3 py-2 text-right font-semibold text-green-600">NZ$5.98</td><td class="px-3 py-2 text-right text-slate-500">Baseline</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">1.80</td><td class="px-3 py-2 text-right">NZ$8.98</td><td class="px-3 py-2 text-right">NZ$0.75</td><td class="px-3 py-2 text-right">NZ$1.94</td><td class="px-3 py-2 text-right font-medium">NZ$6.30</td><td class="px-3 py-2 text-right text-green-600">+5.4%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">1.90</td><td class="px-3 py-2 text-right">NZ$9.48</td><td class="px-3 py-2 text-right">NZ$0.77</td><td class="px-3 py-2 text-right">NZ$2.05</td><td class="px-3 py-2 text-right font-medium">NZ$6.66</td><td class="px-3 py-2 text-right text-green-600">+11.4%</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">2.00</td><td class="px-3 py-2 text-right">NZ$9.98</td><td class="px-3 py-2 text-right">NZ$0.80</td><td class="px-3 py-2 text-right">NZ$2.15</td><td class="px-3 py-2 text-right font-medium">NZ$7.03</td><td class="px-3 py-2 text-right text-green-600">+17.6%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Profit shown for monthly subscriber. Revenue = US$4.99 &times; rate. Stripe fee = ~5% + NZ$0.30. AI cost = US$1.05 &times; rate &times; 1.025 (card FX).</p>
+      </div>
+    </section>
+
+    <!-- Section 11: Payment Fees -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">11</span>
+          <h2 class="text-2xl font-bold">Payment Fees</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-4">Stripe (Web/PWA) &mdash; Actual Data</h4>
+            <ul class="space-y-2 text-sm text-slate-600">
+              <li class="flex justify-between"><span>Processing fee</span><span class="font-medium">2.9% + US$0.30</span></li>
+              <li class="flex justify-between"><span>Currency conversion</span><span class="font-medium text-rose-500">+~2.1% (USD&rarr;NZD)</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2"><span class="font-semibold">Monthly sub total</span><span class="font-medium">NZ$0.73 (8.5%)</span></li>
+              <li class="flex justify-between"><span class="font-semibold">Yearly Sub total</span><span class="font-medium">NZ$4.20 (5.4%)</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2"><span>Card FX on AI costs</span><span class="font-medium text-rose-500">+2.5% (NZD&rarr;USD)</span></li>
+            </ul>
+            <p class="text-xs text-slate-400 mt-3">Verified from actual Stripe dashboard: NZ$8.64 net volume, NZ$0.73 fee per monthly sale.</p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h4 class="font-semibold text-slate-900 mb-4">Apple/Google (In-App)</h4>
+            <ul class="space-y-2 text-sm text-slate-600">
+              <li class="flex justify-between"><span>Apple (year 1)</span><span class="font-medium">30%</span></li>
+              <li class="flex justify-between"><span>Apple (year 2+)</span><span class="font-medium">15%</span></li>
+              <li class="flex justify-between"><span>Google</span><span class="font-medium">15%</span></li>
+              <li class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span class="font-semibold text-rose-500">Stripe vs Apple (yr 1)</span><span class="font-medium text-rose-500">8.5% vs 30% = 3.5x cheaper</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-5">
+          <p class="text-rose-700 font-semibold text-sm">Strategy: Encourage web/PWA subscriptions via Stripe. Avoid Apple/Google in-app purchases where possible. Future: hold USD in Stripe + Wise to eliminate ~2.1% conversion fee (see Section 14).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12: 6-Month Growth Sprint -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">12</span>
+          <h2 class="text-2xl font-bold">6-Month Growth Sprint</h2>
+        </div>
+
+        <!-- Milestone Cards -->
+        <div class="grid md:grid-cols-3 gap-4 mb-8">
+          <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+            <p class="text-green-600 text-xs font-semibold uppercase mb-1">Month 1</p>
+            <p class="text-green-700 font-bold">Cumulative net profit turns positive</p>
+          </div>
+          <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+            <p class="text-green-600 text-xs font-semibold uppercase mb-1">Month 2</p>
+            <p class="text-green-700 font-bold">Revenue run rate crosses NZ$150K/yr</p>
+          </div>
+          <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+            <p class="text-green-600 text-xs font-semibold uppercase mb-1">Month 6</p>
+            <p class="text-green-700 font-bold">NZ$148K cumulative profit banked</p>
+          </div>
+        </div>
+
+        <!-- Monthly Timeline -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
+          <div class="bg-white border-2 border-green-500 rounded-lg p-3 text-center text-sm"><p class="text-green-500 text-xs font-bold">Month 1</p><p class="font-bold text-green-500">5,000 couples</p></div>
+          <div class="bg-white border border-slate-200 rounded-lg p-3 text-center text-sm"><p class="text-slate-400 text-xs">Month 2</p><p class="font-semibold">15,000 couples</p></div>
+          <div class="bg-white border border-slate-200 rounded-lg p-3 text-center text-sm"><p class="text-slate-400 text-xs">Month 3</p><p class="font-semibold">35,000 couples</p></div>
+          <div class="bg-white border border-slate-200 rounded-lg p-3 text-center text-sm"><p class="text-slate-400 text-xs">Month 4</p><p class="font-semibold">70,000 couples</p></div>
+          <div class="bg-white border border-slate-200 rounded-lg p-3 text-center text-sm"><p class="text-slate-400 text-xs">Month 5</p><p class="font-semibold">115,000 couples</p></div>
+          <div class="bg-white border border-slate-200 rounded-lg p-3 text-center text-sm"><p class="text-slate-400 text-xs">Month 6</p><p class="font-semibold">170,000 couples</p></div>
+        </div>
+
+        <!-- Financial Projection Table -->
+        <div class="overflow-x-auto mb-8">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-right px-3 py-3 font-semibold">Month</th>
+                <th class="text-right px-3 py-3 font-semibold">End Couples</th>
+                <th class="text-right px-3 py-3 font-semibold">New Acquired</th>
+                <th class="text-right px-3 py-3 font-semibold">Paying (15%)</th>
+                <th class="text-right px-3 py-3 font-semibold">Gross Profit</th>
+                <th class="text-right px-3 py-3 font-semibold">CAC Cost</th>
+                <th class="text-right px-3 py-3 font-semibold">Net Profit</th>
+                <th class="text-right px-3 py-3 font-semibold">Cumulative</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">1</td><td class="px-3 py-2 text-right">5,000</td><td class="px-3 py-2 text-right">5,000</td><td class="px-3 py-2 text-right">750</td><td class="px-3 py-2 text-right">NZ$2,915</td><td class="px-3 py-2 text-right">NZ$2,500</td><td class="px-3 py-2 text-right text-green-600">NZ$415</td><td class="px-3 py-2 text-right text-green-600">NZ$415</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">2</td><td class="px-3 py-2 text-right">15,000</td><td class="px-3 py-2 text-right">10,250</td><td class="px-3 py-2 text-right">2,250</td><td class="px-3 py-2 text-right">NZ$8,745</td><td class="px-3 py-2 text-right">NZ$5,125</td><td class="px-3 py-2 text-right text-green-600">NZ$3,620</td><td class="px-3 py-2 text-right text-green-600">NZ$4,035</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">3</td><td class="px-3 py-2 text-right">35,000</td><td class="px-3 py-2 text-right">20,750</td><td class="px-3 py-2 text-right">5,250</td><td class="px-3 py-2 text-right">NZ$20,405</td><td class="px-3 py-2 text-right">NZ$10,375</td><td class="px-3 py-2 text-right text-green-600">NZ$10,030</td><td class="px-3 py-2 text-right text-green-600">NZ$14,065</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">4</td><td class="px-3 py-2 text-right">70,000</td><td class="px-3 py-2 text-right">36,750</td><td class="px-3 py-2 text-right">10,500</td><td class="px-3 py-2 text-right">NZ$40,810</td><td class="px-3 py-2 text-right">NZ$18,375</td><td class="px-3 py-2 text-right text-green-600">NZ$22,435</td><td class="px-3 py-2 text-right text-green-600">NZ$36,500</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-3 py-2 text-right">5</td><td class="px-3 py-2 text-right">115,000</td><td class="px-3 py-2 text-right">48,500</td><td class="px-3 py-2 text-right">17,250</td><td class="px-3 py-2 text-right">NZ$67,045</td><td class="px-3 py-2 text-right">NZ$24,250</td><td class="px-3 py-2 text-right text-green-600">NZ$42,795</td><td class="px-3 py-2 text-right text-green-600">NZ$79,295</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50 bg-green-50/50"><td class="px-3 py-2 text-right font-semibold">6</td><td class="px-3 py-2 text-right font-semibold">170,000</td><td class="px-3 py-2 text-right">60,750</td><td class="px-3 py-2 text-right">25,500</td><td class="px-3 py-2 text-right font-semibold">NZ$99,110</td><td class="px-3 py-2 text-right">NZ$30,375</td><td class="px-3 py-2 text-right font-semibold text-green-600">NZ$68,735</td><td class="px-3 py-2 text-right font-bold text-green-600">NZ$148,030</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Investment Summary -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-sm">
+          <h4 class="font-semibold text-slate-900 mb-3">Investment Summary</h4>
+          <div class="grid sm:grid-cols-3 gap-4 text-sm">
+            <div class="text-center"><p class="text-slate-500">Total CAC Spend</p><p class="text-xl font-bold text-rose-500">NZ$91,000</p></div>
+            <div class="text-center"><p class="text-slate-500">Total Gross Profit</p><p class="text-xl font-bold text-green-600">NZ$239,030</p></div>
+            <div class="text-center"><p class="text-slate-500">ROI on CAC</p><p class="text-xl font-bold text-green-600">2.63x</p></div>
+          </div>
+        </div>
+
+        <!-- What It Takes -->
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-5">
+          <h4 class="font-semibold text-rose-800 mb-2">What It Takes</h4>
+          <ul class="text-sm text-rose-700 space-y-1">
+            <li>Acquire 5,000 couples in Month 1 (viral loop + launch push)</li>
+            <li>15% conversion rate to paid (sustained)</li>
+            <li>NZ$0.50 blended CAC (organic + referral heavy)</li>
+            <li>5% monthly churn (healthy for consumer apps)</li>
+            <li>15% yearly uptake (40% of monthly upgrade to yearly)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 13: Quick Reference Card -->
+    <section class="py-16 px-4 bg-slate-50">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">13</span>
+          <h2 class="text-2xl font-bold">Quick Reference Card</h2>
+        </div>
+        <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">Pricing</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Free</span><span class="font-medium">$0</span></div>
+              <div class="flex justify-between"><span>Monthly</span><span class="font-medium">US$4.99</span></div>
+              <div class="flex justify-between"><span>Yearly</span><span class="font-medium">US$44.99</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">Per-Couple Economics</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Free cost</span><span class="font-medium text-rose-500">-NZ$0.26/mo</span></div>
+              <div class="flex justify-between"><span>Monthly profit</span><span class="font-medium text-green-600">NZ$6.06/mo</span></div>
+              <div class="flex justify-between"><span>Blended annual</span><span class="font-medium text-green-600">NZ$64.26/yr</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">Break-Even</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Gross (AI+Stripe+FX)</span><span class="font-medium">~4.7%</span></div>
+              <div class="flex justify-between"><span>With NZ$2 CAC, 5% churn</span><span class="font-medium">~6.5%</span></div>
+              <div class="flex justify-between"><span>With NZ$5 CAC, 5% churn</span><span class="font-medium">~9.0%</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">NZ$150K Target</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>10% conv, no CAC</span><span class="font-medium">42,000</span></div>
+              <div class="flex justify-between"><span>12% conv, NZ$2 CAC</span><span class="font-medium text-green-600">32,900</span></div>
+              <div class="flex justify-between"><span>15% conv, NZ$2 CAC</span><span class="font-medium text-green-600">23,300</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">AI Pricing</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>V4 Flash</span><span class="font-medium">NZ$0.24/M in</span></div>
+              <div class="flex justify-between"><span>V4 Pro</span><span class="font-medium">NZ$0.75/M in</span></div>
+              <div class="flex justify-between"><span>vs GPT-5.5</span><span class="font-medium text-green-600">94.7x cheaper</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">LTV (Blended)</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Low churn</span><span class="font-medium">NZ$204</span></div>
+              <div class="flex justify-between"><span>Normal</span><span class="font-medium">NZ$132</span></div>
+              <div class="flex justify-between"><span>High churn</span><span class="font-medium">NZ$87</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">Stripe &amp; FX</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Stripe fee (monthly)</span><span class="font-medium">NZ$0.73 (8.5%)</span></div>
+              <div class="flex justify-between"><span>Card FX on AI</span><span class="font-medium">+2.5%</span></div>
+              <div class="flex justify-between"><span>Subsidy</span><span class="font-medium">~21 free/couple</span></div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h5 class="text-xs font-semibold text-slate-400 uppercase mb-2">FX Hedge</h5>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between"><span>Rev-to-cost ratio</span><span class="font-medium text-green-600">4.75:1</span></div>
+              <div class="flex justify-between"><span>AI cost per couple</span><span class="font-medium">NZ$1.85/mo</span></div>
+              <div class="flex justify-between"><span>Total variable cost</span><span class="font-medium">NZ$1.85/mo</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 14: Payment Flow Optimization -->
+    <section class="py-16 px-4" id="section-14">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="flex-shrink-0 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">14</span>
+          <h2 class="text-2xl font-bold">Payment Flow Optimization</h2>
+        </div>
+
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-6">
+          <h4 class="font-semibold text-green-800 mb-2">Minimal Savings Without Images</h4>
+          <p class="text-sm text-green-700">With AI text as the only variable cost (US$1.05/mo), the double-conversion penalty is small. The current Stripe FX rate (1.7315) is actually favourable vs mid-market (1.7148), so holding USD via Wise provides negligible savings (~NZ$1.40/yr per subscriber). The primary value is <strong>FX risk management</strong>, not cost reduction.</p>
+        </div>
+
+        <!-- Current vs Optimized Flows -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white border-2 border-amber-300 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-1 rounded">CURRENT</span>
+              <h4 class="font-semibold text-slate-900">Double Conversion</h4>
+            </div>
+            <div class="space-y-2 text-sm text-slate-600">
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">1.</span><span>Customer pays <strong>US$4.99</strong> &rarr; Stripe</span></div>
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">2.</span><span>Stripe converts USD&rarr;NZD <span class="text-rose-500">(~2.1% fee)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">3.</span><span>Stripe processing <span class="text-rose-500">(2.9% + $0.30)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">4.</span><span>NZ$7.91 paid to NZ bank</span></div>
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">5.</span><span>Pay OpenRouter from NZD card <span class="text-rose-500">(2.5% FX fee)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-rose-500 font-bold">6.</span><span>AI cost: US$1.05/mo &rarr; NZ$1.85/mo</span></div>
+              <div class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span class="font-semibold">Monthly profit</span><span class="font-bold text-green-600">NZ$6.06/mo</span></div>
+            </div>
+          </div>
+          <div class="bg-white border-2 border-slate-300 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">OPTIONAL</span>
+              <h4 class="font-semibold text-slate-900">Hold USD via Wise</h4>
+            </div>
+            <div class="space-y-2 text-sm text-slate-600">
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">1.</span><span>Customer pays <strong>US$4.99</strong> &rarr; Stripe (hold USD)</span></div>
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">2.</span><span>Stripe processing only <span class="text-slate-400">(2.9% + $0.30)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">3.</span><span>No conversion fee <span class="text-slate-400">(save ~2.1%)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">4.</span><span>US$4.55 &rarr; Wise USD account</span></div>
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">5.</span><span>Pay OpenRouter in USD <span class="text-slate-400">(0% FX fee)</span></span></div>
+              <div class="flex items-start gap-2"><span class="text-slate-400 font-bold">6.</span><span>AI cost: US$1.05/mo (no conversion)</span></div>
+              <div class="flex justify-between border-t border-slate-100 pt-2 mt-2"><span class="font-semibold">Monthly profit</span><span class="font-bold text-green-600">NZ$5.96/mo</span></div>
+              <div class="text-xs text-slate-400 mt-1">Convert only profit to NZD via Wise (~0.5%): NZ$5.96 net</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-Couple Comparison -->
+        <div class="overflow-x-auto mb-8">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold">Metric</th>
+                <th class="text-right px-4 py-3 font-semibold">Current (Double FX)</th>
+                <th class="text-right px-4 py-3 font-semibold">Optimized (Hold USD)</th>
+                <th class="text-right px-4 py-3 font-semibold">Savings</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Stripe fee/month</td><td class="px-4 py-3 text-right">NZ$0.73</td><td class="px-4 py-3 text-right">NZ$0.76</td><td class="px-4 py-3 text-right text-red-500">+NZ$0.03</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Stripe conversion fee</td><td class="px-4 py-3 text-right text-red-500">NZ$0.18</td><td class="px-4 py-3 text-right text-green-600">NZ$0.00</td><td class="px-4 py-3 text-right text-green-600">NZ$0.18/mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Card FX on AI costs</td><td class="px-4 py-3 text-right text-red-500">NZ$0.045</td><td class="px-4 py-3 text-right text-green-600">NZ$0.00</td><td class="px-4 py-3 text-right text-green-600">NZ$0.045/mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Stripe favourable FX rate</td><td class="px-4 py-3 text-right text-green-600">+NZ$0.08</td><td class="px-4 py-3 text-right">&mdash;</td><td class="px-4 py-3 text-right text-red-500">-NZ$0.08/mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50"><td class="px-4 py-3 font-medium">Wise conversion (profit)</td><td class="px-4 py-3 text-right">NZ$0.00</td><td class="px-4 py-3 text-right text-rose-500">NZ$0.03</td><td class="px-4 py-3 text-right text-red-500">-NZ$0.03/mo</td></tr>
+              <tr class="border-t border-slate-200 hover:bg-slate-50 bg-slate-50/50"><td class="px-4 py-3 font-bold">Net savings/subscriber</td><td class="px-4 py-3 text-right">&mdash;</td><td class="px-4 py-3 text-right">&mdash;</td><td class="px-4 py-3 text-right font-bold text-green-600">~NZ$1.40/yr</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Savings at Scale -->
+        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6">
+          <h4 class="font-semibold text-slate-900 mb-4">Annual Savings at Scale</h4>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="text-center"><p class="text-xs text-slate-400">1,000 subscribers</p><p class="text-lg font-bold text-green-600">NZ$1,400</p></div>
+            <div class="text-center"><p class="text-xs text-slate-400">5,000 subscribers</p><p class="text-lg font-bold text-green-600">NZ$7,000</p></div>
+            <div class="text-center"><p class="text-xs text-slate-400">10,000 subscribers</p><p class="text-lg font-bold text-green-600">NZ$14,000</p></div>
+            <div class="text-center"><p class="text-xs text-slate-400">25,000 subscribers</p><p class="text-lg font-bold text-green-600">NZ$35,000</p></div>
+            <div class="text-center"><p class="text-xs text-slate-400">50,000 subscribers</p><p class="text-lg font-bold text-green-600">NZ$70,000</p></div>
+          </div>
+        </div>
+
+        <!-- Optimized Key Metrics -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+          <h4 class="font-semibold text-slate-800 mb-3">Optimized Scenario Key Metrics</h4>
+          <div class="grid sm:grid-cols-2 gap-3 text-sm">
+            <div class="flex justify-between"><span class="text-slate-600">Monthly Sub Profit</span><span class="font-medium text-slate-700">NZ$5.96/mo</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Yearly Sub Profit</span><span class="font-medium text-slate-700">NZ$4.37/mo</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Blended Annual</span><span class="font-medium text-slate-700">NZ$63.90/yr</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Break-even Conversion</span><span class="font-medium text-slate-700">~4.7%</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Couples for NZ$150K (10%)</span><span class="font-medium text-slate-700">~42,300</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Savings vs Current</span><span class="font-medium text-slate-700">~NZ$1.40/yr</span></div>
+          </div>
+          <p class="text-xs text-slate-400 mt-3">Note: Optimized scenario eliminates FX risk but current Stripe rate is favourable. Net difference is negligible (&lt;NZ$0.10/mo). Primary benefit is hedging against NZD strengthening.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-12 px-4 bg-cream border-t border-slate-200">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center space-y-4">
+        <p class="text-sm text-slate-500">Data verified: June 22, 2026. FX rate: 1 USD = NZ$1.7148. Stripe data: actual (NZ$8.64/sale, NZ$0.73 fee). Card FX: 2.5%.</p>
+        <div class="flex flex-wrap justify-center gap-6 text-sm">
+          <a href="https://api-docs.deepseek.com/quick_start/pricing" target="_blank" rel="noopener noreferrer" class="text-rose-500 hover:text-rose-600">DeepSeek Pricing</a>
+          <a href="https://openai.com/api/pricing/" target="_blank" rel="noopener noreferrer" class="text-rose-500 hover:text-rose-600">OpenAI Pricing</a>
+          <a href="https://www.xe.com/currencyconverter/convert/?Amount=1&From=USD&To=NZD" target="_blank" rel="noopener noreferrer" class="text-rose-500 hover:text-rose-600">XE USD/NZD</a>
+        </div>
+        <div class="pt-4 border-t border-slate-100">
+          <a href="/" class="text-slate-600 hover:text-slate-900 transition text-sm">&larr; Back to Home</a>
+        </div>
+        <p class="text-xs text-slate-400">CUPLA &middot; Couples Food System &mdash; Internal Economics Analysis</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

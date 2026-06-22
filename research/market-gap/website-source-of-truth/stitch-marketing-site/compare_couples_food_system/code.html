@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Difference | Couples Food System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(245, 240, 230, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #E5E1DA;
+        }
+        .bento-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .bento-glow::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(122, 158, 126, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e8d0",
+                        "on-secondary-fixed": "#301400",
+                        "primary-fixed-dim": "#aad0ad",
+                        "surface-tint": "#44664a",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#615e57",
+                        "on-primary-fixed-variant": "#2d4e33",
+                        "on-tertiary-container": "#2f2e27",
+                        "on-primary-container": "#13341c",
+                        "inverse-surface": "#233524",
+                        "on-background": "#0e1f10",
+                        "primary-fixed": "#c6ecc8",
+                        "tertiary-container": "#98958c",
+                        "surface-dim": "#cae0c8",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#aad0ad",
+                        "on-primary-fixed": "#00210b",
+                        "surface-container-low": "#e4fae1",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#def4db",
+                        "on-tertiary-fixed": "#1d1c16",
+                        "on-tertiary-fixed-variant": "#494740",
+                        "surface-container-high": "#d8eed6",
+                        "background": "#ebffe7",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#febb8e",
+                        "inverse-on-surface": "#e1f7de",
+                        "tertiary-fixed-dim": "#cac6bd",
+                        "secondary-fixed": "#ffdcc6",
+                        "surface-bright": "#ebffe7",
+                        "on-surface-variant": "#424842",
+                        "secondary-fixed-dim": "#fbb88b",
+                        "tertiary-fixed": "#e7e2d8",
+                        "on-surface": "#0e1f10",
+                        "surface": "#ebffe7",
+                        "on-secondary-container": "#794925",
+                        "primary": "#44664a",
+                        "outline-variant": "#c2c8bf",
+                        "on-secondary-fixed-variant": "#693c19",
+                        "on-error-container": "#93000a",
+                        "outline": "#727971",
+                        "primary-container": "#7a9e7e",
+                        "secondary": "#85532e",
+                        "surface-variant": "#d3e8d0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "container-padding": "20px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h1-mobile": ["Plus Jakarta Sans"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "h3": ["Plus Jakarta Sans"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md">
+<nav class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<span class="text-h3 font-h3 text-primary tracking-tight">Couples Food System</span>
+</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity font-body-sm" href="#">Our Ritual</a>
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity font-body-sm" href="#">Shared Kitchen</a>
+<a class="text-primary font-semibold font-body-sm" href="#">Compare</a>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-caps hover:opacity-90 active:scale-95 transition-all">
+                Join Free Beta
+            </button>
+</nav>
+</header>
+<main class="pt-32 pb-xl px-container-padding max-w-7xl mx-auto">
+<!-- Hero Comparison Header -->
+<section class="text-center mb-xl">
+<h1 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-surface mb-md">Why Sunday Morning?</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                While other apps focus on calories and macros, we focus on the ritual of connection. Discover how we transform daily chores into shared moments.
+            </p>
+</section>
+<!-- Bento Grid Comparison -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter lg:gap-xl">
+<!-- Bento Item 1: Real-Time Collaboration -->
+<div class="md:col-span-8 bg-[#F5F0E6] rounded-[24px] p-lg border border-outline-variant bento-glow min-h-[300px] flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-base mb-sm">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-caps text-secondary uppercase">Relationship-First</span>
+</div>
+<h2 class="font-h2 text-h2 text-primary mb-md">Shared Intentions, Not Solitary Chores</h2>
+<p class="font-body-md text-on-surface-variant max-w-lg">
+                        Our platform is built for two. Real-time presence indicators show when your partner is browsing recipes or adding to the shopping list, making it a collaborative dance rather than a solo burden.
+                    </p>
+</div>
+<div class="mt-xl flex -space-x-4">
+<div class="w-12 h-12 rounded-full border-2 border-secondary overflow-hidden bg-surface-container">
+<img alt="Partner A" data-alt="A warm, close-up portrait of a woman in her 30s with a kind expression, softly lit by morning sun in a minimalist home kitchen. The aesthetic is clean and organic, reflecting the Sunday Morning brand's focus on intentional living and emotional connection within the home." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqo_rxlq2BSSGMKq_VbVgXU-MuGFL_zPn0QUBxxRnaAIoq6q49sTv4-Csa84JYpc0W11Jj3DF6oh8DBphHLT0X_4QsE2qJvKJCcSSTwBv3oyNYcCqaJudNzpw_FlKMtdx6gIHTB8o5Wdvbe2Ts3Lhq9nekgnHB3YPyr2-uq3kdVX-34w0T-6BWkYhMBU_F5gI-MTjjOWpu7fWPYdKyLSd-6S-rmtianYp7XZfqLn2e-Wjtn8lhaLwo2nE7h06HS2JNjpvAtLYjjqv3"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-primary overflow-hidden bg-surface-container">
+<img alt="Partner B" data-alt="A candid profile of a man in a modern, sage-colored linen shirt, smiling gently in a bright, sunlit kitchen. The photo has a soft, editorial quality with low contrast and a warm, terracotta and cream color palette, emphasizing a peaceful domestic atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4Qe-BALp3fD1UzbYaSn3bigTfb-N7N4wiBUXbGVwZ1re3ghDAzYMD56HAQxKQ-pSI3S6hutRjktjCE1Ea4iGUqWKY0yh0hWf0KYPCBHeZtZt4LebV4aNJfC3XQvj2D-Wekw2Ba5L7z_dD0AZWMDf5ad_2BEpzge4bz4rfvYgO0uovUw5Y0dd8WCcPb9p8ZzAM-YlfLQ2uin6BzNiXkodhAkq_oockrwJDZniX7zHt8cjxkvFmLN8LWXqKagbR5Ypw7IRNnffAd6ek"/>
+</div>
+<div class="ml-8 self-center px-sm py-xs bg-primary-container/20 rounded-full border border-primary-container">
+<span class="text-body-sm text-primary font-medium">"What are you feeling for Tuesday?"</span>
+</div>
+</div>
+</div>
+<!-- Bento Item 2: AI vs Traditional -->
+<div class="md:col-span-4 bg-surface-container-high rounded-[24px] p-lg border border-outline-variant flex flex-col items-center text-center justify-center space-y-md">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-h3 text-h3 text-on-surface">Adaptive AI Meal Generation</h3>
+<p class="font-body-sm text-on-surface-variant">
+                    Forget manual entry. Our AI learns your shared cravings and suggests meals based on what's already in your pantry.
+                </p>
+<div class="w-full h-1 bg-outline-variant rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary transition-all duration-1000"></div>
+</div>
+<span class="font-label-caps text-primary">75% Less Planning Time</span>
+</div>
+<!-- Comparison Table Section -->
+<div class="md:col-span-12 mt-xl">
+<div class="bg-white/50 backdrop-blur-sm rounded-[24px] border border-outline-variant overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-lg font-h3 text-h3 text-primary">The Experience</th>
+<th class="p-lg font-h3 text-h3 text-primary w-1/3">Sunday Morning</th>
+<th class="p-lg font-h3 text-h3 text-on-surface-variant/50 w-1/3">Typical Apps</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr>
+<td class="p-lg">
+<p class="font-body-md font-semibold text-on-surface">Portion Scaling</p>
+<p class="font-body-sm text-on-surface-variant">Matching your individual metabolic needs</p>
+</td>
+<td class="p-lg">
+<div class="flex items-center gap-base text-primary font-medium">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                                            Adaptive for two
+                                        </div>
+</td>
+<td class="p-lg text-on-surface-variant/60 font-body-sm italic">Standard 2/4 servings</td>
+</tr>
+<tr>
+<td class="p-lg">
+<p class="font-body-md font-semibold text-on-surface">Pantry Logic</p>
+<p class="font-body-sm text-on-surface-variant">Waste reduction and inventory tracking</p>
+</td>
+<td class="p-lg">
+<div class="flex items-center gap-base text-primary font-medium">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                                            Pantry-first discovery
+                                        </div>
+</td>
+<td class="p-lg text-on-surface-variant/60 font-body-sm italic">Recipe-only focus</td>
+</tr>
+<tr>
+<td class="p-lg">
+<p class="font-body-md font-semibold text-on-surface">Atmosphere</p>
+<p class="font-body-sm text-on-surface-variant">The psychological impact of the UI</p>
+</td>
+<td class="p-lg">
+<div class="flex items-center gap-base text-primary font-medium">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                                            Editorial &amp; Intentional
+                                        </div>
+</td>
+<td class="p-lg text-on-surface-variant/60 font-body-sm italic">Clinical/Utility-heavy</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Bento Item 3: Visual Aesthetic -->
+<div class="md:col-span-4 bg-[#E8A87C]/10 rounded-[24px] p-lg border border-[#E8A87C]/30 flex flex-col h-full">
+<div class="mb-md">
+<span class="material-symbols-outlined text-secondary" data-icon="palette">palette</span>
+<h3 class="font-h3 text-h3 text-secondary mt-base">Modern Organic Aesthetic</h3>
+</div>
+<div class="flex-grow flex items-center justify-center">
+<img alt="Organic aesthetic" class="rounded-xl shadow-lg border-2 border-white rotate-2 hover:rotate-0 transition-transform duration-500" data-alt="A top-down aesthetic flat-lay of a wooden dining table. On the table sits a ceramic sage-green bowl filled with fresh salad, a terracotta-colored linen napkin, and a pair of brass servers. The lighting is soft and golden, characteristic of an early Sunday morning, with shadows of leaves dancing across the surface, creating a peaceful and high-end organic mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw9EGBdqHMlonsX7UrlJczJf8pliXAkxV2eW1C2Y-nOuRJQyU08IbIpRhOLYlrF4morcHj9cmK4nasfMf2SROXBqAl7fs3fjSqjN1MWT6RbcUSfIIG1eTea_Xo95smqP2xQhfisaH3n5oZLEGzR1QWCYpST-yaEzN_fl1J-j-xQbVttuM49kx0sCRwdEPqD4GexcEVcluwa62hbcF5F2wI5r0mMt9GjoMw0Ny6CuZ1LjnJDGM3SY6-0JjIpxqng0m0h4idt4f8dIS-"/>
+</div>
+</div>
+<!-- Bento Item 4: Success Message -->
+<div class="md:col-span-8 bg-primary rounded-[24px] p-xl flex flex-col md:flex-row items-center gap-xl text-on-primary">
+<div class="flex-1">
+<h2 class="font-h2 text-h2 mb-md">Ready to reclaim your evenings?</h2>
+<p class="font-body-md opacity-90 mb-lg">
+                        Our waitlist for the Couples Food System beta is now open. Join 2,500+ couples designing their shared ritual.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-md">
+<input class="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-full px-lg py-sm focus:ring-secondary focus:border-secondary flex-1" placeholder="Email address" type="email"/>
+<button class="bg-secondary text-on-secondary px-xl py-sm rounded-full font-label-caps hover:scale-105 transition-transform">
+                            Cook Together
+                        </button>
+</div>
+</div>
+<div class="hidden md:block w-32 h-32 relative">
+<div class="absolute inset-0 bg-secondary/30 rounded-full animate-ping"></div>
+<div class="relative bg-secondary p-8 rounded-full shadow-xl">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container border-t border-outline-variant py-xl mt-xl">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="space-y-md">
+<span class="font-h3 text-h3 text-primary tracking-tight">Sunday Morning</span>
+<p class="font-body-sm text-on-surface-variant max-w-xs">
+                    Transforming meal planning into a shared ritual of nourishment and connection.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="space-y-sm">
+<p class="font-label-caps text-primary uppercase">The Method</p>
+<a class="block text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Shared Kitchen</a>
+<a class="block text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Partner Access</a>
+</div>
+<div class="space-y-sm">
+<p class="font-label-caps text-primary uppercase">Support</p>
+<a class="block text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact</a>
+<a class="block text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy</a>
+</div>
+</div>
+<div class="flex flex-col items-start md:items-end justify-between">
+<div class="flex gap-md">
+<a class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+</div>
+<p class="font-body-sm text-on-surface-variant text-xs mt-lg">
+                    © 2024 Sunday Morning Systems.
+                </p>
+</div>
+</div>
+</footer>
+<script>
+        // Simple scroll reveal interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const bentoItems = document.querySelectorAll('.bento-glow');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-4');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            bentoItems.forEach(item => {
+                item.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-4');
+                observer.observe(item);
+            });
+        });
+    </script>
+</body></html>

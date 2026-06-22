@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Couples Food System | One dinner. Two plates. Zero arguments.</title>
+  <meta name="description" content="The collaborative food operating system for couples with different dietary goals.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Design System Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: { DEFAULT: '#FAF6EE', dark: '#F5F0E6' },
+            sage: { DEFAULT: '#7A9E7E', dark: '#5A7E5E', light: '#9ABE9E' },
+            terracotta: { DEFAULT: '#E8A87C', dark: '#C88A5C' },
+            textPrimary: '#2C3E2D',
+            textSecondary: '#6B7B6C',
+            borderWarm: '#E5E1DA',
+            error: '#E07A5F'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          lineHeight: {
+            relaxed: '1.5',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .page-view { display: none; animation: fadeIn 0.4s ease-in-out; }
+    .page-view.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-cream text-textPrimary antialiased leading-relaxed min-h-screen flex flex-col pt-20">
+
+  <!-- Header / Navigation -->
+  <header class="fixed top-0 w-full bg-cream/90 backdrop-blur-md z-50 border-b border-borderWarm transition-all">
+    <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="#" onclick="navigate('home')" class="flex items-center gap-2 text-textPrimary hover:text-sage transition-colors">
+        <i data-lucide="heart-handshake" class="w-8 h-8 text-terracotta"></i>
+        <span class="font-semibold text-xl tracking-tight">Couples Food System</span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-8 text-textSecondary font-medium">
+        <a href="#" onclick="navigate('features')" class="hover:text-sage transition-colors">Features</a>
+        <a href="#" onclick="navigate('how-it-works')" class="hover:text-sage transition-colors">How It Works</a>
+        <a href="#" onclick="navigate('compare')" class="hover:text-sage transition-colors">Compare</a>
+        <a href="#" onclick="navigate('about')" class="hover:text-sage transition-colors">About</a>
+        <a href="#" onclick="navigate('faq')" class="hover:text-sage transition-colors">FAQ</a>
+        <a href="#waitlist" class="bg-sage text-white px-5 py-2.5 rounded-xl hover:bg-sage-dark transition-colors shadow-sm">
+          Join Free Beta
+        </a>
+      </nav>
+
+      <!-- Mobile Toggle -->
+      <button class="md:hidden text-textPrimary" onclick="toggleMobileMenu()" aria-label="Toggle Menu">
+        <i data-lucide="menu" class="w-6 h-6" id="menu-icon"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div id="mobile-menu-container" class="hidden md:hidden bg-cream border-b border-borderWarm px-6 py-4 flex flex-col gap-4 text-lg font-medium shadow-lg">
+      <a href="#" onclick="navigate('features')" class="text-textSecondary hover:text-sage">Features</a>
+      <a href="#" onclick="navigate('how-it-works')" class="text-textSecondary hover:text-sage">How It Works</a>
+      <a href="#" onclick="navigate('compare')" class="text-textSecondary hover:text-sage">Compare</a>
+      <a href="#" onclick="navigate('about')" class="text-textSecondary hover:text-sage">About</a>
+      <a href="#" onclick="navigate('faq')" class="text-textSecondary hover:text-sage">FAQ</a>
+      <a href="#waitlist" onclick="toggleMobileMenu()" class="bg-sage text-white text-center px-5 py-3 rounded-xl mt-4">Join Free Beta</a>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-grow">
+    
+    <!-- ==================== HOME VIEW ==================== -->
+    <div id="view-home" class="page-view active">
+      <!-- Hero -->
+      <section class="py-20 md:py-32 px-6 max-w-6xl mx-auto text-center">
+        <div class="inline-block bg-terracotta/20 text-terracotta-dark px-4 py-1.5 rounded-full text-sm font-semibold mb-6 tracking-wide uppercase">
+          Now accepting Beta waitlist couples
+        </div>
+        <h1 class="text-5xl md:text-7xl font-semibold text-textPrimary tracking-tight mb-8 max-w-4xl mx-auto leading-tight">
+          One dinner.<br/> Two plates.<br/> <span class="text-sage">Zero arguments.</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-textSecondary mb-10 max-w-2xl mx-auto leading-relaxed">
+          The first collaborative meal app for couples. Cook <strong class="font-semibold text-textPrimary">one</strong> meal together, and our AI adapts the plating so you <strong class="font-semibold text-textPrimary">both</strong> hit your unique goals.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+          <a href="#waitlist" class="bg-sage hover:bg-sage-dark text-white px-8 py-4 rounded-xl text-lg font-medium transition-colors shadow-sm">
+            Join Free Beta Waitlist
+          </a>
+          <button onclick="navigate('how-it-works')" class="border-2 border-sage text-sage hover:bg-sage/5 px-8 py-4 rounded-xl text-lg font-medium transition-colors">
+            See How It Works
+          </button>
+        </div>
+      </section>
+
+      <!-- Problem/Solution -->
+      <section class="bg-sage/10 py-24">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+          <h2 class="text-3xl md:text-4xl font-semibold mb-6 tracking-tight text-textPrimary">
+            The "What's for dinner?" argument ends tonight.
+          </h2>
+          <p class="text-xl text-textSecondary leading-relaxed">
+            Sharing a kitchen shouldn't mean compromising on your personal wellness goals. Whether one of you wants to feel lighter and the other wants to build strength, <strong>Couples Food System</strong> does the heavy lifting. No math, no separate cooking, just quality time together.
+          </p>
+        </div>
+      </section>
+
+      <!-- Features Preview Grid -->
+      <section class="py-24 max-w-6xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-semibold mb-4 tracking-tight">Your shared kitchen, smarter.</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Feature 1 -->
+          <div onclick="navigate('feature-moat')" class="cursor-pointer block bg-white p-8 rounded-2xl border border-borderWarm hover:border-sage transition-all shadow-sm hover:shadow-md group">
+            <div class="bg-cream-dark w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:bg-sage/20 transition-colors">
+              <i data-lucide="utensils" class="w-7 h-7 text-sage-dark"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-3 tracking-tight flex items-center gap-3">
+              Adaptive Shared Cooking
+              <span class="bg-terracotta/20 text-terracotta-dark text-xs px-2 py-1 rounded-full uppercase tracking-wider font-semibold">Unique</span>
+            </h3>
+            <p class="text-textSecondary leading-relaxed text-lg">One cooking session, two different plates. We generate a unified recipe with AI-adapted plating instructions so you both hit your goals.</p>
+          </div>
+          <!-- Feature 2 -->
+          <div class="block bg-white p-8 rounded-2xl border border-borderWarm hover:border-sage transition-all shadow-sm hover:shadow-md group">
+            <div class="bg-cream-dark w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:bg-sage/20 transition-colors">
+              <i data-lucide="refresh-cw" class="w-7 h-7 text-sage-dark"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-3 tracking-tight">Real-Time Sync</h3>
+            <p class="text-textSecondary leading-relaxed text-lg">Never buy milk twice. Our lightning-fast shared grocery list updates instantly for both of you, whether you are at home or in the aisle.</p>
+          </div>
+          <!-- Feature 3 -->
+          <div class="block bg-white p-8 rounded-2xl border border-borderWarm hover:border-sage transition-all shadow-sm hover:shadow-md group">
+            <div class="bg-cream-dark w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:bg-sage/20 transition-colors">
+              <i data-lucide="carrot" class="w-7 h-7 text-sage-dark"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-3 tracking-tight">Pantry-First AI</h3>
+            <p class="text-textSecondary leading-relaxed text-lg">"We have chicken, rice, and spinach..." Tell the app what you have, and our AI suggests perfect meals to reduce waste and save a trip to the store.</p>
+          </div>
+          <!-- Feature 4 -->
+          <div class="block bg-white p-8 rounded-2xl border border-borderWarm hover:border-sage transition-all shadow-sm hover:shadow-md group">
+            <div class="bg-cream-dark w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:bg-sage/20 transition-colors">
+              <i data-lucide="calendar-heart" class="w-7 h-7 text-sage-dark"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-3 tracking-tight">Collaborative Planning</h3>
+            <p class="text-textSecondary leading-relaxed text-lg">A shared kitchen metaphor that ends the "what's for dinner?" argument. Plan your week together with zero mental load.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== FEATURES OVERVIEW VIEW ==================== -->
+    <div id="view-features" class="page-view">
+      <section class="py-20 max-w-6xl mx-auto px-6">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <h1 class="text-4xl md:text-5xl font-semibold text-textPrimary tracking-tight mb-6">Designed for "We", not "You"</h1>
+          <p class="text-xl text-textSecondary">Discover how our intuitive features make planning, shopping, and cooking together a breeze.</p>
+        </div>
+
+        <div class="space-y-8">
+          <!-- Feature Moat -->
+          <div class="bg-white rounded-2xl border border-borderWarm p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center shadow-sm">
+            <div class="flex-1">
+              <h2 class="text-3xl font-semibold mb-4 tracking-tight flex items-center gap-3">
+                Adaptive Shared Cooking
+                <span class="bg-terracotta text-white text-xs px-3 py-1 rounded-full font-medium">Signature Feature</span>
+              </h2>
+              <p class="text-lg text-textSecondary mb-6">One cooking session, two different plates. We generate a unified recipe with AI-adapted plating instructions so you both hit your unique goals without cooking twice.</p>
+              <button onclick="navigate('feature-moat')" class="text-sage font-medium hover:text-sage-dark flex items-center gap-1">
+                Learn more &rarr;
+              </button>
+            </div>
+            <div class="flex-1 w-full bg-cream-dark rounded-xl aspect-video flex items-center justify-center border border-borderWarm">
+              <span class="text-textSecondary/50 font-medium">Adaptive Plating Interface</span>
+            </div>
+          </div>
+          
+          <!-- Sync -->
+          <div class="bg-white rounded-2xl border border-borderWarm p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center shadow-sm">
+            <div class="flex-1 order-2 md:order-1 w-full bg-cream-dark rounded-xl aspect-video flex items-center justify-center border border-borderWarm">
+              <span class="text-textSecondary/50 font-medium">Live Grocery Sync Interface</span>
+            </div>
+            <div class="flex-1 order-1 md:order-2">
+              <h2 class="text-3xl font-semibold mb-4 tracking-tight">Real-Time Sync</h2>
+              <p class="text-lg text-textSecondary">Never buy milk twice. Our lightning-fast shared grocery list updates instantly for both of you. Add an item at home, and it appears on your partner's phone in the aisle in less than 100ms.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== FEATURE DEEP DIVE (THE MOAT) ==================== -->
+    <div id="view-feature-moat" class="page-view">
+      <section class="py-20 max-w-4xl mx-auto px-6">
+        <button onclick="navigate('features')" class="text-sage hover:text-sage-dark mb-8 inline-block font-medium">&larr; Back to all features</button>
+        <div class="bg-white rounded-2xl border border-borderWarm p-8 md:p-16 shadow-sm">
+          <span class="bg-terracotta text-white text-sm px-3 py-1 rounded-full font-medium mb-6 inline-block">The Couples Food System Advantage</span>
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Adaptive Shared Cooking</h1>
+          <p class="text-xl text-textSecondary leading-relaxed mb-10">Same meal, different portions. Partner A gets a 450 calorie plate optimized for weight loss. Partner B gets a 700 calorie plate optimized for muscle gain. One pan, zero math.</p>
+          
+          <div class="bg-cream-dark rounded-xl aspect-video w-full flex items-center justify-center border border-borderWarm mb-10">
+            <span class="text-textSecondary">App UI: Splitting one pan into two distinct plates</span>
+          </div>
+
+          <div class="text-lg text-textSecondary space-y-6">
+            <p>
+              When you share a life, you share meals. But traditional meal planning apps treat everyone as an isolated individual. They expect you to either abandon your goals to eat the same thing, or cook completely separate dinners.
+            </p>
+            <p>
+              <strong>We solved this.</strong> You follow one single cooking workflow together. When the food is ready, the app provides visual, AI-adapted plating guides. It tells you exactly how much chicken to give Partner A, and how much extra rice to give Partner B. 
+            </p>
+            <p>
+              It eliminates friction, reduces dishes, and brings the joy back to a shared kitchen.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== HOW IT WORKS VIEW ==================== -->
+    <div id="view-how-it-works" class="page-view">
+      <section class="py-20 max-w-4xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">From Plan to Plate in 5 Steps</h1>
+          <p class="text-xl text-textSecondary">We've streamlined the entire process so you spend less time planning and more time enjoying dinner together.</p>
+        </div>
+
+        <div class="space-y-12">
+          <!-- Step 1 -->
+          <div class="flex flex-col md:flex-row gap-6 md:gap-12 items-start relative">
+            <div class="hidden md:block absolute left-8 top-20 bottom-[-3rem] w-0.5 bg-borderWarm"></div>
+            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-sage text-white text-2xl font-semibold flex items-center justify-center z-10 shadow-sm border-4 border-cream">1</div>
+            <div class="bg-white flex-1 rounded-2xl border border-borderWarm p-8 shadow-sm">
+              <h3 class="text-2xl font-semibold mb-3 tracking-tight">Invite Your Partner</h3>
+              <p class="text-lg text-textSecondary">Link your accounts to create your shared digital kitchen. "We" replaces "You".</p>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="flex flex-col md:flex-row gap-6 md:gap-12 items-start relative">
+            <div class="hidden md:block absolute left-8 top-20 bottom-[-3rem] w-0.5 bg-borderWarm"></div>
+            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-sage text-white text-2xl font-semibold flex items-center justify-center z-10 shadow-sm border-4 border-cream">2</div>
+            <div class="bg-white flex-1 rounded-2xl border border-borderWarm p-8 shadow-sm">
+              <h3 class="text-2xl font-semibold mb-3 tracking-tight">Set Your Goals</h3>
+              <p class="text-lg text-textSecondary">Partner A wants more energy; Partner B wants to build strength. Set your individual preferences behind the scenes.</p>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="flex flex-col md:flex-row gap-6 md:gap-12 items-start relative">
+            <div class="hidden md:block absolute left-8 top-20 bottom-[-3rem] w-0.5 bg-borderWarm"></div>
+            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-sage text-white text-2xl font-semibold flex items-center justify-center z-10 shadow-sm border-4 border-cream">3</div>
+            <div class="bg-white flex-1 rounded-2xl border border-borderWarm p-8 shadow-sm">
+              <h3 class="text-2xl font-semibold mb-3 tracking-tight">Stock the Pantry</h3>
+              <p class="text-lg text-textSecondary">Quickly log what you already have. Our AI uses this to suggest smart, waste-free meals.</p>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="flex flex-col md:flex-row gap-6 md:gap-12 items-start relative">
+            <div class="hidden md:block absolute left-8 top-20 bottom-[-3rem] w-0.5 bg-borderWarm"></div>
+            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-sage text-white text-2xl font-semibold flex items-center justify-center z-10 shadow-sm border-4 border-cream">4</div>
+            <div class="bg-white flex-1 rounded-2xl border border-borderWarm p-8 shadow-sm">
+              <h3 class="text-2xl font-semibold mb-3 tracking-tight">Generate Meals</h3>
+              <p class="text-lg text-textSecondary">Hit generate. We create a weekly plan with one unified, real-time grocery list.</p>
+            </div>
+          </div>
+          <!-- Step 5 -->
+          <div class="flex flex-col md:flex-row gap-6 md:gap-12 items-start relative">
+            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-sage text-white text-2xl font-semibold flex items-center justify-center z-10 shadow-sm border-4 border-cream">5</div>
+            <div class="bg-white flex-1 rounded-2xl border border-borderWarm p-8 shadow-sm">
+              <h3 class="text-2xl font-semibold mb-3 tracking-tight">Cook Together</h3>
+              <p class="text-lg text-textSecondary">Follow one simple recipe, then plate it two ways based on your individual needs. Eat together in peace.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== COMPARE VIEW ==================== -->
+    <div id="view-compare" class="page-view">
+      <section class="py-20 max-w-5xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Why Generic Apps Fail Couples</h1>
+          <p class="text-xl text-textSecondary max-w-3xl mx-auto">
+            Most popular apps are designed for isolated individuals. They force you to choose between eating the exact same portions or cooking completely separate meals. Here is how we change the game.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-borderWarm overflow-hidden shadow-sm">
+          <div class="grid grid-cols-3 bg-cream-dark p-6 border-b border-borderWarm font-semibold text-textPrimary text-sm md:text-base">
+            <div>Feature</div>
+            <div class="text-center text-sage-dark">Couples Food System</div>
+            <div class="text-center text-textSecondary">Standard Diet Apps</div>
+          </div>
+          
+          <div class="grid grid-cols-3 p-6 border-b border-borderWarm items-center">
+            <div class="font-medium text-sm md:text-base">Adaptive Portions (1 Meal, 2 Goals)</div>
+            <div class="flex justify-center"><i data-lucide="check-circle-2" class="text-sage w-7 h-7"></i></div>
+            <div class="flex justify-center"><i data-lucide="x-circle" class="text-textSecondary/30 w-7 h-7"></i></div>
+          </div>
+          
+          <div class="grid grid-cols-3 p-6 border-b border-borderWarm items-center">
+            <div class="font-medium text-sm md:text-base">Real-Time Shared Grocery List</div>
+            <div class="flex justify-center"><i data-lucide="check-circle-2" class="text-sage w-7 h-7"></i></div>
+            <div class="flex justify-center"><i data-lucide="x-circle" class="text-textSecondary/30 w-7 h-7"></i></div>
+          </div>
+          
+          <div class="grid grid-cols-3 p-6 border-b border-borderWarm items-center">
+            <div class="font-medium text-sm md:text-base">Pantry-Aware AI Generation</div>
+            <div class="flex justify-center"><i data-lucide="check-circle-2" class="text-sage w-7 h-7"></i></div>
+            <div class="flex justify-center"><i data-lucide="x-circle" class="text-textSecondary/30 w-7 h-7"></i></div>
+          </div>
+
+          <div class="grid grid-cols-3 p-6 items-center">
+            <div class="font-medium text-sm md:text-base">Relationship "We" Centric Design</div>
+            <div class="flex justify-center"><i data-lucide="check-circle-2" class="text-sage w-7 h-7"></i></div>
+            <div class="flex justify-center"><i data-lucide="x-circle" class="text-textSecondary/30 w-7 h-7"></i></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== FAQ VIEW ==================== -->
+    <div id="view-faq" class="page-view">
+      <section class="py-20 max-w-3xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Frequently Asked Questions</h1>
+          <p class="text-xl text-textSecondary">Everything you need to know to get your shared kitchen running smoothly.</p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-borderWarm p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-textPrimary mb-3">Is the beta really free?</h3>
+            <p class="text-textSecondary text-lg leading-relaxed">Yes! Couples Food System is completely free during our Beta period. No credit card required. We just want your feedback to make the app perfect.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-borderWarm p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-textPrimary mb-3">Do we need two separate accounts?</h3>
+            <p class="text-textSecondary text-lg leading-relaxed">You'll each have your own login, but they link together securely to form one Shared Kitchen. This allows for individual goal-setting while keeping planning and shopping 100% collaborative.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-borderWarm p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-textPrimary mb-3">How does Adaptive Plating work?</h3>
+            <p class="text-textSecondary text-lg leading-relaxed">You cook the exact same meal in one pan. At the end, our AI gives you visual plating guides—for example, suggesting Partner A takes a larger portion of protein, while Partner B adds extra rice and greens.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== ABOUT VIEW ==================== -->
+    <div id="view-about" class="page-view">
+      <section class="py-20 max-w-3xl mx-auto px-6">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Our Story</h1>
+        </div>
+        
+        <div class="bg-white p-8 md:p-16 rounded-2xl border border-borderWarm shadow-sm space-y-6 text-lg text-textSecondary leading-relaxed">
+          <p>
+            It started in our own kitchen. I wanted to lean out, and my partner wanted to build muscle. Suddenly, Sunday meal prep became a nightmare of two different recipes, two grocery lists, and twice the cleanup. 
+          </p>
+          <p>
+            We tried standard meal planning apps, but they felt clinical, isolating, and completely ignored the fact that cooking together is supposed to be a bonding experience, not a math equation.
+          </p>
+          <p>
+            That's why we built <strong class="text-textPrimary font-semibold">Couples Food System</strong>. We believe that sharing a meal is a cornerstone of a healthy relationship. Our mission is to remove the mental load of meal planning and the friction of dietary differences, so you can get back to what matters: enjoying dinner together.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== CONTACT VIEW ==================== -->
+    <div id="view-contact" class="page-view">
+      <section class="py-20 max-w-2xl mx-auto px-6">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Say Hello</h1>
+          <p class="text-xl text-textSecondary">Have questions, feedback, or just want to chat about food? We're all ears.</p>
+        </div>
+        
+        <div class="bg-white p-8 md:p-12 rounded-2xl border border-borderWarm shadow-sm">
+          <form action="https://formspree.io/f/barrydgrottis@gmail.com" method="POST" class="flex flex-col gap-6">
+            <div>
+              <label for="name" class="block font-medium text-textPrimary mb-2">Name</label>
+              <input type="text" name="name" id="name" required class="w-full px-4 py-3 rounded-xl border border-borderWarm bg-white focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all" />
+            </div>
+            <div>
+              <label for="contact_email" class="block font-medium text-textPrimary mb-2">Email</label>
+              <input type="email" name="email" id="contact_email" required class="w-full px-4 py-3 rounded-xl border border-borderWarm bg-white focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all" />
+            </div>
+            <div>
+              <label for="message" class="block font-medium text-textPrimary mb-2">Message</label>
+              <textarea name="message" id="message" rows="5" required class="w-full px-4 py-3 rounded-xl border border-borderWarm bg-white focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"></textarea>
+            </div>
+            <button type="submit" class="bg-sage hover:bg-sage-dark text-white font-medium text-lg py-4 rounded-xl transition-colors mt-2 shadow-sm">
+              Send Message
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ==================== GLOBAL WAITLIST SECTION ==================== -->
+  <section class="max-w-6xl mx-auto px-6 w-full py-12">
+    <div id="waitlist" class="bg-cream-dark rounded-2xl p-8 md:p-12 shadow-sm border border-borderWarm max-w-2xl mx-auto">
+      <div class="text-center mb-8">
+        <h3 class="text-3xl font-semibold text-textPrimary mb-3 tracking-tight">Be Among the First</h3>
+        <p class="text-textSecondary text-lg">Join thousands of couples completely free during our Beta. No credit card required.</p>
+      </div>
+      
+      <!-- Formspree Integration -->
+      <form action="https://formspree.io/f/barrydgrottis@gmail.com" method="POST" class="flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label for="waitlist_email" class="sr-only">Your Email</label>
+            <input type="email" name="email" id="waitlist_email" required placeholder="Your email address" 
+              class="w-full px-4 py-4 rounded-xl border border-borderWarm bg-white text-textPrimary focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all" />
+          </div>
+          <div class="flex-1">
+            <label for="partner_email" class="sr-only">Partner's Email</label>
+            <input type="email" name="partner_email" id="partner_email" placeholder="Partner's email (optional)" 
+              class="w-full px-4 py-4 rounded-xl border border-borderWarm bg-white text-textPrimary focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all" />
+          </div>
+        </div>
+        
+        <div>
+          <label for="goal" class="sr-only">Primary Goal</label>
+          <select name="primary_goal" id="goal" required
+            class="w-full px-4 py-4 rounded-xl border border-borderWarm bg-white text-textSecondary focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all appearance-none">
+            <option value="" disabled selected>What is your shared primary goal?</option>
+            <option value="Stop arguing about dinner">Stop arguing about "what's for dinner"</option>
+            <option value="Different portion/diet goals">Eat the same meals but with different portion goals</option>
+            <option value="Reduce food waste">Reduce food waste and save money</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="w-full bg-sage hover:bg-sage-dark text-white font-semibold text-lg py-4 rounded-xl transition-colors mt-2 shadow-sm">
+          Join Free Beta Waitlist
+        </button>
+        <p class="text-sm text-textSecondary text-center mt-3">We respect your privacy. No spam, ever.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-cream-dark border-t border-borderWarm py-16 mt-12">
+    <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="md:col-span-2">
+        <a href="#" onclick="navigate('home')" class="font-semibold text-xl text-textPrimary flex items-center gap-2 mb-4 tracking-tight">
+          <i data-lucide="heart-handshake" class="w-6 h-6 text-terracotta"></i>
+          Couples Food System
+        </a>
+        <p class="text-textSecondary max-w-sm text-lg">
+          Your shared kitchen, smarter. End the dinnertime debate and enjoy meals together, perfectly portioned for both of you.
+        </p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-textPrimary text-lg">Product</h4>
+        <ul class="space-y-3 text-textSecondary">
+          <li><a href="#" onclick="navigate('features')" class="hover:text-sage transition-colors">Features</a></li>
+          <li><a href="#" onclick="navigate('how-it-works')" class="hover:text-sage transition-colors">How It Works</a></li>
+          <li><a href="#" onclick="navigate('compare')" class="hover:text-sage transition-colors">Compare</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-textPrimary text-lg">Company</h4>
+        <ul class="space-y-3 text-textSecondary">
+          <li><a href="#" onclick="navigate('about')" class="hover:text-sage transition-colors">About Us</a></li>
+          <li><a href="#" onclick="navigate('faq')" class="hover:text-sage transition-colors">FAQ</a></li>
+          <li><a href="#" onclick="navigate('contact')" class="hover:text-sage transition-colors">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="max-w-6xl mx-auto px-6 mt-16 pt-8 border-t border-borderWarm text-center text-textSecondary">
+      &copy; <script>document.write(new Date().getFullYear())</script> Couples Food System. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Mobile Menu Toggle
+    const mobileMenu = document.getElementById('mobile-menu-container');
+    function toggleMobileMenu() {
+      mobileMenu.classList.toggle('hidden');
+    }
+
+    // "Single Page App" Navigation Logic
+    function navigate(viewId) {
+      // Hide all views
+      const views = document.querySelectorAll('.page-view');
+      views.forEach(view => view.classList.remove('active'));
+      
+      // Show target view
+      const target = document.getElementById('view-' + viewId);
+      if(target) {
+        target.classList.add('active');
+      }
+
+      // Close mobile menu if open
+      if (!mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+      }
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

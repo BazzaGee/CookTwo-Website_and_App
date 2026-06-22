@@ -1,0 +1,269 @@
+---
+// src/pages/app/calendar.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="p-6 h-screen flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Calendar</h1>
+        <p class="text-slate-600">Manage your shared schedule</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="connect-calendar-btn" class="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition flex items-center gap-2">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Connect Google
+        </button>
+        <button id="add-event-btn" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Event
+        </button>
+      </div>
+    </div>
+    
+    <!-- Calendar Container -->
+    <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div id="calendar" class="h-full"></div>
+    </div>
+    
+    <!-- Connected Calendars List -->
+    <div class="mt-4 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+      <h3 class="text-sm font-semibold text-slate-900 mb-2">Connected Calendars</h3>
+      <div id="connected-calendars" class="flex gap-2">
+        <span class="text-slate-500 text-sm">No calendars connected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Event Modal -->
+  <div id="event-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Add Event</h2>
+      <form id="event-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Title</label>
+          <input type="text" id="event-title" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Start</label>
+            <input type="datetime-local" id="event-start" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">End</label>
+            <input type="datetime-local" id="event-end" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
+          <select id="event-type" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+            <option value="shared">Shared</option>
+            <option value="personal">Personal</option>
+            <option value="date">Date Night</option>
+          </select>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="cancel-event" class="flex-1 px-4 py-2 border rounded-lg hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    import FullCalendar from '@fullcalendar/react';
+    import dayGridPlugin from '@fullcalendar/daygrid';
+    import timeGridPlugin from '@fullcalendar/timegrid';
+    import interactionPlugin from '@fullcalendar/interaction';
+    
+    let calendar;
+    let coupleId;
+    
+    async function initCalendar() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      coupleId = [user.id, profile.partner_id].sort().join('-');
+      
+      // Initialize FullCalendar
+      const calendarEl = document.getElementById('calendar');
+      if (!calendarEl) return;
+      
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: true,
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        events: fetchEvents,
+        eventClick: handleEventClick,
+        select: handleDateSelect,
+        eventDrop: handleEventDrop,
+        eventResize: handleEventResize,
+      });
+      
+      calendar.render();
+      
+      // Load connected calendars
+      loadConnectedCalendars(user.id);
+    }
+    
+    async function fetchEvents(info, successCallback, failureCallback) {
+      try {
+        const { data: events } = await supabase
+          .from('events')
+          .select('*')
+          .eq('couple_id', coupleId)
+          .gte('start_time', info.startStr)
+          .lte('end_time', info.endStr);
+        
+        const formattedEvents = events?.map(event => ({
+          id: event.id,
+          title: event.title,
+          start: event.start_time,
+          end: event.end_time,
+          allDay: event.is_all_day,
+          color: getEventColor(event.event_type),
+          extendedProps: event,
+        })) || [];
+        
+        successCallback(formattedEvents);
+      } catch (error) {
+        failureCallback(error);
+      }
+    }
+    
+    function getEventColor(type) {
+      switch (type) {
+        case 'date': return '#f43f5e'; // rose-500
+        case 'personal': return '#3b82f6'; // blue-500
+        default: return '#10b981'; // emerald-500
+      }
+    }
+    
+    function handleEventClick(info) {
+      // Show event details or edit modal
+      console.log('Event clicked:', info.event);
+    }
+    
+    function handleDateSelect(info) {
+      document.getElementById('event-start').value = info.startStr.slice(0, 16);
+      document.getElementById('event-end').value = info.endStr.slice(0, 16);
+      document.getElementById('event-modal').classList.remove('hidden');
+      document.getElementById('event-modal').classList.add('flex');
+    }
+    
+    async function handleEventDrop(info) {
+      await updateEvent(info.event.id, {
+        start_time: info.event.start.toISOString(),
+        end_time: info.event.end?.toISOString() || info.event.start.toISOString(),
+      });
+    }
+    
+    async function handleEventResize(info) {
+      await updateEvent(info.event.id, {
+        end_time: info.event.end.toISOString(),
+      });
+    }
+    
+    async function updateEvent(id, updates) {
+      const { error } = await supabase
+        .from('events')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Failed to update event:', error);
+      }
+    }
+    
+    async function loadConnectedCalendars(userId) {
+      const { data: connections } = await supabase
+        .from('calendar_connections')
+        .select('provider, display_name, color')
+        .eq('user_id', userId);
+      
+      const container = document.getElementById('connected-calendars');
+      if (!connections?.length) {
+        container.innerHTML = '<span class="text-slate-500 text-sm">No calendars connected</span>';
+        return;
+      }
+      
+      container.innerHTML = connections.map(conn => `
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-sm">
+          <div class="w-2 h-2 rounded-full" style="background-color: ${conn.color}"></div>
+          <span>${conn.display_name}</span>
+        </div>
+      `).join('');
+    }
+    
+    // Event form handlers
+    document.getElementById('add-event-btn')?.addEventListener('click', () => {
+      document.getElementById('event-modal').classList.remove('hidden');
+      document.getElementById('event-modal').classList.add('flex');
+    });
+    
+    document.getElementById('cancel-event')?.addEventListener('click', () => {
+      document.getElementById('event-modal').classList.add('hidden');
+      document.getElementById('event-modal').classList.remove('flex');
+    });
+    
+    document.getElementById('event-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const eventData = {
+        couple_id: coupleId,
+        created_by: user.id,
+        title: document.getElementById('event-title').value,
+        start_time: new Date(document.getElementById('event-start').value).toISOString(),
+        end_time: new Date(document.getElementById('event-end').value).toISOString(),
+        event_type: document.getElementById('event-type').value,
+      };
+      
+      const { error } = await supabase.from('events').insert([eventData]);
+      
+      if (!error) {
+        document.getElementById('event-modal').classList.add('hidden');
+        document.getElementById('event-modal').classList.remove('flex');
+        calendar.refetchEvents();
+      }
+    });
+    
+    // Connect calendar button
+    document.getElementById('connect-calendar-btn')?.addEventListener('click', () => {
+      window.location.href = '/app/settings';
+    });
+    
+    // Initialize
+    initCalendar();
+  </script>
+</AppLayout>

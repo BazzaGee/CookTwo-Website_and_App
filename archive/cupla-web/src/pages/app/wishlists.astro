@@ -1,0 +1,247 @@
+---
+// src/pages/app/wishlists.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Wishlists</h1>
+        <p class="text-slate-600">Save ideas for dates, gifts, and trips</p>
+      </div>
+      <button id="new-wishlist-btn" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Wishlist
+      </button>
+    </div>
+    
+    <!-- Wishlists Grid -->
+    <div id="wishlists-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="text-center text-slate-500 py-12 col-span-full">No wishlists yet</div>
+    </div>
+  </div>
+
+  <!-- New Wishlist Modal -->
+  <div id="wishlist-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Create Wishlist</h2>
+      <form id="wishlist-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Title</label>
+          <input type="text" id="wishlist-title" placeholder="e.g., Date Ideas" required
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+          <textarea id="wishlist-description" rows="3" placeholder="What's this wishlist for?"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none"></textarea>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="cancel-wishlist" class="flex-1 px-4 py-2 border rounded-lg hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Wishlist Items Modal -->
+  <div id="items-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="items-title" class="text-xl font-bold">Wishlist Items</h2>
+        <button id="close-items" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="mb-4">
+        <div class="flex gap-2">
+          <input type="text" id="new-item-title" placeholder="Add an item..."
+            class="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+          <button id="add-item-btn" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Add</button>
+        </div>
+      </div>
+      
+      <div id="items-container" class="space-y-2">
+        <!-- Items will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    let coupleId;
+    let currentUserId;
+    let currentWishlistId = null;
+    let wishlists = [];
+    
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      currentUserId = user.id;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      coupleId = [user.id, profile.partner_id].sort().join('-');
+      
+      await loadWishlists();
+    }
+    
+    async function loadWishlists() {
+      const { data } = await supabase
+        .from('wishlists')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .order('created_at', { ascending: false });
+      
+      wishlists = data || [];
+      
+      const container = document.getElementById('wishlists-container');
+      
+      if (!wishlists.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-12 col-span-full">No wishlists yet</div>';
+        return;
+      }
+      
+      container.innerHTML = wishlists.map(list => `
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition cursor-pointer group"
+          onclick="openWishlist('${list.id}')">
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="font-semibold text-slate-900">${list.title}</h3>
+            <button onclick="event.stopPropagation(); deleteWishlist('${list.id}')" 
+              class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          <p class="text-sm text-slate-600 line-clamp-2">${list.description || 'No description'}</p>
+          <div class="mt-3 flex items-center gap-2 text-sm text-slate-500">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Created ${new Date(list.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    async function loadWishlistItems(wishlistId) {
+      const { data: items } = await supabase
+        .from('wishlist_items')
+        .select('*')
+        .eq('wishlist_id', wishlistId)
+        .order('created_at', { ascending: false });
+      
+      const container = document.getElementById('items-container');
+      
+      if (!items?.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-4">No items yet</div>';
+        return;
+      }
+      
+      container.innerHTML = items.map(item => `
+        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+          ${item.image_url ? `<img src="${item.image_url}" class="w-16 h-16 rounded-lg object-cover">` : ''}
+          <div class="flex-1">
+            <p class="font-medium text-slate-900">${item.title}</p>
+            ${item.description ? `<p class="text-sm text-slate-600">${item.description}</p>` : ''}
+            ${item.source_url ? `<a href="${item.source_url}" target="_blank" class="text-xs text-rose-500 hover:underline">View source</a>` : ''}
+          </div>
+          <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    window.openWishlist = async (id) => {
+      currentWishlistId = id;
+      const list = wishlists.find(w => w.id === id);
+      document.getElementById('items-title').textContent = list?.title || 'Wishlist Items';
+      
+      await loadWishlistItems(id);
+      
+      document.getElementById('items-modal').classList.remove('hidden');
+      document.getElementById('items-modal').classList.add('flex');
+    };
+    
+    window.deleteWishlist = async (id) => {
+      await supabase.from('wishlists').delete().eq('id', id);
+      loadWishlists();
+    };
+    
+    window.deleteItem = async (id) => {
+      await supabase.from('wishlist_items').delete().eq('id', id);
+      loadWishlistItems(currentWishlistId);
+    };
+    
+    // Modal handlers
+    document.getElementById('new-wishlist-btn')?.addEventListener('click', () => {
+      document.getElementById('wishlist-modal').classList.remove('hidden');
+      document.getElementById('wishlist-modal').classList.add('flex');
+    });
+    
+    document.getElementById('cancel-wishlist')?.addEventListener('click', () => {
+      document.getElementById('wishlist-modal').classList.add('hidden');
+      document.getElementById('wishlist-modal').classList.remove('flex');
+    });
+    
+    document.getElementById('close-items')?.addEventListener('click', () => {
+      document.getElementById('items-modal').classList.add('hidden');
+      document.getElementById('items-modal').classList.remove('flex');
+      currentWishlistId = null;
+    });
+    
+    document.getElementById('wishlist-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const { error } = await supabase.from('wishlists').insert([{
+        couple_id: coupleId,
+        created_by: currentUserId,
+        title: document.getElementById('wishlist-title').value,
+        description: document.getElementById('wishlist-description').value,
+      }]);
+      
+      if (!error) {
+        document.getElementById('wishlist-modal').classList.add('hidden');
+        document.getElementById('wishlist-modal').classList.remove('flex');
+        document.getElementById('wishlist-form').reset();
+        loadWishlists();
+      }
+    });
+    
+    document.getElementById('add-item-btn')?.addEventListener('click', async () => {
+      const title = document.getElementById('new-item-title').value.trim();
+      if (!title || !currentWishlistId) return;
+      
+      await supabase.from('wishlist_items').insert([{
+        wishlist_id: currentWishlistId,
+        title,
+        created_by: currentUserId,
+      }]);
+      
+      document.getElementById('new-item-title').value = '';
+      loadWishlistItems(currentWishlistId);
+    });
+    
+    init();
+  </script>
+</AppLayout>

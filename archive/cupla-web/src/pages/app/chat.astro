@@ -1,0 +1,191 @@
+---
+// src/pages/app/chat.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="h-screen flex flex-col">
+    <!-- Chat Header -->
+    <div class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="partner-avatar" class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+          <span class="text-lg font-semibold text-rose-500">?</span>
+        </div>
+        <div>
+          <h2 id="partner-name" class="font-semibold text-slate-900">Partner</h2>
+          <p class="text-xs text-slate-500">Online</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Messages -->
+    <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
+      <div class="text-center text-slate-400 py-8">Start your conversation</div>
+    </div>
+    
+    <!-- Input -->
+    <div class="bg-white border-t border-slate-200 p-4">
+      <form id="message-form" class="flex items-end gap-3">
+        <div class="flex-1">
+          <textarea 
+            id="message-input" 
+            rows="2"
+            placeholder="Type a message..."
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none resize-none"
+          ></textarea>
+        </div>
+        <button type="submit" class="px-6 py-2 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition">
+          Send
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    let coupleId;
+    let currentUserId;
+    let partnerInfo = {};
+    
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      currentUserId = user.id;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id, partner:partner_id(full_name, avatar_url)')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      coupleId = [user.id, profile.partner_id].sort().join('-');
+      partnerInfo = profile.partner || {};
+      
+      // Update partner display
+      document.getElementById('partner-name').textContent = partnerInfo.full_name || 'Partner';
+      if (partnerInfo.avatar_url) {
+        document.getElementById('partner-avatar').innerHTML = 
+          `<img src="${partnerInfo.avatar_url}" class="w-10 h-10 rounded-full" />`;
+      } else if (partnerInfo.full_name) {
+        document.getElementById('partner-avatar').innerHTML = 
+          `<span class="text-lg font-semibold text-rose-500">${partnerInfo.full_name.charAt(0)}</span>`;
+      }
+      
+      await loadMessages();
+      
+      // Subscribe to new messages
+      supabase
+        .channel('chat-channel')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `couple_id=eq.${coupleId}` },
+          (payload) => {
+            displayMessage(payload.new);
+            markAsRead(payload.new.id);
+          }
+        )
+        .subscribe();
+    }
+    
+    async function loadMessages() {
+      const { data: messages } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+      
+      const container = document.getElementById('messages-container');
+      
+      if (!messages?.length) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-8">Start your conversation</div>';
+        return;
+      }
+      
+      container.innerHTML = messages.map(msg => renderMessage(msg)).join('');
+      container.scrollTop = container.scrollHeight;
+      
+      // Mark messages as read
+      const unreadIds = messages
+        .filter(m => m.sender_id !== currentUserId && !m.is_read)
+        .map(m => m.id);
+      
+      if (unreadIds.length) {
+        await supabase
+          .from('messages')
+          .update({ is_read: true })
+          .in('id', unreadIds);
+      }
+    }
+    
+    function renderMessage(msg) {
+      const isMe = msg.sender_id === currentUserId;
+      return `
+        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-md ${isMe ? 'bg-rose-500 text-white' : 'bg-white border border-slate-200'} rounded-2xl px-4 py-2 shadow-sm">
+            <p>${msg.content}</p>
+            <p class="text-xs ${isMe ? 'text-rose-100' : 'text-slate-400'} mt-1">
+              ${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+        </div>
+      `;
+    }
+    
+    function displayMessage(msg) {
+      const container = document.getElementById('messages-container');
+      
+      // Remove empty state if present
+      if (container.querySelector('.text-center')) {
+        container.innerHTML = '';
+      }
+      
+      const div = document.createElement('div');
+      div.innerHTML = renderMessage(msg);
+      container.appendChild(div.firstElementChild);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    async function markAsRead(messageId) {
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('id', messageId);
+    }
+    
+    // Send message
+    document.getElementById('message-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const input = document.getElementById('message-input');
+      const content = input.value.trim();
+      if (!content) return;
+      
+      const { error } = await supabase.from('messages').insert([{
+        couple_id: coupleId,
+        sender_id: currentUserId,
+        content,
+        message_type: 'text',
+      }]);
+      
+      if (!error) {
+        input.value = '';
+      }
+    });
+    
+    // Enter key to send
+    document.getElementById('message-input')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('message-form').dispatchEvent(new Event('submit'));
+      }
+    });
+    
+    init();
+  </script>
+</AppLayout>

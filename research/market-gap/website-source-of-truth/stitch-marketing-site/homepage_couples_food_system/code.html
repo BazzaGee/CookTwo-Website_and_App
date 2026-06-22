@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Couples Food System - One dinner. Two plates. Zero arguments.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#d3e8d0",
+                    "on-secondary-fixed": "#301400",
+                    "primary-fixed-dim": "#aad0ad",
+                    "surface-tint": "#44664a",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#615e57",
+                    "on-primary-fixed-variant": "#2d4e33",
+                    "on-tertiary-container": "#2f2e27",
+                    "on-primary-container": "#13341c",
+                    "inverse-surface": "#233524",
+                    "on-background": "#0e1f10",
+                    "primary-fixed": "#c6ecc8",
+                    "tertiary-container": "#98958c",
+                    "surface-dim": "#cae0c8",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#aad0ad",
+                    "on-primary-fixed": "#00210b",
+                    "surface-container-low": "#e4fae1",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#def4db",
+                    "on-tertiary-fixed": "#1d1c16",
+                    "on-tertiary-fixed-variant": "#494740",
+                    "surface-container-high": "#d8eed6",
+                    "background": "#ebffe7",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#febb8e",
+                    "inverse-on-surface": "#e1f7de",
+                    "tertiary-fixed-dim": "#cac6bd",
+                    "secondary-fixed": "#ffdcc6",
+                    "surface-bright": "#ebffe7",
+                    "on-surface-variant": "#424842",
+                    "secondary-fixed-dim": "#fbb88b",
+                    "tertiary-fixed": "#e7e2d8",
+                    "on-surface": "#0e1f10",
+                    "surface": "#ebffe7",
+                    "on-secondary-container": "#794925",
+                    "primary": "#44664a",
+                    "outline-variant": "#c2c8bf",
+                    "on-secondary-fixed-variant": "#693c19",
+                    "on-error-container": "#93000a",
+                    "outline": "#727971",
+                    "primary-container": "#7a9e7e",
+                    "secondary": "#85532e",
+                    "surface-variant": "#d3e8d0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "sm": "12px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h1-mobile": ["Plus Jakarta Sans"],
+                    "h2": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "h3": ["Plus Jakarta Sans"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        @media (min-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(2, minmax(200px, auto));
+            }
+            .bento-item-1 { grid-column: span 3; grid-row: span 1; }
+            .bento-item-2 { grid-column: span 3; grid-row: span 1; }
+            .bento-item-3 { grid-column: span 2; grid-row: span 1; }
+            .bento-item-4 { grid-column: span 4; grid-row: span 1; }
+        }
+        .premium-blur {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .hero-pattern {
+            background-color: #ebffe7;
+            background-image: radial-gradient(#7a9e7e 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            background-position: 0 0;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md">
+<nav class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-base">
+<img alt="Couples Food System Logo" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSBlNaxdvZZIJArvG-Io1tcr-51mhvh7RiFDKv7kh-INcSrtOPuhOEx6gsHux1WSJKHxA8l2eU1kscJhH1TDNnqhHvDAhd9A1mBixqbguDwN6Izuabihob23NYh32oJCoTmH2GkobO7nMfHkU-Lt0Ysrw11m5SOewJJV8odNLoXTQi0TH5__bsY3EPIWhbi-8VNIPys1S6511PGEsZ-E11XFAsHW3GcUeCSOQ1nUM5NaA-Laq4RmjGObawQoC_o0M92G4ae9XG4Igf"/>
+<span class="text-h3 font-h3 text-primary tracking-tight hidden sm:block">Couples Food System</span>
+</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-primary font-semibold hover:opacity-80 transition-opacity" href="#">Our Ritual</a>
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity" href="#">Shared Kitchen</a>
+<a class="text-on-surface-variant hover:opacity-80 transition-opacity" href="#">The Story</a>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-semibold hover:opacity-90 active:scale-95 transition-all duration-200">
+                Join Free Beta
+            </button>
+</nav>
+</header>
+<!-- Navigation Drawer (Mobile) -->
+<div class="fixed inset-0 z-40 bg-black/20 opacity-0 pointer-events-none transition-opacity lg:hidden" id="mobile-nav">
+<div class="h-full w-80 bg-surface flex flex-col gap-base py-xl translate-x-[-100%] transition-transform duration-300">
+<div class="px-container-padding pb-lg">
+<span class="text-h2 font-h2 text-primary">Sunday Morning</span>
+</div>
+<a class="bg-primary-container text-on-primary-container rounded-full mx-2 px-4 py-3 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">auto_awesome</span> Our Ritual
+            </a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined">restaurant</span> Shared Kitchen
+            </a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined">edit_calendar</span> Beta Access
+            </a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 flex items-center gap-md hover:bg-surface-container-high transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined">history_edu</span> The Story
+            </a>
+</div>
+</div>
+<main class="pt-24 overflow-x-hidden">
+<!-- Hero Section -->
+<section class="relative px-container-padding py-xl md:py-32 hero-pattern">
+<div class="max-w-7xl mx-auto flex flex-col items-center text-center">
+<div class="mb-lg inline-flex items-center gap-base bg-secondary-container/30 border border-secondary px-md py-xs rounded-full">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-caps text-on-secondary-container">Designed for Modern Partners</span>
+</div>
+<h1 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-surface max-w-4xl mb-md">
+                    One dinner. Two plates. <br class="hidden md:block"/> <span class="text-primary italic">Zero arguments.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-xl">
+                    Stop the "I don't know, what do you want?" cycle. Our system learns both your tastes and creates a shared culinary ritual.
+                </p>
+<!-- Waitlist Form Card -->
+<div class="w-full max-w-2xl bg-surface-container-lowest p-lg rounded-[32px] border border-outline-variant shadow-sm">
+<form class="grid grid-cols-1 md:grid-cols-2 gap-md text-left">
+<div class="space-y-xs">
+<label class="font-label-caps text-on-surface-variant ml-xs">Your Email</label>
+<input class="w-full bg-surface-container-low border-outline-variant rounded-xl p-md focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="you@home.com" type="email"/>
+</div>
+<div class="space-y-xs">
+<label class="font-label-caps text-on-surface-variant ml-xs">Partner's Email (Optional)</label>
+<input class="w-full bg-surface-container-low border-outline-variant rounded-xl p-md focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="them@home.com" type="email"/>
+</div>
+<div class="md:col-span-2 space-y-xs">
+<label class="font-label-caps text-on-surface-variant ml-xs">Primary Kitchen Goal</label>
+<select class="w-full bg-surface-container-low border-outline-variant rounded-xl p-md focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none">
+<option>Ending the "What's for dinner?" debate</option>
+<option>Better health as a couple</option>
+<option>Reducing food waste together</option>
+<option>Learning to cook collaboratively</option>
+</select>
+</div>
+<button class="md:col-span-2 bg-secondary text-on-secondary font-h3 text-h3 py-md rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-md" type="submit">
+                            Secure Beta Access
+                        </button>
+</form>
+<p class="mt-md text-center font-body-sm text-body-sm text-outline">Join 2,400+ couples finding kitchen peace.</p>
+</div>
+</div>
+</section>
+<!-- Problem Section -->
+<section class="py-xl md:py-32 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-container-padding">
+<div class="flex flex-col md:flex-row items-center gap-xl">
+<div class="w-full md:w-1/2">
+<h2 class="font-h2 text-h2 text-on-surface mb-md">The "What's for dinner?" tax is too high.</h2>
+<p class="text-body-lg text-on-surface-variant mb-lg leading-relaxed">
+                            Deciding what to eat shouldn't feel like a high-stakes negotiation. Between mismatched cravings, varying dietary goals, and limited energy after work, dinner has become a point of friction instead of a moment of connection.
+                        </p>
+<ul class="space-y-md">
+<li class="flex items-start gap-md">
+<div class="bg-primary/10 p-xs rounded-full">
+<span class="material-symbols-outlined text-primary">close</span>
+</div>
+<p class="text-body-md">Endless scrolling on delivery apps.</p>
+</li>
+<li class="flex items-start gap-md">
+<div class="bg-primary/10 p-xs rounded-full">
+<span class="material-symbols-outlined text-primary">close</span>
+</div>
+<p class="text-body-md">Mismatched diet goals causing separate cooking.</p>
+</li>
+<li class="flex items-start gap-md">
+<div class="bg-primary/10 p-xs rounded-full">
+<span class="material-symbols-outlined text-primary">close</span>
+</div>
+<p class="text-body-md">Forgotten ingredients rotting in the fridge.</p>
+</li>
+</ul>
+</div>
+<div class="w-full md:w-1/2 rounded-[32px] overflow-hidden shadow-xl">
+<img alt="Collaborative Kitchen Ritual" class="w-full h-[400px] object-cover" data-alt="A warm, editorial photograph of a couple standing together in a sun-drenched, modern kitchen. The scene captures a moment of quiet connection, with soft light illuminating sage-colored cabinets and cream-tiled walls. The atmosphere is peaceful and intentional, embodying the Sunday Morning brand philosophy of calm, collaborative living. The focus is on their hands softly brushing as they prepare fresh vegetables on a terracotta-colored cutting board." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeMEVxo8kvVDxEU0Bek31fW37JhgSl7ib630ozpAH7Xdok7cGtFmR4hznfD-8X0G3147Xe2YwdKD_opoiGqtP6byhpN8_82EI0GfoTRod7azZpFl0moNnClMv67umN6p8u7cE4oVa05Wansd00SvIPZg_2Y6EsLjFov3ellNsf6jj6oEvgqW9UJWdz03eF85DT6foZgpirwYe25pnMyVQ1-PBbQRimlZ-w3CRkyoXplQfb2cvK3u8eC7KXphM6-SANAEeU6m5LVnPv"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-xl md:py-32">
+<div class="max-w-7xl mx-auto px-container-padding">
+<div class="text-center mb-xl">
+<h2 class="font-h2 text-h2 text-on-surface">Built for Co-Living</h2>
+<p class="text-on-surface-variant">Simple tools that respect your relationship dynamics.</p>
+</div>
+<div class="bento-grid">
+<!-- Feature 1 -->
+<div class="bento-item-1 bg-surface-container-highest p-xl rounded-[24px] border border-outline-variant flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-primary text-4xl mb-md">dynamic_form</span>
+<h3 class="font-h3 text-h3 mb-base">Adaptive Cooking</h3>
+<p class="text-on-surface-variant">Recipes that automatically adjust for one vegan and one carnivore, or one keto and one 'whatever'.</p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="bento-item-2 bg-secondary-container/20 p-xl rounded-[24px] border border-outline-variant flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-secondary text-4xl mb-md">sync</span>
+<h3 class="font-h3 text-h3 mb-base">Real-Time Sync</h3>
+<p class="text-on-surface-variant">Shared shopping lists that update instantly. See what your partner grabbed before you even reach the aisle.</p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="bento-item-3 bg-surface-container-low p-xl rounded-[24px] border border-outline-variant">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-md">psychology</span>
+<h3 class="font-h3 text-h3 mb-base">Pantry-First AI</h3>
+<p class="text-on-surface-variant">Suggests meals based on what you actually have, reducing waste and grocery runs.</p>
+</div>
+<!-- Feature 4 -->
+<div class="bento-item-4 bg-primary-container/10 p-xl rounded-[24px] border border-primary/20 relative overflow-hidden group">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-primary text-4xl mb-md">family_history</span>
+<h3 class="font-h3 text-h3 mb-base">Relationship UX</h3>
+<p class="text-on-surface-variant max-w-md">No 'Chef' and 'Sous-chef'. Our task-splitter ensures cooking is a shared joy, not a burden for one person.</p>
+</div>
+<div class="absolute right-[-50px] bottom-[-50px] opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[200px]">volunteer_activism</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How it works -->
+<section class="py-xl md:py-32 bg-surface">
+<div class="max-w-7xl mx-auto px-container-padding">
+<h2 class="font-h2 text-h2 text-center mb-24">The Sunday Morning Ritual</h2>
+<div class="relative">
+<!-- Progress Line -->
+<div class="hidden md:block absolute top-1/2 left-0 w-full h-[2px] bg-outline-variant -translate-y-1/2"></div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-xl">
+<!-- Step 1 -->
+<div class="relative flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border-2 border-primary flex items-center justify-center mb-md relative z-10 group-hover:scale-110 transition-transform">
+<span class="text-h3 font-h3 text-primary">1</span>
+</div>
+<h4 class="font-h3 text-h3 mb-xs">Sync Tastes</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Both connect your favorite flavors.</p>
+</div>
+<!-- Step 2 -->
+<div class="relative flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border-2 border-primary flex items-center justify-center mb-md relative z-10 group-hover:scale-110 transition-transform">
+<span class="text-h3 font-h3 text-primary">2</span>
+</div>
+<h4 class="font-h3 text-h3 mb-xs">Scan Pantry</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Quick inventory of your kitchen.</p>
+</div>
+<!-- Step 3 -->
+<div class="relative flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border-2 border-primary flex items-center justify-center mb-md relative z-10 group-hover:scale-110 transition-transform">
+<span class="text-h3 font-h3 text-primary">3</span>
+</div>
+<h4 class="font-h3 text-h3 mb-xs">The Choice</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">System suggests 3 perfect matches.</p>
+</div>
+<!-- Step 4 -->
+<div class="relative flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border-2 border-primary flex items-center justify-center mb-md relative z-10 group-hover:scale-110 transition-transform">
+<span class="text-h3 font-h3 text-primary">4</span>
+</div>
+<h4 class="font-h3 text-h3 mb-xs">Collaborate</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Step-by-step shared cooking guide.</p>
+</div>
+<!-- Step 5 -->
+<div class="relative flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full bg-secondary-container border-2 border-secondary flex items-center justify-center mb-md relative z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<h4 class="font-h3 text-h3 mb-xs">Enjoy Together</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Connection over a healthy meal.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="py-xl md:py-32 bg-surface-container-high/50">
+<div class="max-w-7xl mx-auto px-container-padding">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
+<div class="grid grid-cols-2 gap-md">
+<div class="p-lg bg-surface-container-lowest rounded-2xl border border-outline-variant transform rotate-[-2deg]">
+<p class="font-body-sm italic text-on-surface-variant">"Finally, a system that understands I'm vegan and my partner isn't, without making us cook two entirely different meals."</p>
+<p class="mt-md font-label-caps text-primary">— Sarah &amp; Mark</p>
+</div>
+<div class="p-lg bg-surface-container-lowest rounded-2xl border border-outline-variant transform rotate-[3deg] mt-xl">
+<p class="font-body-sm italic text-on-surface-variant">"The 'What's for dinner' argument used to last an hour. Now it's a 30-second tap."</p>
+<p class="mt-md font-label-caps text-primary">— Alex &amp; James</p>
+</div>
+</div>
+<div class="md:pl-xl">
+<h2 class="font-h2 text-h2 mb-md">Join the kitchen revolution.</h2>
+<p class="text-body-lg text-on-surface-variant mb-lg">
+                            We're onboarding couples slowly to ensure the highest quality experience. Early access members get lifetime "Founding Partners" status.
+                        </p>
+<div class="flex items-center gap-xl">
+<div>
+<span class="text-h2 font-h1 text-secondary">2.4k+</span>
+<p class="font-label-caps text-outline">Active Couples</p>
+</div>
+<div>
+<span class="text-h2 font-h1 text-primary">120k+</span>
+<p class="font-label-caps text-outline">Meals Shared</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-xl md:py-32">
+<div class="max-w-5xl mx-auto px-container-padding">
+<div class="bg-primary text-on-primary p-xl md:p-32 rounded-[48px] text-center shadow-2xl relative overflow-hidden">
+<!-- Decor elements -->
+<div class="absolute top-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+<div class="absolute bottom-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+<h2 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 mb-lg relative z-10">Start your ritual today.</h2>
+<p class="font-body-lg text-body-lg mb-xl opacity-90 relative z-10 max-w-2xl mx-auto">
+                        Ready to end the food arguments? Secure your spot in the next beta cohort.
+                    </p>
+<div class="flex flex-col md:flex-row items-center justify-center gap-md relative z-10">
+<input class="w-full md:w-80 bg-white/10 border-white/20 text-white placeholder-white/60 rounded-full px-lg py-md focus:ring-2 focus:ring-secondary transition-all" placeholder="Enter your email" type="email"/>
+<button class="w-full md:w-auto bg-secondary text-on-secondary px-xl py-md rounded-full font-h3 text-h3 hover:scale-105 transition-transform shadow-lg">
+                            Get Early Access
+                        </button>
+</div>
+<p class="mt-lg font-body-sm text-body-sm opacity-70">Next cohort starts in 4 days. Limited seats available.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container border-t border-outline-variant">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="space-y-md">
+<span class="font-h3 text-h3 text-primary">Sunday Morning</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                    © 2024 Sunday Morning Systems. Transform meal planning into a shared ritual. Built with love for modern partners.
+                </p>
+</div>
+<div>
+<h4 class="font-label-caps text-on-surface mb-md">The Method</h4>
+<ul class="space-y-base text-body-sm">
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Shared Kitchen Lab</a></li>
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Pantry Sync Guide</a></li>
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Relationship UX</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-caps text-on-surface mb-md">Support</h4>
+<ul class="space-y-base text-body-sm">
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Partner Access</a></li>
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact Support</a></li>
+</ul>
+</div>
+</div>
+</footer>
+<script>
+        // Simple Interaction Scripts
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const btn = form.querySelector('button');
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Waitlist Joined!';
+                    btn.classList.replace('bg-secondary', 'bg-primary');
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.classList.replace('bg-primary', 'bg-secondary');
+                    }, 3000);
+                });
+            }
+
+            // Scroll animations observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-10');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.bento-grid > div').forEach(el => {
+                el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+                observer.observe(el);
+            });
+        });
+    </script>
+</body></html>

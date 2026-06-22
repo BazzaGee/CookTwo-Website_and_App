@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FAQ | Couples Food System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#d3e8d0",
+                    "on-secondary-fixed": "#301400",
+                    "primary-fixed-dim": "#aad0ad",
+                    "surface-tint": "#44664a",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#615e57",
+                    "on-primary-fixed-variant": "#2d4e33",
+                    "on-tertiary-container": "#2f2e27",
+                    "on-primary-container": "#13341c",
+                    "inverse-surface": "#233524",
+                    "on-background": "#0e1f10",
+                    "primary-fixed": "#c6ecc8",
+                    "tertiary-container": "#98958c",
+                    "surface-dim": "#cae0c8",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#aad0ad",
+                    "on-primary-fixed": "#00210b",
+                    "surface-container-low": "#e4fae1",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#def4db",
+                    "on-tertiary-fixed": "#1d1c16",
+                    "on-tertiary-fixed-variant": "#494740",
+                    "surface-container-high": "#d8eed6",
+                    "background": "#ebffe7",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#febb8e",
+                    "inverse-on-surface": "#e1f7de",
+                    "tertiary-fixed-dim": "#cac6bd",
+                    "secondary-fixed": "#ffdcc6",
+                    "surface-bright": "#ebffe7",
+                    "on-surface-variant": "#424842",
+                    "secondary-fixed-dim": "#fbb88b",
+                    "tertiary-fixed": "#e7e2d8",
+                    "on-surface": "#0e1f10",
+                    "surface": "#ebffe7",
+                    "on-secondary-container": "#794925",
+                    "primary": "#44664a",
+                    "outline-variant": "#c2c8bf",
+                    "on-secondary-fixed-variant": "#693c19",
+                    "on-error-container": "#93000a",
+                    "outline": "#727971",
+                    "primary-container": "#7a9e7e",
+                    "secondary": "#85532e",
+                    "surface-variant": "#d3e8d0",
+                    "cream-dark": "#F5F0E6",
+                    "sage-light": "#E9F0E9",
+                    "sage-dark": "#2d4e33"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "sm": "12px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h1-mobile": ["Plus Jakarta Sans"],
+                    "h2": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "h3": ["Plus Jakarta Sans"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .faq-accordion-item[open] .material-symbols-outlined {
+            transform: rotate(180deg);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md">
+<nav class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-base">
+<button class="material-symbols-outlined text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 duration-200" onclick="toggleDrawer()">menu</button>
+<h1 class="font-h3 text-h3-mobile md:text-h3 text-primary dark:text-primary-fixed-dim tracking-tight">Couples Food System</h1>
+</div>
+<a class="hidden md:flex font-body-md text-primary dark:text-primary-fixed-dim font-semibold hover:opacity-80 transition-opacity" href="#">Join Free Beta</a>
+<button class="md:hidden material-symbols-outlined text-primary">edit_calendar</button>
+</nav>
+</header>
+<!-- NavigationDrawer Overlay -->
+<div class="fixed inset-0 bg-on-surface/20 z-[60] hidden transition-opacity duration-300" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<!-- NavigationDrawer -->
+<aside class="fixed top-0 left-0 h-full w-80 bg-surface dark:bg-surface-dim z-[70] -translate-x-full transition-transform duration-300 shadow-xl dark:shadow-none flex flex-col gap-base py-xl" id="main-drawer">
+<div class="px-xl mb-md">
+<h2 class="text-h2 font-h2 text-primary dark:text-primary-fixed-dim">Sunday Morning</h2>
+</div>
+<nav class="flex flex-col gap-xs">
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-body-lg text-body-lg">Our Ritual</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-body-lg text-body-lg">Shared Kitchen</span>
+</a>
+<a class="bg-primary-container text-on-primary-container rounded-full mx-2 px-4 py-3 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">edit_calendar</span>
+<span class="font-body-lg text-body-lg">Beta Access</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-body-lg text-body-lg">The Story</span>
+</a>
+</nav>
+</aside>
+<main class="pt-24 pb-xl px-container-padding max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="mb-xl text-center md:text-left flex flex-col md:flex-row md:items-center gap-xl">
+<div class="flex-1">
+<h2 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-primary mb-base">Questions &amp; Clarity</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    Everything you need to know about ritualizing your kitchen culture. We’re here to help you and your partner navigate the Sunday Morning experience.
+                </p>
+</div>
+<div class="hidden md:block w-48 h-48 rounded-full overflow-hidden border-4 border-surface-container-highest relative">
+<img alt="Warm kitchen atmosphere" class="w-full h-full object-cover" data-alt="A warm, sun-drenched minimalist kitchen scene where a couple is softly blurred in the background, preparing a meal together. The lighting is high-key and inviting, utilizing a palette of soft creams, sage greens, and warm terracotta accents. The focus is on a ceramic bowl of fresh greens on a clean stone countertop, embodying a serene and collaborative morning atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrCwqIw8ycukXgiShVwSeltu7JwLRRGoLQymGU4PGA_-3Jdpig3l34BvpWfaciZq51n_p11b9AdlB5gzTkX0GmpUMtWbxIC8k2FrP6KBdkZuuheji9rQmGlWX-INNv1SuXcls89I2lfKqHy5uI-LiKKuF-SkodB-5wOtA6JsRWqNXA3MONvfaEuI9pk_1HUOwsUZue6Z-sHbxTmQrG1hG0HFgNAdhGI73QCdpB97hT-pKJSIZzz5G8jshC1X-hEuce9JngPIMOLxLH"/>
+</div>
+</section>
+<!-- Category Chips -->
+<section class="mb-lg overflow-x-auto hide-scrollbar -mx-container-padding px-container-padding">
+<div class="flex gap-sm pb-xs">
+<button class="faq-filter-chip bg-primary text-on-primary px-lg py-sm rounded-full font-label-caps whitespace-nowrap transition-all" data-category="all">All Questions</button>
+<button class="faq-filter-chip bg-surface-container text-on-surface-variant px-lg py-sm rounded-full font-label-caps whitespace-nowrap hover:bg-surface-container-high transition-all" data-category="getting-started">Getting Started</button>
+<button class="faq-filter-chip bg-surface-container text-on-surface-variant px-lg py-sm rounded-full font-label-caps whitespace-nowrap hover:bg-surface-container-high transition-all" data-category="features">Features</button>
+<button class="faq-filter-chip bg-surface-container text-on-surface-variant px-lg py-sm rounded-full font-label-caps whitespace-nowrap hover:bg-surface-container-high transition-all" data-category="beta">Beta</button>
+<button class="faq-filter-chip bg-surface-container text-on-surface-variant px-lg py-sm rounded-full font-label-caps whitespace-nowrap hover:bg-surface-container-high transition-all" data-category="technical">Technical</button>
+<button class="faq-filter-chip bg-surface-container text-on-surface-variant px-lg py-sm rounded-full font-label-caps whitespace-nowrap hover:bg-surface-container-high transition-all" data-category="privacy">Privacy</button>
+</div>
+</section>
+<!-- FAQ Accordion Container -->
+<section class="grid grid-cols-1 md:grid-cols-1 gap-base mb-xl" id="faq-list">
+<!-- Item 1: Getting Started -->
+<details class="faq-accordion-item group bg-cream-dark border border-outline-variant rounded-xl overflow-hidden transition-all duration-300" data-category="getting-started">
+<summary class="flex items-center justify-between p-lg cursor-pointer list-none">
+<h3 class="font-h3 text-h3 text-primary group-hover:opacity-80 transition-opacity">What is the "Sunday Morning" method?</h3>
+<span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+</summary>
+<div class="px-lg pb-lg text-on-surface-variant font-body-md">
+                    The method is a collaborative meal-planning framework designed specifically for couples. Instead of a robotic shopping list, we focus on a shared 20-minute ritual each Sunday morning where you co-create your week's nourishment. It's about presence, not just grocery lists.
+                </div>
+</details>
+<!-- Item 2: Features -->
+<details class="faq-accordion-item group bg-cream-dark border border-outline-variant rounded-xl overflow-hidden transition-all duration-300" data-category="features">
+<summary class="flex items-center justify-between p-lg cursor-pointer list-none">
+<h3 class="font-h3 text-h3 text-primary group-hover:opacity-80 transition-opacity">How does "Shared Kitchen" sync work?</h3>
+<span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+</summary>
+<div class="px-lg pb-lg text-on-surface-variant font-body-md">
+                    Both partners have full visibility. When one person adds an ingredient or checks off a meal, it updates instantly for the other. We use a low-latency collaborative engine so you never buy the same gallon of milk twice.
+                </div>
+</details>
+<!-- Item 3: Beta -->
+<details class="faq-accordion-item group bg-cream-dark border border-outline-variant rounded-xl overflow-hidden transition-all duration-300" data-category="beta">
+<summary class="flex items-center justify-between p-lg cursor-pointer list-none">
+<h3 class="font-h3 text-h3 text-primary group-hover:opacity-80 transition-opacity">Is the Beta open to everyone?</h3>
+<span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+</summary>
+<div class="px-lg pb-lg text-on-surface-variant font-body-md">
+                    We are currently in a "Closed Beta" for our first 500 couples. We release new invite codes every Friday morning. Joining the waitlist is the best way to get priority access as we scale our infrastructure.
+                </div>
+</details>
+<!-- Item 4: Privacy -->
+<details class="faq-accordion-item group bg-cream-dark border border-outline-variant rounded-xl overflow-hidden transition-all duration-300" data-category="privacy">
+<summary class="flex items-center justify-between p-lg cursor-pointer list-none">
+<h3 class="font-h3 text-h3 text-primary group-hover:opacity-80 transition-opacity">How is our dietary data protected?</h3>
+<span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+</summary>
+<div class="px-lg pb-lg text-on-surface-variant font-body-md">
+                    Your data is yours. We encrypt all shared notes and meal histories. We never sell your dietary preferences or shopping habits to third-party advertisers. We believe your kitchen should remain a private sanctuary.
+                </div>
+</details>
+<!-- Item 5: Technical -->
+<details class="faq-accordion-item group bg-cream-dark border border-outline-variant rounded-xl overflow-hidden transition-all duration-300" data-category="technical">
+<summary class="flex items-center justify-between p-lg cursor-pointer list-none">
+<h3 class="font-h3 text-h3 text-primary group-hover:opacity-80 transition-opacity">Does it integrate with Google Calendar?</h3>
+<span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+</summary>
+<div class="px-lg pb-lg text-on-surface-variant font-body-md">
+                    Yes! You can export your "Cook Rituals" directly to Google, Apple, or Outlook calendars so your dinner dates are clearly blocked out in your shared schedule.
+                </div>
+</details>
+</section>
+<!-- Waitlist CTA Section -->
+<section class="bg-secondary-container rounded-xl p-xl flex flex-col md:flex-row items-center justify-between gap-lg relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-64 h-64 bg-secondary opacity-10 rounded-full blur-3xl"></div>
+<div class="relative z-10 text-center md:text-left">
+<h3 class="font-h2 text-h2 text-on-secondary-container mb-xs">Ready to ritualize?</h3>
+<p class="font-body-md text-on-secondary-container opacity-90">Join 4,000+ couples designing a better kitchen culture.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-md w-full md:w-auto relative z-10">
+<input class="bg-surface-container-lowest border-none rounded-lg px-md py-sm w-full md:w-64 focus:ring-2 focus:ring-secondary" placeholder="email@example.com" type="email"/>
+<button class="bg-secondary text-on-secondary px-xl py-sm rounded-lg font-h3 text-h3 whitespace-nowrap active:scale-95 transition-transform">Get Access</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container dark:bg-surface-container-highest border-t border-outline-variant">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="flex flex-col gap-base">
+<h3 class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim">Sunday Morning</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Sunday Morning Systems. Transform meal planning into a shared ritual.</p>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">The Method</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Partner Access</a>
+</div>
+<div class="flex flex-col gap-xs">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+<div class="flex flex-col gap-base md:items-end">
+<div class="flex gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-70 transition-opacity">favorite</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-70 transition-opacity">share</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-70 transition-opacity">spa</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">Made for connection.</p>
+</div>
+</div>
+</footer>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('main-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            const isOpen = drawer.classList.contains('translate-x-0');
+            
+            if (isOpen) {
+                drawer.classList.remove('translate-x-0');
+                drawer.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                drawer.classList.add('translate-x-0');
+                drawer.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // FAQ Filtering Logic
+        const filterChips = document.querySelectorAll('.faq-filter-chip');
+        const faqItems = document.querySelectorAll('.faq-accordion-item');
+
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const category = chip.getAttribute('data-category');
+                
+                // Update active chip UI
+                filterChips.forEach(c => {
+                    c.classList.remove('bg-primary', 'text-on-primary');
+                    c.classList.add('bg-surface-container', 'text-on-surface-variant');
+                });
+                chip.classList.add('bg-primary', 'text-on-primary');
+                chip.classList.remove('bg-surface-container', 'text-on-surface-variant');
+
+                // Filter items
+                faqItems.forEach(item => {
+                    if (category === 'all' || item.getAttribute('data-category') === category) {
+                        item.classList.remove('hidden');
+                        item.classList.add('block');
+                    } else {
+                        item.classList.add('hidden');
+                        item.classList.remove('block');
+                    }
+                });
+            });
+        });
+
+        // Close other accordion items when one opens
+        faqItems.forEach(item => {
+            item.addEventListener('toggle', () => {
+                if (item.open) {
+                    faqItems.forEach(otherItem => {
+                        if (otherItem !== item) otherItem.removeAttribute('open');
+                    });
+                }
+            });
+        });
+    </script>
+</body></html>

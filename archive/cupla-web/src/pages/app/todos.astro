@@ -1,0 +1,292 @@
+---
+// src/pages/app/todos.astro
+import AppLayout from '../../layouts/AppLayout.astro';
+
+export const prerender = false;
+---
+
+<AppLayout>
+  <div class="p-6 h-screen flex">
+    <!-- Sidebar - Lists -->
+    <div class="w-64 bg-white rounded-xl border border-slate-200 mr-4 overflow-hidden">
+      <div class="p-4 border-b border-slate-100">
+        <button id="new-list-btn" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          New List
+        </button>
+      </div>
+      <div id="lists-container" class="p-2 space-y-1">
+        <!-- Lists will be loaded here -->
+      </div>
+    </div>
+    
+    <!-- Main Content - Todos -->
+    <div class="flex-1 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h1 id="current-list-title" class="text-xl font-bold text-slate-900">All Tasks</h1>
+          <p id="current-list-count" class="text-sm text-slate-600">0 tasks</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="new-todo-input" 
+            placeholder="Add a new task..."
+            class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none"
+          />
+          <button id="add-todo-btn" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+            Add
+          </button>
+        </div>
+      </div>
+      
+      <div id="todos-container" class="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-220px)]">
+        <!-- Todos will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- New List Modal -->
+  <div id="list-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm">
+      <h2 class="text-xl font-bold mb-4">Create New List</h2>
+      <form id="list-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">List Name</label>
+          <input type="text" id="list-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
+          <select id="list-type" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+            <option value="todo">To-Do List</option>
+            <option value="checklist">Checklist</option>
+            <option value="grocery">Grocery List</option>
+          </select>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="cancel-list" class="flex-1 px-4 py-2 border rounded-lg hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase/client';
+    
+    let coupleId;
+    let currentListId = null;
+    let lists = [];
+    
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('partner_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.partner_id) return;
+      
+      coupleId = [user.id, profile.partner_id].sort().join('-');
+      
+      await loadLists();
+      await loadTodos();
+      
+      // Subscribe to realtime changes
+      supabase
+        .channel('todos-channel')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'todos', filter: `couple_id=eq.${coupleId}` },
+          (payload) => {
+            loadTodos();
+          }
+        )
+        .subscribe();
+    }
+    
+    async function loadLists() {
+      const { data } = await supabase
+        .from('todo_lists')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .order('created_at', { ascending: false });
+      
+      lists = data || [];
+      
+      const container = document.getElementById('lists-container');
+      container.innerHTML = `
+        <div class="list-item cursor-pointer px-3 py-2 rounded-lg hover:bg-slate-100 transition ${!currentListId ? 'bg-rose-50 text-rose-600' : 'text-slate-700'}" data-list-id="">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>All Tasks</span>
+          </div>
+        </div>
+        ${lists.map(list => `
+          <div class="list-item cursor-pointer px-3 py-2 rounded-lg hover:bg-slate-100 transition ${currentListId === list.id ? 'bg-rose-50 text-rose-600' : 'text-slate-700'}" data-list-id="${list.id}">
+            <div class="flex items-center gap-2">
+              ${getListIcon(list.list_type)}
+              <span>${list.title}</span>
+            </div>
+          </div>
+        `).join('')}
+      `;
+      
+      // Add click handlers
+      document.querySelectorAll('.list-item').forEach(item => {
+        item.addEventListener('click', () => {
+          currentListId = item.dataset.listId || null;
+          loadLists();
+          loadTodos();
+        });
+      });
+    }
+    
+    function getListIcon(type) {
+      const icons = {
+        grocery: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>',
+        checklist: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+        default: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>'
+      };
+      return icons[type] || icons.default;
+    }
+    
+    async function loadTodos() {
+      let query = supabase
+        .from('todos')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .eq('is_completed', false)
+        .order('created_at', { ascending: false });
+      
+      if (currentListId) {
+        query = query.eq('list_id', currentListId);
+      }
+      
+      const { data } = await query;
+      
+      const container = document.getElementById('todos-container');
+      if (!data?.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-8">No tasks yet</div>';
+        document.getElementById('current-list-count').textContent = '0 tasks';
+        return;
+      }
+      
+      document.getElementById('current-list-count').textContent = `${data.length} tasks`;
+      
+      container.innerHTML = data.map(todo => `
+        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition group">
+          <input 
+            type="checkbox" 
+            class="w-5 h-5 rounded border-slate-300 text-rose-500 focus:ring-rose-500 cursor-pointer"
+            onchange="completeTodo('${todo.id}')"
+          />
+          <div class="flex-1">
+            <p class="text-slate-900 ${todo.is_completed ? 'line-through text-slate-500' : ''}">${todo.title}</p>
+            ${todo.due_date ? `<p class="text-xs text-slate-500">Due: ${new Date(todo.due_date).toLocaleDateString()}</p>` : ''}
+          </div>
+          <button onclick="deleteTodo('${todo.id}')" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    window.completeTodo = async (id) => {
+      await supabase
+        .from('todos')
+        .update({ is_completed: true, completed_at: new Date().toISOString() })
+        .eq('id', id);
+      loadTodos();
+    };
+    
+    window.deleteTodo = async (id) => {
+      await supabase.from('todos').delete().eq('id', id);
+      loadTodos();
+    };
+    
+    // New list modal
+    document.getElementById('new-list-btn')?.addEventListener('click', () => {
+      document.getElementById('list-modal').classList.remove('hidden');
+      document.getElementById('list-modal').classList.add('flex');
+    });
+    
+    document.getElementById('cancel-list')?.addEventListener('click', () => {
+      document.getElementById('list-modal').classList.add('hidden');
+      document.getElementById('list-modal').classList.remove('flex');
+    });
+    
+    document.getElementById('list-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.from('todo_lists').insert([{
+        couple_id: coupleId,
+        created_by: user.id,
+        title: document.getElementById('list-name').value,
+        list_type: document.getElementById('list-type').value,
+      }]);
+      
+      if (!error) {
+        document.getElementById('list-modal').classList.add('hidden');
+        document.getElementById('list-modal').classList.remove('flex');
+        document.getElementById('list-form').reset();
+        loadLists();
+      }
+    });
+    
+    // Add todo
+    document.getElementById('add-todo-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('new-todo-input');
+      const title = input.value.trim();
+      if (!title) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Get or create default list
+      let listId = currentListId;
+      if (!listId) {
+        const { data: lists } = await supabase
+          .from('todo_lists')
+          .select('id')
+          .eq('couple_id', coupleId)
+          .eq('list_type', 'todo')
+          .limit(1);
+        
+        if (lists?.length) {
+          listId = lists[0].id;
+        } else {
+          const { data: newList } = await supabase.from('todo_lists').insert([{
+            couple_id: coupleId,
+            created_by: user.id,
+            title: 'My Tasks',
+            list_type: 'todo',
+          }]).select();
+          listId = newList[0].id;
+          loadLists();
+        }
+      }
+      
+      await supabase.from('todos').insert([{
+        couple_id: coupleId,
+        list_id: listId,
+        created_by: user.id,
+        title,
+      }]);
+      
+      input.value = '';
+      loadTodos();
+    });
+    
+    init();
+  </script>
+</AppLayout>

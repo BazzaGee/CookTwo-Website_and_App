@@ -1,0 +1,30 @@
+name = "couples-food-system-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "couples-food-system"
+database_id = "your-d1-database-id-here"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "your-kv-namespace-id-here"
+
+[[durable_objects.bindings]]
+name = "HOUSEHOLD_SYNC"
+class_name = "HouseholdSync"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HouseholdSync"]
+
+[vars]
+JWT_SECRET = "development-secret-change-in-production"
+
+[env.staging]
+name = "couples-food-system-api-staging"
+
+[env.production]
+name = "couples-food-system-api"

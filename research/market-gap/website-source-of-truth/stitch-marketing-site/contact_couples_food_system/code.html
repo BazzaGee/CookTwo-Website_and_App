@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contact Us - Couples Food System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e8d0",
+                        "on-secondary-fixed": "#301400",
+                        "primary-fixed-dim": "#aad0ad",
+                        "surface-tint": "#44664a",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#615e57",
+                        "on-primary-fixed-variant": "#2d4e33",
+                        "on-tertiary-container": "#2f2e27",
+                        "on-primary-container": "#13341c",
+                        "inverse-surface": "#233524",
+                        "on-background": "#0e1f10",
+                        "primary-fixed": "#c6ecc8",
+                        "tertiary-container": "#98958c",
+                        "surface-dim": "#cae0c8",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#aad0ad",
+                        "on-primary-fixed": "#00210b",
+                        "surface-container-low": "#e4fae1",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#def4db",
+                        "on-tertiary-fixed": "#1d1c16",
+                        "on-tertiary-fixed-variant": "#494740",
+                        "surface-container-high": "#d8eed6",
+                        "background": "#ebffe7",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#febb8e",
+                        "inverse-on-surface": "#e1f7de",
+                        "tertiary-fixed-dim": "#cac6bd",
+                        "secondary-fixed": "#ffdcc6",
+                        "surface-bright": "#ebffe7",
+                        "on-surface-variant": "#424842",
+                        "secondary-fixed-dim": "#fbb88b",
+                        "tertiary-fixed": "#e7e2d8",
+                        "on-surface": "#0e1f10",
+                        "surface": "#ebffe7",
+                        "on-secondary-container": "#794925",
+                        "primary": "#44664a",
+                        "outline-variant": "#c2c8bf",
+                        "on-secondary-fixed-variant": "#693c19",
+                        "on-error-container": "#93000a",
+                        "outline": "#727971",
+                        "primary-container": "#7a9e7e",
+                        "secondary": "#85532e",
+                        "surface-variant": "#d3e8d0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "container-padding": "20px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h1-mobile": ["Plus Jakarta Sans"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "h3": ["Plus Jakarta Sans"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "h1-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #ebffe7;
+        }
+        .cream-dark-card {
+            background-color: #f5f0e6;
+            border: 1px solid #e5e1da;
+            border-radius: 24px;
+        }
+        .tap-highlight-transparent {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-drawer-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md">
+<nav class="flex items-center justify-between px-container-padding py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-base">
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 duration-200" onclick="toggleDrawer()">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-h3 text-h3-mobile md:text-h3 text-primary dark:text-primary-fixed-dim tracking-tight">Couples Food System</h1>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-caps hover:opacity-80 transition-opacity active:scale-95 duration-200 hidden md:block">
+                Join Free Beta
+            </button>
+<button class="text-primary md:hidden active:scale-95 transition-transform">
+<span class="material-symbols-outlined">edit_calendar</span>
+</button>
+</nav>
+</header>
+<!-- Navigation Drawer Overlay -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300" id="drawerOverlay" onclick="toggleDrawer()"></div>
+<!-- NavigationDrawer -->
+<aside class="fixed top-0 left-0 h-full w-80 bg-surface dark:bg-surface-dim shadow-xl z-[70] -translate-x-full nav-drawer-transition flex flex-col gap-base py-xl" id="navDrawer">
+<div class="px-xl mb-md">
+<h2 class="text-h2 font-h2 text-primary dark:text-primary-fixed-dim">Sunday Morning</h2>
+</div>
+<nav class="flex flex-col">
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-body-lg text-body-lg">Our Ritual</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-body-lg text-body-lg">Shared Kitchen</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">edit_calendar</span>
+<span class="font-body-lg text-body-lg">Beta Access</span>
+</a>
+<a class="bg-primary-container text-on-primary-container rounded-full mx-2 px-4 py-3 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-body-lg text-body-lg font-semibold">The Story</span>
+</a>
+</nav>
+</aside>
+<main class="pt-24 pb-xl px-container-padding max-w-7xl mx-auto w-full">
+<!-- Hero Section -->
+<section class="mb-xl text-center md:text-left">
+<h2 class="font-h1 text-h1-mobile md:text-h1 text-primary mb-sm">Let’s start a new ritual.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Have questions about our shared kitchen philosophy? We'd love to hear from you and help you transform your table.</p>
+</section>
+<!-- Bento Layout for Contact Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Contact Form Card -->
+<div class="md:col-span-7 cream-dark-card p-xl flex flex-col gap-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">mail</span>
+<h3 class="font-h3 text-h3 text-primary">Send a Note</h3>
+</div>
+<form class="flex flex-col gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-caps text-on-surface-variant ml-sm">YOUR NAME</label>
+<input class="bg-[#f5f0e6] border border-[#e5e1da] rounded-xl px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline/50" placeholder="Alex &amp; Jordan" type="text"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-caps text-on-surface-variant ml-sm">EMAIL ADDRESS</label>
+<input class="bg-[#f5f0e6] border border-[#e5e1da] rounded-xl px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline/50" placeholder="hello@ourhome.com" type="email"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-caps text-on-surface-variant ml-sm">MESSAGE</label>
+<textarea class="bg-[#f5f0e6] border border-[#e5e1da] rounded-xl px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline/50" placeholder="Tell us about your kitchen ritual..." rows="4"></textarea>
+</div>
+<button class="bg-primary text-on-primary py-md px-xl rounded-full font-h3 hover:opacity-90 active:scale-95 transition-all w-full md:w-fit self-end" type="submit">
+                        Send Message
+                    </button>
+</form>
+</div>
+<!-- Side Bento Info Column -->
+<div class="md:col-span-5 flex flex-col gap-gutter">
+<!-- Image Card -->
+<div class="h-48 md:h-64 rounded-[24px] overflow-hidden relative group">
+<img alt="Couple cooking" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A serene, sun-drenched kitchen in the early morning with soft, hazy light filtering through linen curtains. A couple is seen from behind, peacefully preparing a fresh breakfast together on a clean wooden counter. The scene uses a warm palette of sage green and soft terracotta accents, emphasizing a modern organic lifestyle. The mood is calm, intimate, and deeply collaborative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClvoqRcGIZj2LbO37EhVkEMC8r88MYAOJ50KY4AhQ-CmLx-idTwfv_zD_Lv9oTZosCOtivNeFbaL-5YsPubExHgtPe1cd8Er9NE6XFGklVzB91AACH9n5EWAcIJI7I3zNUre9a5hsNTuRps78q_WeDkfugZu_ag0iOGiRWlO0xg6cuWa9NdrUL0khQyxx3vWEgU-V7RhLTXAIXldCYZNRx6fJq3qfs-2xKq1Ucmux0B30jKbUyLvzx40xlbJ8wAaFc3lZjQ2649PiE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end p-lg">
+<p class="text-white font-body-sm italic">"Nourishment is the ultimate love language."</p>
+</div>
+</div>
+<!-- Info Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+<div class="cream-dark-card p-md flex flex-col gap-base items-center text-center group hover:border-primary transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">chat_bubble</span>
+</div>
+<p class="font-label-caps text-on-surface-variant">TEXT US</p>
+<p class="font-h3 text-h3 text-primary">+1 (555) MEAL-PLAN</p>
+</div>
+<div class="cream-dark-card p-md flex flex-col gap-base items-center text-center group hover:border-primary transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">public</span>
+</div>
+<p class="font-label-caps text-on-surface-variant">FOLLOW</p>
+<p class="font-h3 text-h3 text-primary">@sundaymorning</p>
+</div>
+</div>
+<!-- Map/Location Card -->
+<div class="cream-dark-card p-lg flex-1 flex flex-col gap-sm">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-caps text-on-surface-variant">STUDIO</p>
+<p class="font-body-md text-on-surface">The Sunhouse, Arts District<br/>Portland, OR 97204</p>
+</div>
+<div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">location_on</span>
+</div>
+</div>
+<!-- Mock Map Graphic -->
+<div class="mt-base bg-surface-container-highest/50 h-24 rounded-xl border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+<div class="w-full h-full opacity-50 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Waitlist CTA Section -->
+<section class="mt-xl bg-primary text-on-primary rounded-[32px] p-xl flex flex-col md:flex-row items-center justify-between gap-xl relative overflow-hidden">
+<div class="relative z-10 text-center md:text-left">
+<h2 class="font-h2 text-h2-mobile md:text-h2 mb-base">Ready for better Sundays?</h2>
+<p class="font-body-lg text-body-lg opacity-90 max-w-md">Join 1,200+ couples in our private beta. We're launching the full system this Autumn.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-md relative z-10 w-full md:w-auto">
+<input class="bg-white/10 border border-white/20 rounded-full px-xl py-md text-white placeholder:text-white/60 focus:outline-none focus:bg-white/20 transition-all w-full md:w-64" placeholder="Your email address" type="email"/>
+<button class="bg-secondary text-white px-xl py-md rounded-full font-h3 hover:bg-secondary/90 transition-all active:scale-95 whitespace-nowrap">
+                    Cook Now
+                </button>
+</div>
+<!-- Decorative circle -->
+<div class="absolute -bottom-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container dark:bg-surface-container-highest border-t border-outline-variant mt-xl">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl px-container-padding max-w-7xl mx-auto w-full">
+<div class="flex flex-col gap-md">
+<h3 class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim">Couples Food System</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Sunday Morning Systems. Transform meal planning into a shared ritual.</p>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-caps text-on-surface-variant">SYSTEM</h4>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">The Method</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Partner Access</a>
+</div>
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-caps text-on-surface-variant">SUPPORT</h4>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant font-bold text-primary dark:text-primary-fixed-dim" href="#">Contact Support</a>
+</div>
+</div>
+<div class="flex flex-col gap-md md:items-end">
+<div class="flex gap-md">
+<a class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">alternate_email</span>
+</a>
+<a class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">share</span>
+</a>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Crafted with care for your home.</p>
+</div>
+</div>
+</footer>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('navDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const isHidden = drawer.classList.contains('-translate-x-full');
+            
+            if (isHidden) {
+                drawer.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                drawer.classList.add('-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Add subtle parallax effect to the hero image on scroll
+        window.addEventListener('scroll', () => {
+            const img = document.querySelector('img[data-alt]');
+            const scrolled = window.pageYOffset;
+            img.style.transform = `translateY(${scrolled * 0.05}px) scale(1.05)`;
+        });
+    </script>
+</body></html>
