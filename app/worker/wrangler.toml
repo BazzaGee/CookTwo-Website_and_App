@@ -31,6 +31,8 @@ VAPID_PUBLIC_KEY = "BGvuzRtY6I_rrv2HXWdg9zFD2Tb8LlkywOScoPLlx9xb66b0wxa0YuNt1U3X
 SITE_URL = "https://cfs-app.pages.dev"
 PWA_URL = "https://cooktwo.app/PWA"
 RESEND_FROM = "CookTwo <Krystle@cooktwo.com>"
+STRIPE_PRICE_ID_MONTHLY = "price_1TnJuvPPuIX80dP9996YYHTR"
+STRIPE_PRICE_ID_YEARLY = "price_1TnJv1PPuIX80dP902xl3x4Y"
 
 [env.staging]
 name = "couples-food-system-api-staging"
