@@ -46,14 +46,13 @@
       "id": "meal-planning",
       "title": "AI Meal Planning",
       "badge": "Live",
-      "description": "Chat with AI to plan tonight's dinner or generate an entire week. Multi-provider AI chain (DeepSeek, Alibaba, ZAI) with automatic fallback. Missing ingredients go straight to your shared list.",
+      "description": "Chat with AI to plan tonight's dinner from your pantry or shop for what's missing. Multi-provider AI chain (DeepSeek, Alibaba, ZAI) with automatic fallback. Missing ingredients go straight to your shared list.",
       "icon": "calendar",
       "href": "/features/meal-planning",
       "highlights": [
         "Conversational AI chat with session memory",
-        "Generate single meals or full 7-day plans",
-        "Save favorite recipes for quick access",
-        "AI-generated meal photography (Flux.2 via OpenRouter)"
+        "Generate meals from your pantry or shop for what's missing",
+        "Save favorite recipes for quick access"
       ]
     },
     {

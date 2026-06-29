@@ -48,8 +48,8 @@ DeepSeek API
 |------|---------|
 | `worker/src/lib/ai.ts` | Core AI logic: `generateMeal()`, `chatWithAI()`, `callDeepSeekChat()`, `callProvider()`, system prompt builders |
 | `worker/src/routes/mealChat.ts` | `POST /api/household/:id/meal-chat` — chat endpoint handler |
-| `worker/src/routes/mealplan.ts` | Week plan generation (calls `generateMeal()` per day) |
-| `worker/src/index.ts` | Route wiring: `/meal-plan/generate`, `/meal-plan/week/generate`, `/meal-chat` |
+| `worker/src/routes/mealplan.ts` | `POST /api/household/:id/meal-plan/confirm` — pantry deduction after a meal is cooked |
+| `worker/src/index.ts` | Route wiring: `/meal-chat`, `/meal-plan/confirm` |
 | `worker/src/env.d.ts` | Type definitions for `Env` bindings (`AI_PROVIDER`, `DEEPSEEK_KEY`, etc.) |
 | `worker/wrangler.toml` | `[vars] AI_PROVIDER = "deepseek"`, `[[d1_databases]]`, DO bindings |
 | `worker/src/routes/profiles.ts` | Partner profile queries (diets, allergies, TDEE) used by chat context |
@@ -62,8 +62,6 @@ DeepSeek API
 | `frontend/src/hooks/useMealChat.ts` | Chat state management, localStorage persistence, API calls |
 | `frontend/src/pages/MealPlanTab.tsx` | `MealChatView` (chat UI), `InlineMealCard` (meal card in chat), `SavedRecipeCard` (expandable saved recipes) |
 | `frontend/src/hooks/useRecipes.ts` | React Query hook for saved recipes (list, save, delete) |
-| `frontend/src/hooks/useMealPlan.ts` | Old single-meal generator (deprecated, kept for compatibility) |
-| `frontend/src/hooks/useWeekPlan.ts` | Week plan generation hook |
 | `frontend/src/types/meal.ts` | TypeScript types: `GeneratedMeal`, `MealIngredient`, `PlatingInstruction` |
 | `frontend/src/lib/api.ts` | `apiFetch()` — base HTTP helper with auth headers |
 | `frontend/.env.production` | **Critical**: `VITE_API_URL=https://couples-food-system-api.byte-digital.workers.dev` |
@@ -101,7 +99,7 @@ Primary:   deepseek-v4-flash (only model used)
 
 `callDeepSeekChat()` uses only `deepseek-v4-flash`. If it fails, returns `null` and `chatWithAI()` returns an error message. **No mock data is ever returned.** V4 Pro is never called to minimise cost.
 
-The old `generateMeal()` function (used by `/meal-plan/generate` and week plan) also returns `null` on failure — no mock fallback.
+The legacy `generateMeal()` function also returns `null` on failure — no mock fallback.
 
 ## System prompt
 

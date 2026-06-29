@@ -1,6 +1,6 @@
 ---
 title: "The CookTwo App — A Complete Visual Guide"
-description: "A walkthrough of every screen, button, and feature in the CookTwo PWA. For new users, the curious, and anyone who wants to point someone to a guide."
+description: "Take a quick tour of CookTwo — every screen, every button, every feature. See what the app actually looks like in someone's hands."
 pubDate: 2026-06-25
 author: "CookTwo"
 pillar: "App Guide"
@@ -12,6 +12,8 @@ intentSummary: "Reference — user wants a complete walkthrough of the app's int
 persona: "New CookTwo users, prospective users evaluating the app, and anyone onboarding a partner."
 ogImage: "/images/og/og-app-guide.webp"
 draft: false
+readingTime: 12
+lastUpdated: 2026-06-29
 ---
 
 import GuideScreenshots from '../../components/guide/GuideScreenshots.astro';
@@ -21,7 +23,7 @@ import GuideTableOfContents from '../../components/guide/GuideTableOfContents.as
 
 <div class="bg-sage/5 border-l-4 border-sage p-6 rounded-r-2xl my-8 not-prose">
   <p class="text-text-primary font-semibold mb-2">Welcome 👋</p>
-  <p class="text-text-secondary leading-relaxed m-0">This is the long version. Every screen in the CookTwo app, every button, every badge, every state — with annotated screenshots and plain-English explanations. Use the table of contents to jump to a specific section, or read it start to finish in about 12 minutes.</p>
+  <p class="text-text-secondary leading-relaxed m-0">This is a visual tour of every screen in the CookTwo app — what the buttons do, what the badges mean, and how everything fits together. Use the table of contents to jump around, or read it start to finish in about 12 minutes.</p>
 </div>
 
 <GuideTableOfContents items={[
@@ -31,9 +33,9 @@ import GuideTableOfContents from '../../components/guide/GuideTableOfContents.as
   { title: "The header bar — every icon explained", slug: "header-bar" },
   { title: "The Shopping tab", slug: "shopping" },
   { title: "The Pantry tab", slug: "pantry" },
-  { title: "The Meals tab — Tonight, Saved, Week", slug: "meals" },
+  { title: "The Meals tab — Tonight and Saved", slug: "meals" },
   { title: "The Profiles & Settings tab", slug: "profiles" },
-  { title: "AI credits, the usage chip, and the free vs Premium tiers", slug: "ai-credits" },
+  { title: "AI credits and the free vs Premium tiers", slug: "ai-credits" },
   { title: "Notifications, sharing, offline, and signing out", slug: "extras" },
   { title: "Common questions", slug: "common-questions" }
 ]} />
@@ -49,13 +51,13 @@ If you've just downloaded it, here's the short version of how it's organised:
 - **Meals tab** — a chat with the AI that generates dinner ideas, splits the recipe into two plates with different macros for each of you, and adds anything you're missing to the shopping list.
 - **Profiles tab** — your diet, your goals, your body profile, and the plan you're on (Free or Premium).
 
-Everything is partner-coloured. **Alex is sage green, Jordan is terracotta** — every item, every action, every notification has a small dot showing who added it.
+Everything is partner-coloured. **Partner A is sage green, Partner B is terracotta** — every item, every action, every notification has a small dot showing who added it.
 
 That's the whole shape. Let's walk through every screen.
 
 ## Onboarding — setting up a shared kitchen
 
-The first time you open CookTwo, you go through a short setup. It's seven steps for a two-person kitchen, and you can skip the body profile and come back to it later.
+The first time you open CookTwo, you go through a short setup. There are 8-9 steps depending on whether you're cooking solo or with a partner, and you can skip the body profile and come back to it later.
 
 ### Step 1 — Welcome
 
@@ -64,21 +66,13 @@ The opening screen is the same whether you're cooking solo or with a partner. Th
 <GuideScreenshots
   src="/images/guide/guide-01-onboarding-welcome.webp"
   alt="CookTwo welcome screen with three onboarding options"
-  markers={[
-    { label: "1", x: 96, y: 18, tx: 50, ty: 19, side: "right", note: "CookTwo wordmark" },
-    { label: "2", x: 4, y: 30, tx: 50, ty: 30, side: "left", note: "Main headline" },
-    { label: "3", x: 4, y: 38, tx: 50, ty: 38, side: "left", note: "Value prop" },
-    { label: "4", x: 4, y: 62, tx: 50, ty: 62, side: "left", note: "Cooking solo path" },
-    { label: "5", x: 4, y: 73, tx: 50, ty: 73, side: "left", note: "I have a code path" },
-    { label: "6", x: 4, y: 86, tx: 50, ty: 86, side: "left", note: "Setting up for two — start a new household" }
-  ]}
+  markers={[]}
   caption="The welcome screen. Pick the path that matches your situation."
 />
 
-- **① ② ③** — the wordmark, the headline, and the value prop up top. Read once, then forget — they're the same on every device.
-- **④ Cooking solo** — sets up a one-person kitchen. You can invite a partner later from the Profiles tab.
-- **⑤ I have a code** — for joining a kitchen your partner already started. You'll enter their 6-digit invite code on the next screen.
-- **⑥ Setting up for two** — starts a brand-new household. You'll get an invite code at the end to share with your partner.
+- **Cooking solo** — sets up a one-person kitchen. You can invite a partner later from the Profiles tab.
+- **I have a code** — for joining a kitchen your partner already started. You'll enter their 6-digit invite code on the next screen.
+- **Setting up for two** — starts a brand-new household. You'll get an invite code at the end to share with your partner.
 
 <GuideCallout>
 **Picking the right path matters.** If your partner already has CookTwo, *don't* tap "Setting up for two" — you'll create a separate household and you'll never see each other's lists. Tap "I have a code" and use their 6-digit code instead.
@@ -89,26 +83,18 @@ The opening screen is the same whether you're cooking solo or with a partner. Th
 <GuideScreenshots
   src="/images/guide/guide-02-onboarding-name.webp"
   alt="CookTwo onboarding name input"
-  markers={[
-    { label: "1", x: 96, y: 22, tx: 50, ty: 22, side: "right", note: "CookTwo wordmark" },
-    { label: "2", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Name input — your partner sees this on every item you add" },
-    { label: "3", x: 4, y: 75, tx: 50, ty: 75, side: "left", note: "Continue button" }
-  ]}
+  markers={[]}
   caption="The name you enter here is what your partner will see in the app."
 />
 
-Use your first name. It shows up in the header ("Alex + Jordan"), on every item you add to the shopping list (the small coloured dot), and in every activity-log entry. It also shows up in the meal chat when the AI addresses you.
+Use your first name. This is your **profile name** — it shows up in the header, on every item you add to the shopping list (the small coloured dot), in every activity-log entry, and in the meal chat when the AI addresses you.
 
 ### Step 3 — Diet and allergies
 
 <GuideScreenshots
   src="/images/guide/guide-03-onboarding-preferences.webp"
   alt="CookTwo onboarding dietary preferences and allergies"
-  markers={[
-    { label: "1", x: 96, y: 36, tx: 50, ty: 36, side: "right", note: "Dietary preference dropdown" },
-    { label: "2", x: 96, y: 55, tx: 50, ty: 55, side: "right", note: "Allergies input — comma-separated" },
-    { label: "3", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Continue" }
-  ]}
+  markers={[]}
   caption="Diet and allergies are used by the AI to filter meal suggestions."
 />
 
@@ -125,10 +111,7 @@ The allergies field is free-text. Type them comma-separated ("peanuts, shellfish
 <GuideScreenshots
   src="/images/guide/guide-04-onboarding-goals.webp"
   alt="CookTwo onboarding body goal selection"
-  markers={[
-    { label: "1", x: 96, y: 50, tx: 50, ty: 50, side: "right", note: "One of four body goals — this drives the adaptive plating" },
-    { label: "2", x: 4, y: 88, tx: 50, ty: 88, side: "left", note: "Continue" }
-  ]}
+  markers={[]}
   caption="Pick the goal that matches what you're trying to do right now."
 />
 
@@ -141,21 +124,17 @@ You can change this any time. Pick whatever feels right today.
 <GuideScreenshots
   src="/images/guide/guide-05-onboarding-body.webp"
   alt="CookTwo onboarding body profile form"
-  markers={[
-    { label: "1", x: 96, y: 42, tx: 50, ty: 42, side: "right", note: "Weight and height — used for accurate TDEE" },
-    { label: "2", x: 96, y: 60, tx: 50, ty: 60, side: "right", note: "Age and gender" },
-    { label: "3", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Activity level" }
-  ]}
+  markers={[]}
   caption="The body profile is used to calculate your daily calorie target (TDEE)."
 />
 
 This is technically optional, but the more you fill in, the better the meal portions fit. The app uses these numbers to calculate TDEE (Total Daily Energy Expenditure) — the actual number of calories your body burns in a day — and then subtracts (for weight loss) or adds (for muscle gain) to set your target.
 
-- **Weight, height, age, gender** — for the Mifflin-St Jeor equation.
+- **Weight, height, age, gender** — for the Mifflin-St Jeor equation, a resting metabolic rate formula that's widely regarded as the most accurate for healthy adults.
 - **Activity level** — affects how much your TDEE is. "Sedentary" is desk work, no exercise. "Very active" is hard daily training.
 
 <GuideCallout>
-**Privacy note.** Body stats stay on your device and on the server. They never get shared with your partner. They only affect the *portions* of meals the AI suggests for you.
+**Your body stats don't get shared with anyone else.** No one else has access to that info — not CookThe, not your partner. Even your partner won't see them, unless you switch the "Visible to your partner" toggle on 😉
 </GuideCallout>
 
 ### Step 6 — Pantry (optional but recommended)
@@ -163,15 +142,11 @@ This is technically optional, but the more you fill in, the better the meal port
 <GuideScreenshots
   src="/images/guide/guide-06-onboarding-pantry.webp"
   alt="CookTwo onboarding pantry input"
-  markers={[
-    { label: "1", x: 96, y: 25, tx: 50, ty: 25, side: "right", note: "Pantry input — type naturally" },
-    { label: "2", x: 96, y: 50, tx: 50, ty: 50, side: "right", note: "Type exactly what you have — quantities, brands" },
-    { label: "3", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Continue" }
-  ]}
+  markers={[]}
   caption="Type your kitchen in plain English. The AI parses it into structured items."
 />
 
-Just type. Like a sentence. "1L whole milk, 250g swiss cheddar, half an onion, chicken breast, salmon fillets, 2 cups jasmine rice…" — whatever you've got in the kitchen. The AI parses it into structured items with categories (Produce, Meat, Dairy, Pantry, etc.).
+Just type. Like a sentence. "1L whole milk, 250g swiss cheddar, half an onion, chicken breast, salmon fillets, 2 cups jasmine rice…" — whatever you've got in the kitchen. Separate items with commas. The AI parses it into structured items with categories (Produce, Meat, Dairy, Pantry, etc.).
 
 If you're not sure what's in your kitchen right now, skip this. You can add items any time from the Pantry tab.
 
@@ -180,47 +155,45 @@ If you're not sure what's in your kitchen right now, skip this. You can add item
 <GuideScreenshots
   src="/images/guide/guide-07-onboarding-plan.webp"
   alt="CookTwo onboarding plan selection"
-  markers={[
-    { label: "1", x: 96, y: 40, tx: 50, ty: 40, side: "right", note: "Free plan card" },
-    { label: "2", x: 96, y: 60, tx: 50, ty: 60, side: "right", note: "Premium plan card with sage border" },
-    { label: "3", x: 96, y: 72, tx: 50, ty: 72, side: "right", note: "Monthly vs yearly toggle — yearly saves 25%" }
-  ]}
+  markers={[]}
   caption="Both plans are full-featured. The difference is how much AI you get per day."
 />
 
-- **Free** — 10 AI requests per day, shared with your partner. Enough to chat with the meal planner, generate dinners, and save unlimited recipes. Premium meal images are not included.
-- **Premium ($4.99/mo or $44.99/yr)** — 70 AI requests and 3 AI-generated meal photos per day. Priority responses. Cancel anytime.
+- **Free** — 10 AI requests per day, shared with your partner. Enough to chat with the meal planner, generate dinners, and save unlimited recipes.
+- **Premium ($4.99/mo or $44.99/yr)** — 70 AI requests per day. Priority responses. Cancel anytime.
 
-You can change plans any time from the Profiles tab. The Free plan is genuinely usable — Premium is there if you meal-plan a lot or you really want photos of your meals.
+You can change plans any time from the Profiles tab. The Free plan is genuinely usable — Premium is there if you meal-plan a lot.
 
 ### Step 8 — Did your partner already sign up?
 
 <GuideScreenshots
   src="/images/guide/guide-08-onboarding-partner-check.webp"
   alt="CookTwo onboarding partner check"
-  markers={[
-    { label: "1", x: 4, y: 55, tx: 50, ty: 55, side: "left", note: "Yes, I have their code — enter it" },
-    { label: "2", x: 4, y: 72, tx: 50, ty: 72, side: "left", note: "No, I'm setting up first — you'll get a code to share" }
-  ]}
+  markers={[]}
   caption="Choose how you'll connect to your partner's kitchen."
 />
 
 This step decides whether you join an existing household or start a new one and get an invite code to share.
+
+- **"Yes, I have their code"** — takes you to a screen where you enter your partner's 6-digit invite code. Once you submit it, your kitchens merge instantly. You'll see each other's shopping list, pantry, and meal history right away.
+- **"No, I'm setting up first"** — creates a new household and moves you to the next step. You'll get a 6-digit code at the end that you can send to your partner so they can join.
+
+If you're setting up solo and want to add a partner later, you can always do that from the Profiles tab — no need to redo onboarding.
 
 ### Step 9 — Your kitchen is ready
 
 <GuideScreenshots
   src="/images/guide/guide-09-onboarding-created.webp"
   alt="CookTwo onboarding invite code created"
-  markers={[
-    { label: "1", x: 4, y: 55, tx: 50, ty: 55, side: "left", note: "Your 6-digit invite code" },
-    { label: "2", x: 4, y: 73, tx: 50, ty: 73, side: "left", note: "Copy code button" },
-    { label: "3", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Continue to the app" }
-  ]}
+  markers={[]}
   caption="Save this code. Send it to your partner however you like — text, WhatsApp, email."
 />
 
-If you set up first, you get a 6-digit code that your partner can enter from their phone to join your kitchen. You can also re-share it any time using the share icon in the top-right of the app.
+If you set up first, you get a 6-digit code that your partner can enter from their phone to join your kitchen.
+
+<GuideCallout>
+**You can link at any time.** If your partner isn't ready to join yet, no worries — just send them the code whenever they're ready. You can re-share it any time using the share icon in the top-right of the app, or from the Profiles tab.
+</GuideCallout>
 
 And that's onboarding. You're in. The app drops you straight on the Shopping tab.
 
@@ -232,46 +205,30 @@ Every screen in CookTwo has the same chrome. Once you know the shell, every tab 
   src="/images/guide/guide-10-shopping-empty.webp"
   alt="CookTwo main app shell, empty shopping list"
   markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Partner dots — A is sage (Alex), J is terracotta (Jordan)" },
-    { label: "2", x: 96, y: 8, tx: 80, ty: 8, side: "right", note: "Header icons — covered in detail below" },
-    { label: "3", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Page title" },
-    { label: "4", x: 4, y: 38, tx: 50, ty: 38, side: "left", note: "Empty-state prompt" },
-    { label: "5", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Add-item input — type and tap the + button" },
-    { label: "6", x: 4, y: 95, tx: 20, ty: 95, side: "left", note: "Bottom nav — Shopping, Pantry, Meals" }
+    { label: "H", x: 50, y: 8, tx: 50, ty: 8, side: "left", note: "Header" },
+    { label: "N", x: 50, y: 95, tx: 50, ty: 95, side: "left", note: "Bottom nav" }
   ]}
-  caption="The same shell wraps every tab. Header on top, input bar on the bottom, three-tab nav at the very bottom."
+  caption="The same shell wraps every tab. Header on top, content in the middle, bottom nav at the very bottom."
 />
 
 The shell has three parts:
 
-- **The header** — your partner dots and name on the left, six icons on the right. Always there, never scrolls.
-- **The main content** — what changes when you switch tabs. Scrolls vertically.
-- **The bottom nav** — three tabs (Shopping, Pantry, Meals) and a fixed input bar on the Shopping tab. Tabs are also where the Profiles & Settings live, accessed via the gear icon in the header (no — see below).
+- **The header** — partner dots and names on the left, six icons on the right. Always there, never scrolls. The partner dots are the small coloured circles with initials: Partner A is sage green, Partner B is terracotta. If you're cooking solo, you'll only see one dot.
+- **The main content** — what changes when you switch tabs. Scrolls vertically. On the Shopping tab, the add-item input sits at the bottom of the screen, just above the nav. On the Pantry and Meals tabs, content fills the screen from top to bottom — there's no fixed input bar at the bottom.
+- **The bottom nav** — three tabs: Shopping, Pantry, and Meals. These are the three primary daily-use tabs. Profiles & Settings live behind the gear icon in the header, not here. Each tab has a small icon and a label. The active tab has a coloured indicator.
 
-Actually, the **Profiles tab is reached via the gear icon in the header**, not via the bottom nav. The bottom nav is the three primary daily-use tabs.
+The shell is consistent across every tab. Once you learn it, you never have to think about where things are again.
 
 ## The header bar — every icon explained
 
 The right side of the header has six icons in a row. They do a lot, so they're worth a closer look.
 
-<GuideScreenshots
-  src="/images/guide/guide-26-header-annotated.webp"
-  alt="CookTwo header with every icon annotated"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 22, ty: 8, side: "left", note: "AI credits pill — your remaining AI requests today" },
-    { label: "2", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Notifications bell — shows recent activity" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Sync indicator — green dot means connected" },
-    { label: "4", x: 4, y: 70, tx: 50, ty: 70, side: "left", note: "Share — re-share your invite code" }
-  ]}
-  caption="The six header icons, left to right. The gear and sign-out icons are just past the share."
-/>
-
-- **① AI credits pill** — the small `10/10` badge with a sparkles icon. This is your daily AI quota. Tap to see the full usage panel (covered in the AI credits section below).
-- **② Notifications bell** — a small red badge shows the unread count. Tap to see every action either of you has taken recently: who added what, who checked what off, who generated a meal. Mark all read at the top.
-- **③ Sync indicator** — a small dot. Sage green means connected, amber means reconnecting, red means offline. Changes propagate between you and your partner in under a second when this is green.
-- **④ Share icon** — opens the invite-code modal. Use it to re-share your 6-digit code with your partner, or copy the code to text them directly.
-- **⑤ Gear icon** — opens the **Profiles & Settings tab** (your diet, your goals, your plan, link a partner, etc.).
-- **⑥ Sign out icon** — the door/exit icon on the far right. Logs you out and sends you back to onboarding.
+- **Usage chip** — the small pill badge with a sparkles icon showing your remaining AI requests (e.g. `10/10`). Tap to see the full usage panel (covered in the AI credits section below).
+- **Notifications bell** — a small red badge shows the unread count. Tap to see every action either of you has taken recently: who added what, who checked what off, who generated a meal. Mark all read at the top.
+- **Sync indicator** — a small dot. Sage green means connected, amber means reconnecting, red means offline. Changes propagate between you and your partner in under a second when this is green.
+- **Share icon** — opens the invite-code modal. Use it to re-share your 6-digit code with your partner, or copy the code to text them directly.
+- **Gear icon** — opens the **Profiles & Settings tab** (your diet, your goals, your plan, link a partner, etc.).
+- **Sign out icon** — the door/exit icon on the far right. Logs you out and sends you back to onboarding.
 
 The header never scrolls with the page. It stays glued to the top.
 
@@ -287,12 +244,8 @@ When you first sign in (or after you've used everything), the Shopping tab looks
   src="/images/guide/guide-10-shopping-empty.webp"
   alt="CookTwo shopping tab empty state"
   markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Partner dots in the header" },
-    { label: "2", x: 96, y: 8, tx: 80, ty: 8, side: "right", note: "Header icons — covered in the header section" },
-    { label: "3", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Page title — 'Our shopping list'" },
-    { label: "4", x: 4, y: 38, tx: 50, ty: 38, side: "left", note: "Empty-state prompt — type items below" },
-    { label: "5", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Add-item input — type items separated by commas" },
-    { label: "6", x: 4, y: 95, tx: 20, ty: 95, side: "left", note: "Bottom nav — Shopping is active" }
+    { label: "H", x: 50, y: 8, tx: 50, ty: 8, side: "left", note: "Header" },
+    { label: "N", x: 50, y: 95, tx: 50, ty: 95, side: "left", note: "Bottom nav" }
   ]}
   caption="The empty state. One input at the bottom, and the bottom nav at the very bottom."
 />
@@ -300,6 +253,10 @@ When you first sign in (or after you've used everything), the Shopping tab looks
 The empty state has a single line: "Your list is empty. Type exactly what you need below — quantities, brands, specifics. Separate items with commas."
 
 You don't have to add things in any particular order. Type a whole list at once: "milk, free-range eggs, sourdough bread, chicken breast 500g, salmon fillets, baby spinach, jasmine rice 1kg, sweet potatoes, olive oil, garlic". The AI parses it into separate items and puts each one in the right category.
+
+<GuideCallout>
+**Try this in the app.** The more specific you are with quantities and brands, the better the AI parses your list. "Chicken breast 500g, Sainsbury's" is better than just "chicken". It takes an extra second to type and saves you a headache when you're in the aisle.
+</GuideCallout>
 
 ### Populated list
 
@@ -309,28 +266,23 @@ Once you've added a few items, the Shopping tab shows the full list with categor
   src="/images/guide/guide-11-shopping-populated.webp"
   alt="CookTwo shopping tab populated with categories"
   markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Partner dots in the header" },
-    { label: "2", x: 96, y: 8, tx: 80, ty: 8, side: "right", note: "Header icons" },
-    { label: "3", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Title with item count — '8 to buy'" },
-    { label: "4", x: 4, y: 32, tx: 50, ty: 32, side: "left", note: "Quick-add regulars — one-tap to add your most-bought items" },
-    { label: "5", x: 4, y: 38, tx: 50, ty: 38, side: "left", note: "Item count and 'AI sort check' button — re-categorises anything that's uncertain" },
-    { label: "6", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Category card — tap the header to collapse, tap the checkmark to check off" },
-    { label: "7", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Add input — add more items here" }
+    { label: "C", x: 50, y: 50, tx: 50, ty: 50, side: "left", note: "Categories" }
   ]}
-  caption="The full populated list. Categories, partner dots, quick-add chips, and the AI sort check."
+  caption="The full populated list. Categories, partner dots, and item counts."
 />
 
-Let me walk through what you're seeing:
+Here's what you're seeing:
 
-- **① ② ③** — the partner dots, header icons, and page title. Same as everywhere.
-- **④ Quick-add regulars** — these are the items you add most often. Tap any chip (e.g. `+ Milk`) and it drops into the list instantly. The chips learn from your behaviour — items you add frequently start showing up here.
-- **⑤ Item count and AI sort check** — the left side tells you the total count plus how many items the AI isn't sure about ("2 to review"). The right side is the `AI sort check` button. Tap it when something ended up in the wrong category — the AI re-categorises everything marked "to review" in one go.
-- **⑥ Category cards** — Produce, Meat, Dairy, Pantry, Household, Personal Care. The badge on the right (`2 to buy`, `1 to buy`, `done`) shows how many unchecked items are in that category. Tap the category header to collapse it. Inside each card, every item has:
+- **Title with item count** — the header shows how many items are left to buy.
+- **Category cards** — Produce, Meat, Dairy, Pantry, Household, Personal Care. Each category is a collapsible card. A single tag on the right (`2 to buy`, `1 to buy`, `done`) shows how many unchecked items are in that category. Tap the category header to collapse it. Inside each card, every item has:
   - A **checkbox** — tap to check off
   - **Quantity** in parens (e.g. "Chicken Breast 500g")
-  - A **partner dot** on the right (sage for Alex, terracotta for Jordan) — shows who added it
+  - A **partner dot** on the right (sage for Partner A, terracotta for Partner B) — shows who added it
   - A small **×** on hover (or tap-and-hold on mobile) to delete
-- **⑦ Add input** — type more items. Commas separate them. The "X items — categories auto-detected" hint shows how many separate items the AI parsed.
+  - A **move** action — tap to re-file the item into a different category if it landed in the wrong one
+- **Add input** — type more items. Commas separate them.
+
+The AI sorts your items into categories automatically based on the item name. "Sourdough bread" goes to Pantry. "Chicken breast" goes to Meat. "Baby spinach" goes to Produce. If something ends up in the wrong category, the move action lets you fix it in one tap.
 
 <GuideCallout>
 **Pro tip — the partner dot means something.** When you tap an item to check it off, the *other* person sees the change within a second, and they see *who* checked it. The notification appears in their bell feed. This is the bit that ends the "did you add the milk?" text.
@@ -340,17 +292,6 @@ Let me walk through what you're seeing:
 
 As you walk through the supermarket, you tap each item to check it off. Checked items move to the bottom of their category, with a strikethrough.
 
-<GuideScreenshots
-  src="/images/guide/guide-12-shopping-done.webp"
-  alt="CookTwo shopping list with checked items and Done shopping button"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 35, tx: 50, ty: 35, side: "left", note: "Checked items show with a strikethrough" },
-    { label: "3", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Done shopping button — moves food to pantry, removes non-food" }
-  ]}
-  caption="Checked items strikethrough. When you're done, the big button at the bottom does the rest."
-/>
-
 When you've checked everything off and you're ready to put the groceries away, tap the big **Done shopping** button at the bottom. It's smart about what it does:
 
 - Food items you checked off get **moved to your Pantry** automatically (so you don't have to type them in again).
@@ -359,7 +300,7 @@ When you've checked everything off and you're ready to put the groceries away, t
 The button tells you exactly what's going to happen: "Done shopping · 2 food items → pantry · 1 non-food removed".
 
 <GuideCallout>
-**The Done shopping button is the one feature that ties the Shopping and Pantry tabs together.** Checking items is one half. Moving them to the Pantry when you're home is the other half. If you only ever tap one button in CookTwo, make it this one.
+**Done shopping and Generate Meal are the two most important buttons in the app.** Checking items off is one half. Moving them to the Pantry when you're home is the other half. And generating a meal from your pantry ties it all together. If you only ever tap two buttons in CookTwo, make them these.
 </GuideCallout>
 
 ## The Pantry tab
@@ -371,30 +312,20 @@ The Pantry is your "what's in the kitchen right now" list. It feeds the AI meal 
 <GuideScreenshots
   src="/images/guide/guide-13-pantry-empty.webp"
   alt="CookTwo pantry tab empty state"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Page title — 'Our kitchen'" },
-    { label: "3", x: 4, y: 35, tx: 50, ty: 35, side: "left", note: "Add-item input — type naturally" },
-    { label: "4", x: 4, y: 55, tx: 50, ty: 55, side: "left", note: "Empty-state prompt — explains the two ways to fill your pantry" }
-  ]}
+  markers={[]}
   caption="The Pantry tab when you haven't added anything yet. Type your kitchen in the input, or check off items on the shopping list and tap Done shopping."
 />
 
-The Pantry input is the same pattern as the Shopping input — type naturally, separate items with commas. "1L whole milk, 250g swiss cheddar, half an onion, chicken breast, salmon fillets, baby spinach, 2 cups jasmine rice…" The AI parses it.
+The Pantry input is the same pattern as the Shopping input — type naturally, separate items with commas. "1L whole milk, 250g swiss cheddar, half an onion, chicken breast, salmon fillets, baby spinach, 2 cups jasmine rice…" The AI parses it into structured items with categories.
 
-The empty state also tells you the second way to fill the Pantry: check items off on the shopping list and tap Done shopping. They move over automatically.
+The empty state also tells you the second way to fill the Pantry: check items off on the shopping list and tap Done shopping. They move over automatically. This is the most common way people build their pantry — shop, check off, tap Done shopping, and your pantry updates without typing a thing.
 
 ### Populated — categories
 
 <GuideScreenshots
   src="/images/guide/guide-14-pantry-populated.webp"
   alt="CookTwo pantry tab populated with categories"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Title and item count" },
-    { label: "3", x: 96, y: 38, tx: 78, ty: 38, side: "right", note: "Expand/Collapse all link" },
-    { label: "4", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Category card — tap to expand/collapse" }
-  ]}
+  markers={[]}
   caption="The Pantry tab with items. Categories are the same as the Shopping list — Produce, Meat, Dairy, Pantry, Household, Personal Care."
 />
 
@@ -406,51 +337,38 @@ The Pantry uses the same category emojis as the Shopping list: 🥬 Produce, �
 
 The top-right of the list has `+ Expand all` / `− Collapse all`. Useful when you have a long list.
 
-### When the AI isn't sure
+### When an item lands in the wrong category
 
-Some items end up in a category that isn't quite right, or with a quantity the AI couldn't parse. Those show as "to review" with an amber dot.
+Sometimes an item ends up in a category that isn't quite right, or with a quantity the AI couldn't parse. Those show as "to review" with an amber dot.
 
-<GuideScreenshots
-  src="/images/guide/guide-27-pantry-ai-sort.webp"
-  alt="CookTwo pantry tab with AI sort suggestion"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Item count with 'X to review' in amber" },
-    { label: "3", x: 96, y: 33, tx: 75, ty: 33, side: "right", note: "Ask AI to sort button — appears when 3+ items are uncertain" }
-  ]}
-  caption="When 3 or more items are uncertain, an 'Ask AI to sort' button appears at the top."
-/>
+The "to review" badge doesn't mean the item is broken — it just means the AI wasn't confident about where to put it. You might see it on unusual ingredients ("nutritional yeast" could go in Pantry or Dairy) or on items where the quantity was ambiguous ("a bag of spinach" — how many grams?).
 
-When three or more items are uncertain, an **Ask AI to sort** button appears at the top. Tap it and the AI re-categorises all the uncertain items in one go. It costs 1 AI request.
+Tap the **move** action on any item (shopping or pantry) and a small category picker opens — Produce, Meat, Dairy, Pantry, Household, Personal Care. Pick the right one and the item moves instantly. Your partner sees the change live. No AI request is used for this — it's a simple local action.
 
 <GuideCallout>
-**What "to review" actually means.** The AI parses items in two passes. First it tries to categorise based on the name. Then it asks the AI model to re-check the ones it's not sure about. The "to review" badge means the AI flagged it for a second look. The `Ask AI to sort` button is that second look.
+**What "to review" actually means.** The AI parses items based on the name and tries to categorise them. The "to review" badge means the parser was uncertain. You can fix it in one tap with the move action — no AI request needed.
 </GuideCallout>
 
-## The Meals tab — Tonight, Saved, Week
+## The Meals tab — Tonight and Saved
 
-The Meals tab is the AI planner. It has three views in a pill switcher at the top: **Tonight**, **Saved**, and **Week**.
+The Meals tab is the AI planner. It has two views in a pill switcher at the top: **Tonight** and **Saved**.
 
 ### Tonight — empty state
 
 <GuideScreenshots
-  src="/images/guide/guide-15-meals-tonight-empty.webp"
+  src="/images/guide/guide-16-meals-tonight-card.webp"
   alt="CookTwo meals tab Tonight empty state"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Title — 'What should we cook?'" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Empty-state hero — sparkles icon" },
-    { label: "4", x: 4, y: 70, tx: 50, ty: 70, side: "left", note: "Generate a meal button — the entry point" }
-  ]}
+  markers={[]}
   caption="Tonight, empty. Tap the big 'Generate a meal' button to start."
 />
 
-The first time you open the Meals tab, you see a single button: **Generate a meal**. Tap it.
+The first time you open the Meals tab, you see a single button: **Generate a meal from what's in your pantry**. This is the default — the AI looks at your pantry and suggests a meal you can cook tonight without going to the shop. Tap it.
 
-You'll be asked to choose a mode:
+You'll also see a second option:
 
-- **Cook with what we have** — uses only what's in your pantry. The AI suggests a meal you can make tonight without going to the shop.
 - **Suggest a meal — I'll shop** — plans a meal based on what you'd like, and adds any missing ingredients to your shopping list.
+
+The chat interface below the buttons is where the conversation happens. You can type follow-up questions like "what can I substitute for chicken?" or "make it vegetarian" — and the AI will adjust the suggestion. Every interaction in this chat counts as one AI request against your daily quota.
 
 ### Tonight — the meal card
 
@@ -459,13 +377,7 @@ After you pick a mode, the AI responds with a chat-style message and a meal card
 <GuideScreenshots
   src="/images/guide/guide-16-meals-tonight-card.webp"
   alt="CookTwo meal chat with generated meal card"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 18, tx: 50, ty: 18, side: "left", note: "Tonight / Saved / Week toggle" },
-    { label: "3", x: 96, y: 35, tx: 75, ty: 35, side: "right", note: "In pantry / To buy counters" },
-    { label: "4", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Meal card — name, time, macros, action buttons" },
-    { label: "5", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Chat input — ask follow-up questions" }
-  ]}
+  markers={[]}
   caption="A generated meal in the chat. The card shows macros, what's in pantry, what you need to buy, and action buttons."
 />
 
@@ -476,7 +388,6 @@ The meal card has:
 - **In pantry / To buy** — how many ingredients you already have, how many you need.
 - **Macros** — four small stats: calories, protein, carbs, fat (per plate by default).
 - **Action buttons**:
-  - **Image** — generate an AI photo of the meal (Premium only).
   - **Add X to list** — add the missing ingredients to your shopping list. Turns green and says "Added" after you tap.
   - **Save** — saves the recipe to your Saved list.
 
@@ -489,20 +400,13 @@ This is the bit that makes CookTwo different from any other meal planner. Scroll
 <GuideScreenshots
   src="/images/guide/guide-17-meals-tonight-plating.webp"
   alt="CookTwo meal card expanded with adaptive plating"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 50, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 96, y: 22, tx: 50, ty: 22, side: "right", note: "Ingredients — green dots are in pantry, terracotta dots are needs" },
-    { label: "3", x: 96, y: 36, tx: 50, ty: 36, side: "right", note: "Steps — the same cooking instructions for both of you" },
-    { label: "4", x: 96, y: 55, tx: 50, ty: 55, side: "right", note: "Plating — two cards, one for each partner" },
-    { label: "5", x: 4, y: 75, tx: 25, ty: 75, side: "left", note: "Alex's plate — sage border, muscle-gain target" },
-    { label: "6", x: 96, y: 75, tx: 75, ty: 75, side: "right", note: "Jordan's plate — terracotta border, lighter-dinner target" }
-  ]}
+  markers={[]}
   caption="Adaptive plating. Same pan, two plates, two different macro splits."
 />
 
 There are two cards side by side. Each one shows:
 
-- **Whose plate** — Alex (sage border) or Jordan (terracotta border).
+- **Whose plate** — Partner A (sage border) or Partner B (terracotta border).
 - **The portion** — exact amounts in real units (e.g. "6oz chicken, 1 cup quinoa, side of greens").
 - **Macros** — protein, carbs, fat for that plate.
 - **The total** — calories and the goal it serves (e.g. "~700 cal · Muscle gain").
@@ -515,76 +419,21 @@ The cooking steps are the same for both of you. You cook one pan. At the end, yo
 
 ### Saved recipes
 
-<GuideScreenshots
-  src="/images/guide/guide-18-meals-saved.webp"
-  alt="CookTwo meals tab Saved recipes"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 18, tx: 50, ty: 18, side: "left", note: "Tonight / Saved / Week toggle — Saved is active" },
-    { label: "3", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Title — 'Our recipes'" },
-    { label: "4", x: 96, y: 38, tx: 75, ty: 38, side: "right", note: "Status badge — 'In pantry' or 'X to buy'" }
-  ]}
-  caption="Saved recipes. Tap any card to expand and see the full details again."
-/>
+When you save a meal from the Tonight card, it shows up in the Saved view. Saved recipes remember their ingredients, steps, and plating. The status badge on the right tells you whether you can cook it right now (in pantry) or need to shop first (X to buy).
 
-When you save a meal from the Tonight card, it shows up here. Saved recipes remember their ingredients, steps, and plating. The status badge on the right tells you whether you can cook it right now (in pantry) or need to shop first (X to buy).
+Tap any saved recipe to expand it and see the full details again — ingredients, steps, and plating cards for both partners. You can also tap **Add X to list** right from the saved view to restock the ingredients you're missing.
 
-### Week plan
-
-<GuideScreenshots
-  src="/images/guide/guide-19-meals-week.webp"
-  alt="CookTwo meals tab Week plan populated"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 18, tx: 50, ty: 18, side: "left", note: "Toggle — Week is active" },
-    { label: "3", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Title — 'Our week'" },
-    { label: "4", x: 96, y: 50, tx: 75, ty: 50, side: "right", note: "Per-day status — 'In pantry' or 'X missing'" },
-    { label: "5", x: 4, y: 78, tx: 50, ty: 78, side: "left", note: "Add all missing ingredients to list — bulk action" },
-    { label: "6", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Regenerate the week — pick a new plan" }
-  ]}
-  caption="A full week of meals. Tap 'Add all missing to list' to do one big shop for the week."
-/>
-
-The Week view generates seven meals at once — one per day. Each day card shows the meal name, time, calories, and a status badge.
-
-The bottom of the Week view has two powerful buttons:
-
-- **Add X missing ingredients to list** — bulk-adds every ingredient you don't already have in your pantry to the shopping list. This is the "shop once for the week" button.
-- **Regenerate the week** — picks a brand new plan. Costs 7 AI requests (1 per day).
-
-<GuideCallout>
-**Generating a week is expensive.** 7 AI requests in one shot. On the Free plan, that uses 70% of your daily quota. On Premium, it's 10%. If you're on Free, save it for the days you actually need it.
-</GuideCallout>
-
-The empty state of the Week view is similar to Tonight's — a button that says **Generate the week**, plus a small selector for breakfast, lunch, dinner, or any.
-
-<GuideScreenshots
-  src="/images/guide/guide-30-meals-week-empty.webp"
-  alt="CookTwo meals tab Week plan empty state"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 18, tx: 50, ty: 18, side: "left", note: "Toggle — Week is active" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Empty-state prompt" },
-    { label: "4", x: 4, y: 65, tx: 50, ty: 65, side: "left", note: "Meal-type selector — breakfast, lunch, dinner, any" },
-    { label: "5", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Generate the week button" }
-  ]}
-  caption="Week, empty. Pick a meal type, then tap Generate the week."
-/>
+Saved recipes are unlimited on both Free and Premium plans. There's no cap on how many you can save.
 
 ## The Profiles & Settings tab
 
-Reached via the **gear icon in the header**. This is where your diet, body profile, and plan live.
+Reached via the **gear icon in the header**. This is where your diet, body profile, and plan live. The gear icon (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block align-middle mx-1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>) sits inline in the header, right between the share icon and the sign-out icon.
 
 <GuideScreenshots
   src="/images/guide/guide-20-profiles.webp"
   alt="CookTwo profiles tab showing your profile and partner profile"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 17, tx: 50, ty: 17, side: "left", note: "Title — 'Who are we cooking for?'" },
-    { label: "3", x: 96, y: 35, tx: 75, ty: 35, side: "right", note: "Edit link for your own profile" },
-    { label: "4", x: 4, y: 60, tx: 50, ty: 60, side: "left", note: "Partner profile card — read-only unless they gave you edit access" }
-  ]}
-  caption="The Profiles tab. Your card on top (editable), your partner's card below (read-only)."
+  markers={[]}
+  caption="The Profiles tab. Your card on top (editable), your partner's card below (read-only unless they've opted in)."
 />
 
 Each profile card shows:
@@ -599,47 +448,27 @@ Tap **Edit** on your own card to change anything. Tapping on a field opens an in
 
 ### Your partner's profile
 
-The second card on the Profiles tab is your partner's. By default, you can't edit it — only the person whose profile it is can change it. (They can grant you edit access in their settings, but that's an opt-in, not the default.)
+The second card on the Profiles tab is your partner's. By default, you can't edit it — the body profile is locked to the other partner unless they've explicitly opted in by switching on the "Visible to your partner" toggle in their own settings. Only the person whose profile it is can change their body stats, diet, and goals. The meal planner still uses both profiles to calculate plating — it just doesn't show one partner the other's numbers unless they've chosen to share.
 
-The reason for this: dietary restrictions, body stats, and goals are personal. The two of you can have wildly different settings. The meal planner respects both.
+You can see your partner's name, diet, and allergies on their card. Body stats are hidden by default. If they've toggled on visibility, you'll see their weight, height, age, gender, activity level, and calorie target. The calorie target updates in real time as they change their goal or body stats.
 
 ### Linking a partner after the fact
 
-If you set up solo and now want to invite someone, scroll to the bottom of the Profiles tab.
+If you set up solo and now want to invite someone, scroll to the bottom of the Profiles tab. Tap "Cooking with someone?" to expand the linking section. Your partner sends you their 6-digit invite code, you enter it here, and your kitchens merge.
 
-<GuideScreenshots
-  src="/images/guide/guide-29-link-kitchen.webp"
-  alt="CookTwo profiles tab link kitchen code entry"
-  markers={[
-    { label: "1", x: 4, y: 20, tx: 50, ty: 20, side: "left", note: "Cooking with someone? card — tap to expand" },
-    { label: "2", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "6-digit code entry — your partner sends you their code" },
-    { label: "3", x: 4, y: 75, tx: 50, ty: 75, side: "left", note: "Link kitchens button" }
-  ]}
-  caption="Linking a partner after the fact. They send you their 6-digit code, you enter it here."
-/>
+Your partner opens CookTwo, taps "I have a code" on the welcome screen, and gets a code from their own setup. They text you the code, you enter it, and you're linked. From that moment on, you share the same shopping list, pantry, and meal history. Your profiles stay separate — each of you controls your own diet, goals, and body stats.
 
-Your partner opens CookTwo, taps "I have a code" on the welcome screen, and gets a code from their own setup. They text you the code, you enter it here, and your kitchens merge.
+The linking section also shows your own 6-digit code, so you can re-share it if your partner hasn't joined yet. Tap the copy button or use the share icon in the header to send it however you like.
 
 ### The activity log
 
 The Profiles tab also has a **Recent activity** section. This is the long-form version of the notification bell.
 
-<GuideScreenshots
-  src="/images/guide/guide-28-activity-log.webp"
-  alt="CookTwo profiles tab activity log"
-  markers={[
-    { label: "1", x: 4, y: 17, tx: 50, ty: 17, side: "left", note: "Recent activity title" },
-    { label: "2", x: 4, y: 35, tx: 50, ty: 35, side: "left", note: "Each row — partner dot, action, target item, timestamp" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Refresh button" }
-  ]}
-  caption="The activity log. Every action either of you has taken, in reverse chronological order."
-/>
-
 Every action is logged: who added what, who checked what off, who moved what to the pantry, who generated a meal, who saved a recipe, who created the kitchen. Each row shows the partner dot, the action, the target item, and a relative timestamp ("2m ago", "1h ago", "yesterday", etc.).
 
-## AI credits, the usage chip, and the free vs Premium tiers
+## AI credits and the free vs Premium tiers
 
-The AI is metered. The whole app runs on a daily quota that resets at midnight in your local timezone. The quota is *shared* with your partner — you don't get two separate 10/day limits, you get one shared 10/day.
+The AI is metered. The whole app runs on a daily quota that resets at midnight in your local timezone. The quota is *shared* with your partner — you don't get two separate limits, you get one shared pool.
 
 ### The chip in the header
 
@@ -648,19 +477,13 @@ The pill badge in the header (the `10/10` thing) is your live usage. Tap it to o
 <GuideScreenshots
   src="/images/guide/guide-22-usage-panel.webp"
   alt="CookTwo AI credits usage panel"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 50, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 40, tx: 50, ty: 40, side: "left", note: "AI requests progress bar — 4 of 10 used today" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Meal images progress bar — 1 of 3 used today (Premium only)" },
-    { label: "4", x: 4, y: 70, tx: 50, ty: 70, side: "left", note: "Resets in 8h 12m" }
-  ]}
-  caption="The usage panel. Two progress bars, a reset countdown, and an upgrade button on the Free plan."
+  markers={[]}
+  caption="The usage panel. A progress bar, a reset countdown, and an upgrade button on the Free plan."
 />
 
 The panel shows:
 
 - **AI requests** — `4/10` used today, with a progress bar that goes sage → amber → terracotta as you burn through your quota.
-- **Meal images** — `1/3` used today. This is the Premium-only image-generation feature. On the Free plan, this row is hidden.
 - **Resets in** — countdown to midnight in your timezone, when the quota resets.
 
 The chip color changes as you get closer to your limit:
@@ -668,18 +491,15 @@ The chip color changes as you get closer to your limit:
 - **Amber** (50–79% used) — getting close
 - **Terracotta** (80–100% used) — almost out, the panel opens to the upgrade prompt
 
+The quota is shared between you and your partner. If you generate a meal, it counts against the same pool. If your partner generates one, that counts too. You're working from a single daily budget.
+
 ### Free vs Premium
 
 <GuideScreenshots
-  src="/images/guide/guide-21-upgrade.webp"
-  alt="CookTwo profiles tab plan section with Free and Premium cards"
-  markers={[
-    { label: "1", x: 4, y: 17, tx: 50, ty: 17, side: "left", note: "Free plan card" },
-    { label: "2", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Premium plan card with sage border" },
-    { label: "3", x: 4, y: 50, tx: 50, ty: 50, side: "left", note: "Feature comparison — checkmarks for what's included" },
-    { label: "4", x: 4, y: 70, tx: 50, ty: 70, side: "left", note: "Manage subscription button (on Premium)" }
-  ]}
-  caption="The Plan section. Both plans are full-featured — the difference is AI quota and meal photos."
+  src="/images/guide/guide-31-plan-table.webp"
+  alt="CookTwo feature comparison table for Free vs Premium plans"
+  markers={[]}
+  caption="The full feature comparison. Both plans are full-featured — the difference is AI quota."
 />
 
 The two plans side by side:
@@ -687,9 +507,8 @@ The two plans side by side:
 | | **Free** | **Premium** |
 |---|---|---|
 | AI requests per day | 10 | 70 |
-| Meal images per day | 0 | 3 |
 | Chat with the meal planner | ✓ | ✓ |
-| Generate dinners and full weeks | ✓ | ✓ |
+| Generate meals from pantry or shopping list | ✓ | ✓ |
 | Save unlimited recipes | ✓ | ✓ |
 | Real-time sync | ✓ | ✓ |
 | Adaptive plating for two | ✓ | ✓ |
@@ -699,62 +518,31 @@ The two plans side by side:
 The yearly plan saves 25% vs monthly. Cancel anytime from the **Manage subscription** button (Premium only) — it opens a Stripe portal where you can cancel, change cards, or download invoices.
 
 <GuideCallout>
-**What "10 AI requests" really means.** One request = one round-trip to the AI. Generating a single meal is 1 request. Generating a week is 7 requests. Re-categorising your pantry is 1 request. Re-sorting the shopping list is 1 request. Asking "what can I substitute for chicken?" in the chat is 1 request. If you find yourself running out at 9pm, you're using more than you think.
+**What "10 AI requests" really means.** One request = one round-trip to the AI. Generating a single meal is 1 request. Asking "what can I substitute for chicken?" in the chat is 1 request. If you find yourself running out at 9pm, you're using more than you think.
 </GuideCallout>
 
-## Notifications, sharing, offline, signing out
+## Notifications, sharing, offline, and signing out
 
 A few last screens worth knowing about.
 
 ### Notifications bell
 
-<GuideScreenshots
-  src="/images/guide/guide-23-notifications.webp"
-  alt="CookTwo notification bell panel"
-  markers={[
-    { label: "1", x: 4, y: 22, tx: 50, ty: 22, side: "left", note: "Activity panel title and Mark all read" },
-    { label: "2", x: 4, y: 30, tx: 50, ty: 30, side: "left", note: "Unread items — sage background" },
-    { label: "3", x: 4, y: 42, tx: 50, ty: 42, side: "left", note: "Each row — partner dot, action, item, time" },
-    { label: "4", x: 4, y: 75, tx: 50, ty: 75, side: "left", note: "Read items — white background" }
-  ]}
-  caption="The notification bell panel. The most recent 20 actions, with unread ones highlighted in sage."
-/>
-
 Tap the bell icon in the header to see the last 20 actions either of you has taken. Unread items have a sage background and a small red dot. Tap **Mark all read** at the top to clear them.
 
-### Share the invite code
+Each notification shows the partner dot, the action, and the target item. Examples: "Partner A added Chicken Breast to Shopping", "Partner B checked off Jasmine Rice", "Partner A generated a meal". It's a running log of everything happening in your shared kitchen.
 
-<GuideScreenshots
-  src="/images/guide/guide-24-share-modal.webp"
-  alt="CookTwo share invite code modal"
-  markers={[
-    { label: "1", x: 4, y: 28, tx: 50, ty: 28, side: "left", note: "Title — Invite your partner" },
-    { label: "2", x: 4, y: 42, tx: 50, ty: 42, side: "left", note: "6-digit invite code" },
-    { label: "3", x: 4, y: 70, tx: 50, ty: 70, side: "left", note: "Share invite link — opens native share sheet" },
-    { label: "4", x: 4, y: 80, tx: 50, ty: 80, side: "left", note: "Copy code only — just the 6 digits" }
-  ]}
-  caption="Re-sharing your invite code. Use the link for a one-tap experience, the code if they're already setting up."
-/>
+### Share the invite code
 
 Tap the share icon in the header. You get two options:
 
 - **Share invite link** — opens your phone's native share sheet (iMessage, WhatsApp, email, whatever). The link is `cooktwo.com/join?c=XXXXXX`. When your partner taps it, the app opens, drops them into onboarding with the code pre-filled.
 - **Copy code only** — just the 6 digits, ready to paste anywhere.
 
+This is the same code you got at the end of onboarding. Use it whenever you need to re-share — if your partner gets a new phone, if they accidentally signed out, or if you just haven't sent it yet.
+
 ### Offline mode
 
 If you lose signal — in a basement supermarket, on a plane, in a tunnel — the app keeps working.
-
-<GuideScreenshots
-  src="/images/guide/guide-25-offline.webp"
-  alt="CookTwo shopping tab offline banner"
-  markers={[
-    { label: "1", x: 4, y: 8, tx: 25, ty: 8, side: "left", note: "Header" },
-    { label: "2", x: 4, y: 18, tx: 50, ty: 18, side: "left", note: "Offline banner — terracotta tinted, with pulsing dot" },
-    { label: "3", x: 4, y: 85, tx: 50, ty: 85, side: "left", note: "Input still works offline — queues your changes" }
-  ]}
-  caption="When you're offline, a banner appears. Anything you add is queued and syncs the moment you reconnect."
-/>
 
 A terracotta banner appears at the top saying "You're offline. X items will sync when you reconnect." The sync indicator in the header turns red. You can still:
 
@@ -801,6 +589,12 @@ Not yet. Cream and sage are the brand. Dark mode is on the roadmap for late 2026
 **What about Apple Watch / Wear OS?**
 Not yet. The PWA is mobile-first for now.
 
+**How do I know if I'm on Free or Premium?**
+Check the gear icon → Profiles tab. Your current plan is shown at the bottom. The usage chip in the header also reflects your plan — Free shows `10/10` and Premium shows `70/70` at the start of each day.
+
+**What happens if I run out of AI requests?**
+You can still browse, check off items, and manage your pantry. You just can't generate new meals or chat with the AI until the quota resets at midnight. Premium users get 7x more headroom.
+
 ---
 
-That's the whole app. If you made it to the end, you're now the most-qualified person in your household to give the tour. Send this link to your partner, your mum, or anyone who asked "what does the green dot mean?" — this is the canonical answer.
+That's the whole app. Every screen, every button, every feature — with annotated screenshots and plain-English explanations. If you made it to the end, you're now the most-qualified person in your household to give the tour. Send this link to your partner, your mum, or anyone who asked "what does the green dot mean?" — this is the canonical answer.

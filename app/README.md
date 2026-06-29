@@ -2,7 +2,7 @@
 
 > A progressive web app for couples to share a kitchen, a grocery list, and a meal plan — in real time.
 
-**Status:** Full MVP complete. Guided first-run experience (6-step wizard for Partner 1, code-join for Partner 2). Three pillars: Shopping List (real-time sync, offline queue, "Your regulars"), Pantry (natural language input, "Move to Pantry"), Meals (AI chat-based generation with session memory, weekly planning, saved recipe library with expandable cards). Adaptive cooking ("one prep, two plates") with body profiles and TDEE. PWA installable. See [Roadmap](#roadmap) for what's parked.
+**Status:** Full MVP complete. Guided first-run experience (6-step wizard for Partner 1, code-join for Partner 2). Three pillars: Shopping List (real-time sync, offline queue, "Your regulars"), Pantry (natural language input, "Move to Pantry"), Meals (AI chat-based generation with session memory, saved recipe library with expandable cards). Adaptive cooking ("one prep, two plates") with body profiles and TDEE. PWA installable. See [Roadmap](#roadmap) for what's parked.
 
 ---
 
@@ -106,8 +106,6 @@ couples-food-system/
 │   │   │   ├── useAuth.ts          # Create/join household helpers
 │   │   │   ├── useGroceryList.ts   # TanStack Query + WS subscription
 │   │   │   ├── useMealChat.ts      # AI chat state (localStorage persistence)
-│   │   │   ├── useMealPlan.ts      # Single meal generator (deprecated)
-│   │   │   ├── useWeekPlan.ts      # Week plan generation
 │   │   │   ├── useRecipes.ts       # Saved recipes (list, save, delete)
 │   │   │   ├── usePantry.ts        # Pantry items with WS sync
 │   │   │   ├── useProfiles.ts      # Partner profiles
@@ -119,7 +117,7 @@ couples-food-system/
 │   │   │   ├── MainApp.tsx         # Header + bottom nav shell
 │   │   │   ├── ShoppingTab.tsx     # Grocery list UI
 │   │   │   ├── PantryTab.tsx       # Pantry management UI
-│   │   │   ├── MealPlanTab.tsx     # AI chat, saved recipes (expandable), week plan
+│   │   │   ├── MealPlanTab.tsx     # AI chat, saved recipes (expandable)
 │   │   │   └── ProfilesTab.tsx     # Dietary preferences, body goals
 │   │   └── components/
 │   │       ├── ShoppingList.tsx     # Main list with categories
@@ -194,9 +192,6 @@ All endpoints are under `/api/`. Auth is `Authorization: Bearer <jwt>`.
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/household/:id/meal-chat` | **Main AI endpoint.** Body: `{ message, history }`. Returns `{ message, meal?, actions? }`. Conversations span multiple messages. |
-| `POST` | `/api/household/:id/meal-plan/generate` | Single-shot meal generation (deprecated, kept for week plan compat). |
-| `GET` | `/api/household/:id/meal-plan/week` | Get weekly plan. |
-| `POST` | `/api/household/:id/meal-plan/week/generate` | Generate full week (7 days). |
 | `POST` | `/api/household/:id/meal-plan/confirm` | Subtract used pantry ingredients after cooking. |
 
 ### Saved recipes
