@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { apiFetch } from '../lib/api';
+import { apiFetch, ApiError } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
 export type BillingPlan = 'monthly' | 'yearly';
+
+export class BillingError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = 'BillingError';
+    this.code = code;
+  }
+}
 
 export function useBilling() {
   const session = useAuthStore((s) => s.session);
@@ -38,8 +47,15 @@ export function useBilling() {
       if (res.url) {
         window.location.href = res.url;
       }
-    } catch {
-      throw new Error('Stripe not configured');
+    } catch (err) {
+      console.error('[billing] checkout failed:', err);
+      if (err instanceof ApiError) {
+        const body = err.body as { error?: string; code?: string } | undefined;
+        const msg = body?.error ?? err.message;
+        const code = body?.code ?? 'checkout_error';
+        throw new BillingError(msg, code);
+      }
+      throw new BillingError('Checkout failed. Please try again.', 'checkout_error');
     } finally {
       setCheckingOut(false);
     }
@@ -59,8 +75,9 @@ export function useBilling() {
       if (res.url) {
         window.location.href = res.url;
       }
-    } catch {
-      throw new Error('No portal available');
+    } catch (err) {
+      console.error('[billing] portal failed:', err);
+      throw new BillingError('No portal available. You may not have an active subscription.', 'portal_error');
     } finally {
       setPortalLoading(false);
     }

@@ -27,6 +27,59 @@ function stripeApi(env: Env, path: string, method = 'GET', body?: unknown): Prom
   });
 }
 
+export interface StripeAccountInfo {
+  id: string | null;
+  mode: 'live' | 'test' | null;
+  displayName: string | null;
+  keyPrefix: string;
+  error?: string;
+}
+
+export async function getStripeAccountInfo(env: Env): Promise<StripeAccountInfo> {
+  if (!env.STRIPE_SECRET_KEY) {
+    return { id: null, mode: null, displayName: null, keyPrefix: '', error: 'STRIPE_SECRET_KEY not set' };
+  }
+  const key = env.STRIPE_SECRET_KEY;
+  const keyPrefix = `${key.slice(0, 8)}...${key.slice(-4)}`;
+  try {
+    const res = await stripeApi(env, '/account', 'GET');
+    if (!res.ok) {
+      return { id: null, mode: null, displayName: null, keyPrefix, error: `Stripe API returned ${res.status}` };
+    }
+    const data = (await res.json()) as { id?: string; livemode?: boolean; business_profile?: { name?: string } };
+    return {
+      id: data.id ?? null,
+      mode: data.livemode ? 'live' : 'test',
+      displayName: data.business_profile?.name ?? null,
+      keyPrefix,
+    };
+  } catch (err) {
+    return { id: null, mode: null, displayName: null, keyPrefix, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
+export interface PriceAccessResult {
+  id: string;
+  accessible: boolean;
+  error?: string;
+}
+
+export async function verifyPriceAccess(env: Env, priceId: string): Promise<PriceAccessResult> {
+  if (!env.STRIPE_SECRET_KEY) {
+    return { id: priceId, accessible: false, error: 'STRIPE_SECRET_KEY not set' };
+  }
+  try {
+    const res = await stripeApi(env, `/prices/${priceId}`, 'GET');
+    if (res.ok) {
+      return { id: priceId, accessible: true };
+    }
+    const data = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    return { id: priceId, accessible: false, error: data.error?.message ?? `HTTP ${res.status}` };
+  } catch (err) {
+    return { id: priceId, accessible: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
 export async function createCheckoutSession(
   env: Env,
   householdId: string,

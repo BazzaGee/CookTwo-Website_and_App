@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sparkles, Check, ChevronRight, ExternalLink } from 'lucide-react';
 import { useUsage } from '../hooks/useUsage';
-import { useBilling, type BillingPlan } from '../hooks/useBilling';
+import { useBilling, type BillingPlan, BillingError } from '../hooks/useBilling';
 import { usePaywallStore } from '../stores/paywallStore';
 
 const MONTHLY_PRICE = 4.99;
@@ -13,6 +13,7 @@ export default function UpgradeSection() {
   const paywall = usePaywallStore((s) => s.show);
   const [plan, setPlan] = useState<BillingPlan>('monthly');
   const [stripeChecked, setStripeChecked] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (isLoading || !usage) return null;
 
@@ -138,6 +139,7 @@ export default function UpgradeSection() {
             <button
               type="button"
               onClick={async () => {
+                setCheckoutError(null);
                 try {
                   const avail = stripeChecked ? stripeAvailable : await checkStripeStatus();
                   setStripeChecked(true);
@@ -146,8 +148,14 @@ export default function UpgradeSection() {
                     return;
                   }
                   await checkout(plan);
-                } catch {
-                  paywall('stripe_not_configured');
+                } catch (err) {
+                  console.error('[billing] upgrade click failed:', err);
+                  if (err instanceof BillingError && err.code === 'stripe_not_configured') {
+                    paywall('stripe_not_configured');
+                  } else {
+                    const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+                    setCheckoutError(msg);
+                  }
                 }
               }}
               disabled={checkingOut}
@@ -156,6 +164,9 @@ export default function UpgradeSection() {
               {checkingOut ? 'Redirecting…' : `Upgrade to Premium — $${plan === 'monthly' ? MONTHLY_PRICE : YEARLY_PRICE}`}
               <ChevronRight size={14} />
             </button>
+            {checkoutError && (
+              <p className="text-error text-xs text-center mt-2">{checkoutError}</p>
+            )}
           </div>
         )}
       </div>

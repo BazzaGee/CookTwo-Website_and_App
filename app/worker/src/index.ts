@@ -14,7 +14,7 @@ import { handleListDiets, handleGetDiet, handleListArticles, handleGetArticle } 
 import { getCoupleDietRules } from './lib/diet-rules';
 import { generateMeal } from './lib/ai';
 import { getUsageState, withQuotaAI, tryReserveAI, refundAI, checkPremiumGate } from './lib/usage';
-import { isStripeConfigured, createCheckoutSession, createPortalSession, verifyAndParseWebhook, applyWebhookEvent, StripeNotConfiguredError, updateStripeCustomerId } from './lib/billing';
+import { isStripeConfigured, getStripeAccountInfo, verifyPriceAccess, createCheckoutSession, createPortalSession, verifyAndParseWebhook, applyWebhookEvent, StripeNotConfiguredError, updateStripeCustomerId } from './lib/billing';
 import type { Env } from './env';
 import type { Category } from './durable-objects/HouseholdSync';
 
@@ -96,8 +96,21 @@ function getTz(c: Context<{ Bindings: Env }>): string {
   return c.req.header('X-Timezone') || c.req.header('x-timezone') || 'UTC';
 }
 
-app.get('/api/billing/status', (c) => {
-  return c.json({ configured: isStripeConfigured(c.env) });
+app.get('/api/billing/status', async (c) => {
+  const configured = isStripeConfigured(c.env);
+  let account = null;
+  let prices = null;
+  let ready = false;
+  if (configured) {
+    account = await getStripeAccountInfo(c.env);
+    const [monthly, yearly] = await Promise.all([
+      verifyPriceAccess(c.env, c.env.STRIPE_PRICE_ID_MONTHLY!),
+      verifyPriceAccess(c.env, c.env.STRIPE_PRICE_ID_YEARLY!),
+    ]);
+    prices = { monthly, yearly };
+    ready = account.id !== null && monthly.accessible && yearly.accessible;
+  }
+  return c.json({ configured, account, prices, ready });
 });
 
 app.post('/api/billing/stripe/webhook', async (c) => {

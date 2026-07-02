@@ -1,5 +1,7 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShoppingBasket, Boxes, ChefHat, Settings, LogOut } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { SyncIndicator } from '../components/SyncIndicator';
 import { InstallBanner } from '../components/InstallBanner';
@@ -19,7 +21,18 @@ export default function MainApp() {
   const session = useAuthStore((s) => s.session);
   const clear = useAuthStore((s) => s.clear);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const { profiles } = useProfiles();
+
+  useEffect(() => {
+    if (searchParams.get('upgraded') === 'true') {
+      queryClient.invalidateQueries({ queryKey: ['usage', session?.householdId] });
+      const next = new URLSearchParams(searchParams);
+      next.delete('upgraded');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams, queryClient, session?.householdId]);
 
   function handleSignOut() {
     clear();

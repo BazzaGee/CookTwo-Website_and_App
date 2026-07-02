@@ -95,8 +95,7 @@ export default function Onboarding() {
         activityLevel,
       });
       setSession(result);
-      completeOnboarding();
-      navigate('/', { replace: true });
+      setStep('plan');
     } catch (err) {
       setError(err instanceof Error && 'message' in err ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -111,12 +110,8 @@ export default function Onboarding() {
       return;
     }
     setError(null);
-    setStep('plan');
-  }
-
-  function handlePlanContinue() {
     if (isSoloMode) {
-      handleSoloCreate();
+      handleSoloCreateAndPlan();
     } else {
       setStep('partner-check');
     }
@@ -166,7 +161,7 @@ export default function Onboarding() {
         }
       }
 
-      setStep('created');
+      setStep('plan');
     } catch (err) {
       setError(err instanceof Error && 'message' in err ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -174,7 +169,7 @@ export default function Onboarding() {
     }
   }
 
-  async function handleSoloCreate() {
+  async function handleSoloCreateAndPlan() {
     const name = displayName.trim();
     if (!name) {
       setError('Tell us what to call you.');
@@ -218,7 +213,7 @@ export default function Onboarding() {
         }
       }
 
-      setStep('ready');
+      setStep('plan');
     } catch (err) {
       setError(err instanceof Error && 'message' in err ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -308,8 +303,8 @@ export default function Onboarding() {
 
           {step === 'plan' && (
             <PlanStep
-              onContinue={handlePlanContinue}
-              onBack={() => setStep('pantry')}
+              onContinue={() => setStep(isSoloMode ? 'ready' : 'created')}
+              onBack={() => setStep(isSoloMode ? 'pantry' : 'partner-check')}
             />
           )}
 
@@ -1040,8 +1035,24 @@ function PlanStep({
   onContinue: () => void;
   onBack: () => void;
 }) {
-  const { checkout, checkingOut } = useBilling();
+  const { checkout, checkingOut, checkStripeStatus, stripeAvailable } = useBilling();
   const [planPeriod, setPlanPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  async function handleUpgrade() {
+    setCheckoutError(null);
+    try {
+      const avail = stripeAvailable ?? await checkStripeStatus();
+      if (!avail) {
+        setCheckoutError('Payments are not available yet. Please try again later.');
+        return;
+      }
+      await checkout(planPeriod);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setCheckoutError(msg);
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -1088,12 +1099,15 @@ function PlanStep({
 
         <button
           type="button"
-          onClick={() => checkout(planPeriod)}
+          onClick={handleUpgrade}
           disabled={checkingOut}
           className="w-full bg-sage text-white text-sm font-medium py-3 px-4 rounded-xl hover:bg-sage-dark active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           {checkingOut ? 'Redirecting…' : `Upgrade to Premium · ${planPeriod === 'monthly' ? '$4.99/mo' : '$44.99/yr'}`}
         </button>
+        {checkoutError && (
+          <p className="text-error text-xs text-center mt-2">{checkoutError}</p>
+        )}
       </div>
 
       <p className="text-text-secondary text-xs text-center mb-6">
