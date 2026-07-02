@@ -45,3 +45,9 @@ nul
 # ── Misc archives ────────────────────────────────────────────────
 *.zip
 *.tar.gz
+
+# ── Playwright MCP tool artifacts ────────────────────────────────
+.playwright-mcp/
+
+# ── Stray screenshots at root ───────────────────────────────────
+/guide-*.png
