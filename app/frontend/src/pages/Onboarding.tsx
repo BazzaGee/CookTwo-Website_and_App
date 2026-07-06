@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createHousehold, joinHousehold } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
 import { useBilling } from '../hooks/useBilling';
+import { useUsage } from '../hooks/useUsage';
 import { apiFetch } from '../lib/api';
+import BodyMetricsFields from '../components/BodyMetricsFields';
 import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
 type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'plan' | 'created' | 'join-code' | 'partner-check' | 'ready';
@@ -35,11 +37,10 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = { sedentary: 'Sedentary',
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const session = useAuthStore((s) => s.session);
   const setSession = useAuthStore((s) => s.setSession);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
 
-  const initialStep = session ? 'welcome' : 'welcome';
+  const initialStep = 'welcome';
   const [step, setStep] = useState<Step>(initialStep);
   const [displayName, setDisplayName] = useState('');
   const [inviteCodeDigits, setInviteCodeDigits] = useState<string[]>(['', '', '', '', '', '']);
@@ -303,8 +304,9 @@ export default function Onboarding() {
 
           {step === 'plan' && (
             <PlanStep
-              onContinue={() => setStep(isSoloMode ? 'ready' : 'created')}
+              onContinue={() => handleContinue()}
               onBack={() => setStep(isSoloMode ? 'pantry' : 'partner-check')}
+              inviteCode={createdInviteCode}
             />
           )}
 
@@ -677,36 +679,12 @@ function BodyMetricsStep({
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="body-weight" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
-              Weight (kg)
-            </label>
-            <input
-              id="body-weight"
-              type="number"
-              inputMode="decimal"
-              value={weightKg}
-              onChange={(e) => onWeightKgChange(e.target.value)}
-              placeholder="70"
-              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
-            />
-          </div>
-          <div>
-            <label htmlFor="body-height" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
-              Height (cm)
-            </label>
-            <input
-              id="body-height"
-              type="number"
-              inputMode="decimal"
-              value={heightCm}
-              onChange={(e) => onHeightCmChange(e.target.value)}
-              placeholder="170"
-              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
-            />
-          </div>
-        </div>
+        <BodyMetricsFields
+          weightKg={weightKg}
+          heightCm={heightCm}
+          onWeightKgChange={onWeightKgChange}
+          onHeightCmChange={onHeightCmChange}
+        />
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -1031,11 +1009,14 @@ function ReadyStep({
 function PlanStep({
   onContinue,
   onBack,
+  inviteCode,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  inviteCode: string | null;
 }) {
   const { checkout, checkingOut, checkStripeStatus, stripeAvailable } = useBilling();
+  const { usage, isLoading } = useUsage();
   const [planPeriod, setPlanPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -1054,9 +1035,47 @@ function PlanStep({
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <p className="text-text-secondary text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  if (usage?.tier === 'premium') {
+    return (
+      <div className="flex flex-col">
+        <Wordmark />
+        <div className="text-center mb-8">
+          <h2 className="text-text-primary text-2xl font-semibold tracking-tight">Premium is active</h2>
+          <p className="text-text-secondary text-sm mt-2">
+            You have <strong className="text-text-primary">70 AI requests</strong> per day. Enjoy!
+          </p>
+        </div>
+        {inviteCode && (
+          <div className="bg-white border border-border rounded-2xl p-5 mb-6 text-center">
+            <p className="text-text-secondary text-xs mb-1">Your invite code</p>
+            <p className="text-text-primary text-2xl font-bold tracking-widest">{inviteCode}</p>
+            <p className="text-text-secondary text-xs mt-1">Share this with your partner to join your household.</p>
+          </div>
+        )}
+        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col">
       <Wordmark />
+
+      {inviteCode && (
+        <div className="bg-white border border-border rounded-2xl p-4 mb-6 text-center">
+          <p className="text-text-secondary text-xs mb-1">Your invite code</p>
+          <p className="text-text-primary text-xl font-bold tracking-widest">{inviteCode}</p>
+          <p className="text-text-secondary text-xs mt-1">Share this with your partner.</p>
+        </div>
+      )}
 
       <div className="mb-8">
         <h2 className="text-text-primary text-2xl font-semibold tracking-tight">
@@ -1114,7 +1133,7 @@ function PlanStep({
         You can also upgrade anytime in Settings → Plan.
       </p>
 
-      <PrimaryButton onClick={onContinue}>Continue with free plan</PrimaryButton>
+      <PrimaryButton onClick={onContinue} disabled={checkingOut}>Continue with free plan</PrimaryButton>
       <div className="mt-2 text-center">
         <SecondaryButton onClick={onBack}>Back</SecondaryButton>
       </div>

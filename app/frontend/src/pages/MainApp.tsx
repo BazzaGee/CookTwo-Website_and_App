@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { ShoppingBasket, Boxes, ChefHat, Settings, LogOut } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
+import { useConfirmStore } from '../stores/confirmStore';
 import { SyncIndicator } from '../components/SyncIndicator';
 import { InstallBanner } from '../components/InstallBanner';
 import { ShareCodeButton } from '../components/ShareCodeButton';
@@ -25,18 +26,34 @@ export default function MainApp() {
   const queryClient = useQueryClient();
   const { profiles } = useProfiles();
 
+  const hasCompleted = useAuthStore((s) => s.hasCompletedOnboarding);
+  const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
+
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
+      if (!hasCompleted) {
+        completeOnboarding();
+      }
       queryClient.invalidateQueries({ queryKey: ['usage', session?.householdId] });
       const next = new URLSearchParams(searchParams);
       next.delete('upgraded');
       setSearchParams(next, { replace: true });
     }
-  }, [searchParams, setSearchParams, queryClient, session?.householdId]);
+  }, [searchParams, setSearchParams, queryClient, session?.householdId, hasCompleted, completeOnboarding]);
 
   function handleSignOut() {
-    clear();
-    navigate('/onboarding', { replace: true });
+    useConfirmStore.getState().show({
+      title: 'Sign out of CookTwo?',
+      message:
+        "You'll lose access to your shared kitchen on this device and go through setup again.\n\nTo return to this kitchen later, you'll need your 6-digit invite code. Your partner will need to resend it if you've lost it.",
+      confirmLabel: 'Sign out',
+      cancelLabel: 'Stay signed in',
+      danger: true,
+      onConfirm: () => {
+        clear();
+        navigate('/onboarding', { replace: true });
+      },
+    });
   }
 
   function goToProfiles() {

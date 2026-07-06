@@ -125,6 +125,12 @@ import { CONFIG } from '../../config';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
         close();
+        return;
+      }
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-early-access]') && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        open();
       }
     });
 

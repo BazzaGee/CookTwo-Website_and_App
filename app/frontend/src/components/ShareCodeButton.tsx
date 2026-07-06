@@ -3,7 +3,7 @@ import { Copy, X, Share2, Link } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
 function getShareUrl(code: string): string {
-  return `https://cooktwo.com/join?join=${encodeURIComponent(code)}`;
+  return `https://cooktwo.app/onboarding?join=${encodeURIComponent(code)}`;
 }
 
 function getShareText(code: string): string {

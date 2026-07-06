@@ -8,6 +8,8 @@ import PantryTab from './pages/PantryTab';
 import ProfilesTab from './pages/ProfilesTab';
 import MealPlanTab from './pages/MealPlanTab';
 import PaywallModal from './components/PaywallModal';
+import ConfirmDialog from './components/ConfirmDialog';
+import UpgradeReturn from './components/UpgradeReturn';
 import { usePushNotifications } from './hooks/usePushNotifications';
 
 const DEV_TOKEN = 'cooktwo-dev-2026';
@@ -39,6 +41,7 @@ function App() {
   return (
     <>
       <PaywallModal />
+      <ConfirmDialog />
       <DevSkipOnboarding />
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
@@ -52,6 +55,7 @@ function App() {
           <Route path="profiles" element={<ProfilesTab />} />
           <Route path="meal-plan" element={<MealPlanTab />} />
         </Route>
+        <Route path="/PWA" element={<UpgradeReturn />} />
         <Route path="*" element={<Navigate to="/onboarding" replace />} />
       </Routes>
     </>

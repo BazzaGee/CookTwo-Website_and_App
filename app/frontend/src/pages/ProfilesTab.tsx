@@ -4,9 +4,12 @@ import { useProfiles, type Gender, type ActivityLevel, type Goal, type PartnerPr
 import { useDietList } from '../hooks/useDietInfo';
 import { DIET_CATEGORIES, type DietCatalogEntry } from '../types/diet';
 import { useAuthStore } from '../stores/authStore';
+import { usePreferencesStore } from '../stores/preferencesStore';
+import { formatHeight, formatWeight } from '../lib/units';
 import { linkWithPartner } from '../hooks/useAuth';
 import UpgradeSection from '../components/UpgradeSection';
 import DietBrowser from '../components/DietBrowser';
+import BodyMetricsFields from '../components/BodyMetricsFields';
 import { ActivityLogSection } from '../components/ActivityLogSection';
 
 const GENDERS: readonly Gender[] = ['male', 'female', 'other'] as const;
@@ -232,6 +235,7 @@ export default function ProfilesTab() {
         onToggleBody={() => setEditingBody(!editingBody)}
         onSave={handleSave}
         onCancel={() => { setEditing(false); setEditingBody(false); }}
+        updateProfile={updateProfile}
       />
 
       {otherProfile && (
@@ -335,6 +339,7 @@ function ProfileCard({
   onToggleBody,
   onSave,
   onCancel,
+  updateProfile,
 }: {
   profile: PartnerProfile;
   isYou: boolean;
@@ -370,8 +375,10 @@ function ProfileCard({
   onToggleBody?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
+  updateProfile?: (partnerId: string, updates: { bodyProfileVisible?: boolean }) => Promise<unknown>;
 }) {
   const dotColor = profile.slot === 1 ? 'bg-sage' : 'bg-terracotta';
+  const units = usePreferencesStore((s) => s.units);
 
   return (
     <section className="bg-white border border-border rounded-2xl p-6">
@@ -527,34 +534,13 @@ function ProfileCard({
             </button>
           ) : (
             <div className="space-y-4 pt-2 border-t border-border">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="profile-weight" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
-                    Weight (kg)
-                  </label>
-                  <input
-                    id="profile-weight"
-                    type="number"
-                    value={formWeight}
-                    onChange={(e) => onFormWeightChange?.(e.target.value)}
-                    placeholder="70"
-                    className="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="profile-height" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
-                    Height (cm)
-                  </label>
-                  <input
-                    id="profile-height"
-                    type="number"
-                    value={formHeight}
-                    onChange={(e) => onFormHeightChange?.(e.target.value)}
-                    placeholder="170"
-                    className="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
-                  />
-                </div>
-              </div>
+              <BodyMetricsFields
+                weightKg={formWeight ?? ''}
+                heightCm={formHeight ?? ''}
+                onWeightKgChange={(v) => onFormWeightChange?.(v)}
+                onHeightCmChange={(v) => onFormHeightChange?.(v)}
+                inputClassName="w-full bg-cream border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -670,7 +656,7 @@ function ProfileCard({
               <div className="pt-3 border-t border-border">
                 <p className="text-text-secondary text-xs tracking-wide uppercase">Body profile</p>
                 <p className="text-text-primary text-sm mt-1">
-                  {profile.weightKg}kg · {profile.heightCm}cm · {profile.age}y · {profile.gender} · {ACTIVITY_LABELS[profile.activityLevel!]}
+                  {formatWeight(profile.weightKg, units)} · {formatHeight(profile.heightCm, units)} · {profile.age}y · {profile.gender} · {ACTIVITY_LABELS[profile.activityLevel!]}
                 </p>
                 <p className="text-sage text-sm font-medium mt-1">
                   Goal: {GOAL_LABELS[profile.goal!]} · Target: {profile.tdee.targetCalories} cal/day
@@ -681,7 +667,7 @@ function ProfileCard({
                   <button
                     type="button"
                     onClick={async () => {
-                      await updateProfile(profile.id, { bodyProfileVisible: !profile.bodyProfileVisible });
+                      await updateProfile?.(profile.id, { bodyProfileVisible: !profile.bodyProfileVisible });
                     }}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                       profile.bodyProfileVisible ? 'bg-sage' : 'bg-cream-dark'

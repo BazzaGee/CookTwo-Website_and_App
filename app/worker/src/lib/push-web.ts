@@ -166,7 +166,7 @@ export class WebPushProvider implements PushProvider {
   constructor(
     private vapidPublicKey: string,
     private vapidPrivateKey: string,
-    private vapidSubject: string = 'mailto:cfs-app@example.com',
+    private vapidSubject: string = 'mailto:hello@cooktwo.com',
   ) {}
 
   async send(sub: PushSubscription, payload: PushPayload): Promise<boolean> {

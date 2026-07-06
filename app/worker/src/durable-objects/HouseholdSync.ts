@@ -513,6 +513,35 @@ export class HouseholdSync {
     }
   }
 
+  async notifyPartnerJoined(partnerName: string, joinerSlot: PartnerSlot): Promise<void> {
+    if (!this.pushProvider) return;
+
+    const name = partnerName.trim();
+    const payload: PushPayload = {
+      title: 'CookTwo',
+      body: name ? `${name} just joined your kitchen 🎉` : 'Your partner just joined your kitchen 🎉',
+      tag: 'cfs-partner',
+      data: { kind: 'partner_linked' },
+    };
+
+    const cursor = this.state.storage.sql.exec<{ partner_id: string; slot: number; endpoint: string; p256dh: string; auth: string }>(
+      'SELECT partner_id, slot, endpoint, p256dh, auth FROM push_subscriptions',
+    );
+    const subs = Array.from(cursor);
+
+    for (const sub of subs) {
+      // Don't notify the partner who just joined.
+      if (sub.slot === joinerSlot) continue;
+      try {
+        await this.pushProvider.send(
+          { partnerId: sub.partner_id, endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          payload,
+        );
+      } catch {
+      }
+    }
+  }
+
   private eventToPushPayload(event: SyncEvent): PushPayload | null {
     switch (event.type) {
       case 'item_added': {
@@ -750,6 +779,13 @@ export class HouseholdSync {
         const body = (await request.json()) as { partnerId: string; endpoint?: string };
         if (!body.partnerId) return this.json({ error: 'partnerId required' }, 400);
         await this.removePushSubscription(body.partnerId, body.endpoint);
+        return this.json({ ok: true });
+      }
+
+      if (path === '/partner-linked' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as { partnerName?: string; joinerSlot?: number };
+        const slot = (body.joinerSlot === 2 ? 2 : 1) as PartnerSlot;
+        await this.notifyPartnerJoined(body.partnerName ?? '', slot);
         return this.json({ ok: true });
       }
 

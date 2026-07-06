@@ -324,6 +324,16 @@ app.post('/api/household/join', async (c) => {
     targetId: householdId,
     targetName: displayName,
   }).catch((err) => console.error('activity log failed:', err));
+
+  // Notify the existing partner(s) that someone joined their kitchen.
+  getStub(c, householdId)
+    .fetch('https://do/partner-linked', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ partnerName: displayName, joinerSlot: slot }),
+    })
+    .catch((err) => console.error('partner-linked push failed:', err));
+
   return c.json({
     householdId,
     token,
@@ -495,6 +505,15 @@ app.post('/api/household/link', async (c) => {
     targetId: targetHouseholdId,
     targetName: claims.displayName,
   }).catch((err) => console.error('activity log failed:', err));
+
+  // Notify the existing partner(s) that someone linked into their kitchen.
+  getStub(c, targetHouseholdId)
+    .fetch('https://do/partner-linked', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ partnerName: claims.displayName, joinerSlot: newSlot as 1 | 2 }),
+    })
+    .catch((err) => console.error('partner-linked push failed:', err));
 
   return c.json({
     householdId: targetHouseholdId,

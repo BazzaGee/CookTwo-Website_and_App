@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 'react';
-import { Sparkles, Clock, Plus, Check, Bookmark, Send, ShoppingCart, Package, ChevronDown, ChevronUp, Trash2, AlertCircle, Mic } from 'lucide-react';
+import { Sparkles, Clock, Plus, Check, Bookmark, Send, ShoppingCart, Package, ChevronDown, ChevronUp, Trash2, Mic } from 'lucide-react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useMealChat, type ChatMessage } from '../hooks/useMealChat';
 import { usePantry } from '../hooks/usePantry';
 import { useRecipes } from '../hooks/useRecipes';
 import { useGroceryList } from '../hooks/useGroceryList';
-import { useUsage } from '../hooks/useUsage';
-import { usePaywallStore } from '../stores/paywallStore';
 
 import type { GeneratedMeal } from '../types/meal';
 

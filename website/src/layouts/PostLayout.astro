@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import EarlyAccessButton from '../components/forms/EarlyAccessButton.astro';
 
 interface Props {
   title: string;
@@ -74,7 +75,7 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', { year: 'numer
       <div class="bg-cream-dark rounded-2xl p-8 text-center">
         <p class="text-lg text-text-primary font-medium mb-2">One dinner. Two plates. Zero arguments.</p>
         <p class="text-text-secondary mb-6">Try the shared food system for couples.</p>
-        <a href="/join" class="btn-primary inline-block">Get early access</a>
+        <EarlyAccessButton label="Get early access" variant="primary" />
       </div>
     </footer>
   </article>
