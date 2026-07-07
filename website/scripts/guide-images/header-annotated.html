@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CookTwo — Header annotated</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: { DEFAULT: '#FAF6EE', dark: '#F5F0E6' },
+          sage: { DEFAULT: '#7A9E7E', dark: '#5A7E5E', light: '#9ABE9E', 50: '#F0F5F0' },
+          terracotta: { DEFAULT: '#E8A87C', dark: '#C88A5C', light: '#F8C89C', 50: '#FCF3EA' },
+          ink: { primary: '#2C3E2D', secondary: '#6B7B6C', tertiary: '#9AA39B' },
+          border: '#E5E1DA',
+          error: '#E07A5F',
+        },
+        fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+      }
+    }
+  };
+</script>
+<style>
+  html, body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  body { background: #FAF6EE; }
+  svg { display: block; }
+</style>
+</head>
+<body class="bg-cream">
+  <div class="w-[860px] mx-auto p-6">
+    <div class="relative" style="height: 320px;">
+
+      <!-- Annotation layer (numbers + leader lines), positioned ABOVE the header -->
+      <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 860 320" preserveAspectRatio="none">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#E07A5F" />
+          </marker>
+        </defs>
+
+        <!-- Curved leaders from each number chip down to its icon -->
+        <!-- Numbers are at y≈40; icons are at y≈155 -->
+        <!-- Icon x positions (approx): 1=400, 2=475, 3=540, 4=605, 5=670, 6=755 -->
+        <path d="M 400 80 Q 400 110 400 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        <path d="M 475 80 Q 475 110 475 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        <path d="M 540 80 Q 540 110 540 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        <path d="M 605 80 Q 605 110 605 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        <path d="M 670 80 Q 670 110 670 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        <path d="M 755 80 Q 755 110 755 145" stroke="#E07A5F" stroke-width="1.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+      </svg>
+
+      <!-- Numbered chips, positioned above the icons -->
+      <div class="absolute" style="left: 380px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">1</div>
+      </div>
+      <div class="absolute" style="left: 455px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">2</div>
+      </div>
+      <div class="absolute" style="left: 520px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">3</div>
+      </div>
+      <div class="absolute" style="left: 585px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">4</div>
+      </div>
+      <div class="absolute" style="left: 650px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">5</div>
+      </div>
+      <div class="absolute" style="left: 735px; top: 30px;">
+        <div class="w-11 h-11 rounded-full bg-terracotta-dark text-white text-base font-bold flex items-center justify-center shadow-lg ring-[3px] ring-white">6</div>
+      </div>
+
+      <!-- Header bar itself -->
+      <div class="absolute left-0 right-0" style="top: 145px;">
+        <div class="bg-cream border-b border-border py-4 px-4 flex items-center justify-between">
+
+          <!-- Left: partner dots + names -->
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="flex -space-x-1.5 shrink-0">
+              <div class="w-8 h-8 rounded-full bg-sage text-white text-xs font-bold flex items-center justify-center ring-2 ring-cream">A</div>
+              <div class="w-8 h-8 rounded-full bg-terracotta text-white text-xs font-bold flex items-center justify-center ring-2 ring-cream">J</div>
+            </div>
+            <div class="leading-tight min-w-0">
+              <div class="text-ink-primary font-bold text-[15px] truncate">Alex + Jordana</div>
+              <div class="text-ink-secondary text-[11px]">Our shared kitchen</div>
+            </div>
+          </div>
+
+          <!-- Right: the 6 icons -->
+          <div class="flex items-center gap-3.5 shrink-0">
+            <!-- 1: Usage chip 10/10 -->
+            <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-sage-50 border border-sage/20">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A7E5E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+              </svg>
+              <span class="text-sage-dark text-xs font-semibold">10/10</span>
+            </div>
+
+            <!-- 2: Bell with red badge -->
+            <div class="relative">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2C3E2D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+              </svg>
+              <span class="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center px-1 ring-2 ring-cream">3</span>
+            </div>
+
+            <!-- 3: Sync dot (sage) -->
+            <div class="w-3 h-3 rounded-full bg-sage shadow-[0_0_0_3px_rgba(122,158,126,0.2)]"></div>
+
+            <!-- 4: Share icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2C3E2D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+
+            <!-- 5: Gear icon -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2C3E2D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+
+            <!-- 6: Sign out (door with arrow) -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2C3E2D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Labels under each number (small caption) -->
+      <div class="absolute left-0 right-0" style="top: 270px;">
+        <div class="grid grid-cols-6 gap-2 text-center text-[11px] font-semibold text-ink-primary px-1">
+          <div>Usage<br><span class="text-ink-secondary font-normal text-[10px]">chip</span></div>
+          <div>Notif<br><span class="text-ink-secondary font-normal text-[10px]">bell</span></div>
+          <div>Sync<br><span class="text-ink-secondary font-normal text-[10px]">dot</span></div>
+          <div>Share<br><span class="text-ink-secondary font-normal text-[10px]">code</span></div>
+          <div>Settings<br><span class="text-ink-secondary font-normal text-[10px]">gear</span></div>
+          <div>Sign<br><span class="text-ink-secondary font-normal text-[10px]">out</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

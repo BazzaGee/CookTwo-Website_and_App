@@ -180,8 +180,8 @@ Every screen in CookTwo has the same chrome. Once you know the shell, every tab 
   src="/images/guide/guide-10-shopping-empty.webp"
   alt="CookTwo main app shell, empty shopping list"
   markers={[
-    { label: "H", x: 8, y: 8 },
-    { label: "N", x: 8, y: 95 }
+    { label: "H", x: 94, y: 12, tx: 75, ty: 10 },
+    { label: "N", x: 94, y: 90, tx: 75, ty: 94 }
   ]}
   caption="The same shell wraps every tab. Header on top, content in the middle, bottom nav at the very bottom."
 />
@@ -199,19 +199,18 @@ The shell is consistent across every tab. Once you learn it, you never have to t
 The right side of the header has six icons in a row. They do a lot, so they're worth a closer look.
 
 <GuideScreenshots
-  src="/images/guide/guide-26-header-annotated.webp"
-  alt="CookTwo header bar with six numbered icons"
+  src="/images/guide/guide-10-shopping-empty.webp"
+  alt="CookTwo header bar with both partner dots"
+  caption="The header shows both partner dots on the left and the six icons on the right."
+/>
+
+<GuideScreenshots
+  src="/images/guide/guide-26b-header-annotated.webp"
+  alt="CookTwo header bar with six numbered icons, zoomed in"
   bezel={false}
-  size="md"
-  markers={[
-    { label: "1", x: 30, y: 8, tx: 30, ty: 50 },
-    { label: "2", x: 45, y: 8, tx: 45, ty: 50 },
-    { label: "3", x: 58, y: 8, tx: 58, ty: 50 },
-    { label: "4", x: 71, y: 8, tx: 71, ty: 50 },
-    { label: "5", x: 84, y: 8, tx: 84, ty: 50 },
-    { label: "6", x: 92, y: 8, tx: 92, ty: 50 }
-  ]}
-  caption="The six icons in the header. Numbered left to right."
+  size="lg"
+  aspect="860 / 360"
+  caption="The six icons in the header, zoomed in. Numbered left to right."
 />
 
 Reading the image left to right:
@@ -238,7 +237,7 @@ The Shopping tab is where most of your day-to-day lives. It's a real-time, partn
   src="/images/guide/guide-11-shopping-populated.webp"
   alt="CookTwo shopping tab populated with categories"
   markers={[
-    { label: "C", x: 8, y: 28 }
+    { label: "C", x: 96, y: 30, tx: 55, ty: 25 }
   ]}
   caption="The full populated list. Categories, partner dots, and item counts."
 />
@@ -467,7 +466,8 @@ The quota is shared between you and your partner. If you generate a meal, it cou
   src="/images/guide/guide-31-plan-table.webp"
   alt="CookTwo Free vs Premium plan comparison"
   bezel={false}
-  size="md"
+  size="lg"
+  aspect="4 / 3"
   caption="The full feature comparison. Both plans are full-featured — the difference is AI quota."
 />
 

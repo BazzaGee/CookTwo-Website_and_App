@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CookTwo — Plan comparison</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: { DEFAULT: '#FAF6EE', dark: '#F5F0E6' },
+          sage: { DEFAULT: '#7A9E7E', dark: '#5A7E5E', light: '#9ABE9E', 50: '#F0F5F0' },
+          terracotta: { DEFAULT: '#E8A87C', dark: '#C88A5C', light: '#F8C89C', 50: '#FCF3EA' },
+          ink: { primary: '#2C3E2D', secondary: '#6B7B6C', tertiary: '#9AA39B' },
+          border: '#E5E1DA',
+          error: '#E07A5F',
+        },
+        fontFamily: {
+          sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+<style>
+  html, body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  body { background: #FAF6EE; }
+  .feature-icon { display: inline-flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body class="bg-cream">
+  <div class="w-full max-w-[1100px] mx-auto px-6 py-10">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage/10 text-sage-dark text-xs font-semibold tracking-wider uppercase mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-sage"></span>
+        Compare plans
+      </div>
+      <h1 class="text-4xl font-extrabold text-ink-primary mb-3 tracking-tight">Two plans, one shared kitchen</h1>
+      <p class="text-ink-secondary text-lg max-w-xl mx-auto">Both plans include everything. The only difference is how much AI you get per day.</p>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="rounded-3xl border border-border bg-white shadow-sm overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-cream-dark/50 border-b border-border">
+            <th class="py-5 px-6 text-sm font-semibold text-ink-secondary w-[40%]">Feature</th>
+            <th class="py-5 px-6 text-sm font-semibold text-ink-primary text-center w-[30%]">
+              <div class="flex flex-col items-center gap-1">
+                <span class="text-2xl font-bold text-ink-primary">Free</span>
+                <span class="text-xs font-medium text-ink-tertiary uppercase tracking-wider">Get started</span>
+                <span class="mt-2 text-2xl font-extrabold text-ink-primary">$0</span>
+                <span class="text-xs text-ink-tertiary">forever</span>
+              </div>
+            </th>
+            <th class="py-5 px-6 text-sm font-semibold text-center w-[30%] relative bg-sage-50 border-l border-r border-sage/20">
+              <div class="absolute -top-px left-0 right-0 h-1 bg-sage"></div>
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-sage text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">More AI</div>
+              <div class="flex flex-col items-center gap-1">
+                <span class="text-2xl font-bold text-sage-dark">Premium</span>
+                <span class="text-xs font-medium text-sage-dark uppercase tracking-wider">7× more headroom</span>
+                <div class="mt-2 flex items-baseline gap-1">
+                  <span class="text-2xl font-extrabold text-ink-primary">$4.99</span>
+                  <span class="text-sm text-ink-secondary">/mo</span>
+                </div>
+                <span class="text-xs text-sage-dark font-medium">or $44.99/yr · save 25%</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="text-sm">
+          <!-- AI requests -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">AI requests per day</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Shared with your partner</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="inline-flex items-center gap-1.5 text-ink-primary font-semibold">
+                <span class="feature-icon w-5 h-5 rounded-full bg-sage/15 text-sage-dark">✓</span>
+                10 per day
+              </span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="inline-flex items-center gap-1.5 text-sage-dark font-bold">
+                <span class="feature-icon w-5 h-5 rounded-full bg-sage text-white">✓</span>
+                70 per day
+              </span>
+            </td>
+          </tr>
+
+          <!-- Chat with meal planner -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Chat with the meal planner</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Ask follow-ups, get substitutions</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage/15 text-sage-dark text-base">✓</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Generate meals from pantry -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Generate meals from pantry</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Tonight + weekly plans</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage/15 text-sage-dark text-base">✓</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Adaptive plating -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Adaptive plating for two</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Same pan, two plates</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage/15 text-sage-dark text-base">✓</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Unlimited saved recipes -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Save unlimited recipes</div>
+              <div class="text-xs text-ink-secondary mt-0.5">No cap, both plans</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage/15 text-sage-dark text-base">✓</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Real-time sync -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Real-time sync between partners</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Under 1 second</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage/15 text-sage-dark text-base">✓</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Priority AI -->
+          <tr class="border-b border-border">
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Priority AI responses</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Skip the queue at peak times</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-border/60 text-ink-tertiary text-base">—</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+
+          <!-- Cancel anytime -->
+          <tr>
+            <td class="py-4 px-6">
+              <div class="font-semibold text-ink-primary">Cancel anytime</div>
+              <div class="text-xs text-ink-secondary mt-0.5">Self-serve, no questions</div>
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="feature-icon w-6 h-6 rounded-full bg-border/60 text-ink-tertiary text-base">—</span>
+            </td>
+            <td class="py-4 px-6 text-center bg-sage-50 border-l border-r border-sage/20">
+              <span class="feature-icon w-6 h-6 rounded-full bg-sage text-white text-base">✓</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer note -->
+    <p class="text-center text-sm text-ink-secondary mt-6">
+      The yearly plan saves 25% vs monthly. Cancel anytime from the
+      <span class="font-semibold text-ink-primary">Manage subscription</span> button on Premium.
+    </p>
+  </div>
+</body>
+</html>

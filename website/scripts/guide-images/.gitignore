@@ -1,0 +1,30 @@
+# Intermediate outputs from website/scripts/guide-images/ regenerate runs.
+# The source-of-truth files are the *.html and *.cjs files in this directory.
+# The PNGs (mockup screenshots, in-context captures, full-page rendered slices)
+# are deterministic byproducts and should not be committed.
+
+# Mockup PNG renders (one per HTML)
+*-shot.png
+*-preview.png
+*-v2.png
+plan-table-full.png
+plan-table-shot.png
+plan-table-preview.png
+plan-table-v2.png
+header-annotated.png
+shopping-done.png
+pantry.png
+meals-card.png
+meals-plating.png
+meals-saved.png
+profiles.png
+link-kitchen.png
+notifications.png
+activity-log.png
+
+# In-context verification captures
+incontext-*.png
+
+# Full-page renders of the live page (used to verify the build)
+rendered-*.png
+rendered-slice-*.png
