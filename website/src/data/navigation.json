@@ -25,7 +25,8 @@
       ],
       "resources": [
         { "label": "App Guide", "href": "/app-guide" },
-        { "label": "Blog", "href": "/blog" }
+        { "label": "Blog", "href": "/blog" },
+        { "label": "one meal, two plates", "href": "/one-meal-two-plates" }
       ],
       "company": [
         { "label": "About Us", "href": "/about" },

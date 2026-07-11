@@ -11,15 +11,19 @@ interface Props {
   description: string;
   canonicalURL?: string;
   ogImage?: string;
+  articlePublishedDate?: string;
+  articleAuthor?: string;
+  articleTags?: string[];
+  isArticle?: boolean;
 }
 
-const { title, description, canonicalURL, ogImage } = Astro.props;
+const { title, description, canonicalURL, ogImage, articlePublishedDate, articleAuthor, articleTags, isArticle } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} canonicalURL={canonicalURL} ogImage={ogImage} />
+    <BaseHead title={title} description={description} canonicalURL={canonicalURL} ogImage={ogImage} articlePublishedDate={articlePublishedDate} articleAuthor={articleAuthor} articleTags={articleTags} isArticle={isArticle} />
   </head>
   <body class="min-h-screen flex flex-col pt-20">
     <Header />

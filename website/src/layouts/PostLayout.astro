@@ -21,7 +21,7 @@ const formattedDate = pubDate.toLocaleDateString('en-US', { year: 'numeric', mon
 const formattedUpdated = updatedDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
-<BaseLayout title={`${title} | CookTwo`} description={description} ogImage={ogImage} canonicalURL={canonicalURL}>
+<BaseLayout title={`${title} | CookTwo`} description={description} ogImage={ogImage} canonicalURL={canonicalURL} isArticle={true} articlePublishedDate={pubDate.toISOString()} articleAuthor={author} articleTags={tags}>
   <article class="container-custom max-w-3xl py-12 md:py-20">
     {pillar && (
       <a href={`/blog?pillar=${encodeURIComponent(pillar)}`} class="inline-block text-sm font-medium text-sage hover:text-sage-dark mb-4 transition-colors">

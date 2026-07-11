@@ -4,9 +4,13 @@ interface Props {
   description: string;
   canonicalURL?: string;
   ogImage?: string;
+  articlePublishedDate?: string;
+  articleAuthor?: string;
+  articleTags?: string[];
+  isArticle?: boolean;
 }
 
-const { title, description, canonicalURL, ogImage } = Astro.props;
+const { title, description, canonicalURL, ogImage, articlePublishedDate, articleAuthor, articleTags = [], isArticle = false } = Astro.props;
 const siteURL = 'https://cooktwo.com';
 const canonical = canonicalURL ? `${siteURL}${canonicalURL}` : Astro.url;
 const ogImg = ogImage || `${siteURL}/images/hero/og-homepage.webp`;
@@ -32,6 +36,18 @@ const websiteSchema = {
   "url": "https://cooktwo.com",
   "description": "Collaborative adaptive nutrition app for couples."
 };
+
+const articleSchema = isArticle && articlePublishedDate ? {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "author": { "@type": "Person", "name": articleAuthor || "CookTwo" },
+  "datePublished": articlePublishedDate,
+  "image": ogImg.startsWith("http") ? ogImg : `${siteURL}${ogImg}`,
+  "publisher": { "@type": "Organization", "name": "CookTwo", "logo": { "@type": "ImageObject", "url": `${siteURL}/images/logo/logo-icon.png` } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": canonical }
+} : null;
 ---
 
 <meta charset="utf-8" />
@@ -90,3 +106,6 @@ const websiteSchema = {
 
 <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
 <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+{articleSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>
+)}
