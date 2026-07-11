@@ -6,9 +6,11 @@ interface Marker {
   x: number;
   /** Y position of the marker chip, in % of image height (0–100) */
   y: number;
-  /** Optional target point (in % of image) the arrow points to. If omitted, the chip is placed without an arrow. */
+  /** Target point (in % of image) the arrow points to. If omitted, the chip is placed without an arrow. */
   tx?: number;
   ty?: number;
+  /** Whether to use a curved arrow path instead of a straight line. Default false. */
+  curved?: boolean;
   /** Optional side the chip should sit on for label overflow. */
   side?: 'left' | 'right';
   /** Optional short text note displayed next to the chip */
@@ -91,22 +93,27 @@ const markerId = `markers-${Math.random().toString(36).slice(2, 9)}`;
           if (m.tx == null || m.ty == null) return null;
           const mx = 100 - m.x;
           const my = m.y;
-          const tx = 100 - (m.tx ?? m.x);
-          const ty = m.ty ?? m.y;
-          // Control point: midpoint pushed perpendicular to the line for a gentle curve
-          const midX = (mx + tx) / 2;
-          const midY = (my + ty) / 2;
-          const dx = tx - mx;
-          const dy = ty - my;
-          const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          const px = -dy / len;
-          const py = dx / len;
-          const curve = Math.min(8, len * 0.25);
-          const cpx = midX + px * curve;
-          const cpy = midY + py * curve;
+          const tx = 100 - m.tx;
+          const ty = m.ty;
+
+          let d: string;
+          if (m.curved) {
+            const midX = (mx + tx) / 2;
+            const midY = (my + ty) / 2;
+            const dx = tx - mx;
+            const dy = ty - my;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const px = -dy / len;
+            const py = dx / len;
+            const curve = Math.min(8, len * 0.25);
+            d = `M ${mx} ${my} Q ${midX + px * curve} ${midY + py * curve} ${tx} ${ty}`;
+          } else {
+            d = `M ${mx} ${my} L ${tx} ${ty}`;
+          }
+
           return (
             <path
-              d={`M ${mx} ${my} Q ${cpx} ${cpy} ${tx} ${ty}`}
+              d={d}
               fill="none"
               stroke="#E07A5F"
               stroke-width="0.45"
