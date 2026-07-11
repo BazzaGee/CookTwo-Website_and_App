@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/extract-content.js && astro build",
+    "build": "node scripts/extract-content.js && astro build && node scripts/image-sitemap.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "index:pinecone": "node scripts/extract-content.js && node scripts/index-to-pinecone.mjs"
