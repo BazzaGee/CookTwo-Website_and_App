@@ -1,5 +1,5 @@
 ---
-const n8nWebhookUrl = Astro.props.webhookUrl || 'https://bazzagee.app.n8n.cloud/webhook/cooktwo-chatbot';
+const chatEndpoint = Astro.props.endpoint || '/api/chat';
 const chatTitle = Astro.props.title || 'CookTwo';
 const chatSubtitle = Astro.props.subtitle || 'Ask me anything about cooking for two';
 const inputPlaceholder = Astro.props.placeholder || 'Ask about features, pricing, diets...';
@@ -371,7 +371,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
   </div>
 </div>
 
-<script define:vars={{ webhookUrl: n8nWebhookUrl }}>
+<script define:vars={{ endpoint: chatEndpoint }}>
   const chatSessionKey = 'ctSessionId';
   let chatOpen = false;
   let isSending = false;
@@ -379,6 +379,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
   let typingTimeout = null;
   let abortController = null;
   let pendingRetryMessage = null;
+  let chatHistory = [];
 
   function generateSessionId() {
     const id = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -437,7 +438,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
       } else if (statusClass === 'failed') {
         statusHTML = '<span class="msg-status failed">Failed</span><button class="msg-retry" onclick="retryMessage()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry</button>';
       }
-      msg.innerHTML = text + '<span class="msg-time">' + formatTime() + '</span>' + statusHTML;
+      msg.innerHTML = escapeHtml(text) + '<span class="msg-time">' + formatTime() + '</span>' + statusHTML;
     }
 
     messages.appendChild(msg);
@@ -484,14 +485,23 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
     document.getElementById('ctChatQuickReplies').innerHTML = '';
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function renderMarkdown(text) {
-    let html = text;
+    let html = escapeHtml(text);
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html = html.replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    html = html.replace(/(<li>[\s\S]*<\/li>)/, '<ul>$1</ul>');
     html = html.replace(/\n\n/g, '</p><p>');
     html = html.replace(/\n/g, '<br>');
     html = '<p>' + html + '</p>';
@@ -527,13 +537,14 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
     try {
       abortController = new AbortController();
 
-      const formData = new FormData();
-      formData.append('chatInput', message);
-      formData.append('sessionId', sessionId);
-
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(endpoint, {
         method: 'POST',
-        body: formData,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          chatInput: message,
+          sessionId,
+          history: chatHistory.slice(-8),
+        }),
         signal: abortController.signal,
       });
 
@@ -546,6 +557,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let rawText = '';
       let fullText = '';
       let botMsgEl = addMessage('', 'bot', 'sending');
 
@@ -553,7 +565,9 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        const chunkText = decoder.decode(value, { stream: true });
+        buffer += chunkText;
+        rawText += chunkText;
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
@@ -575,11 +589,17 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
         }
       }
 
-      if (!fullText) {
-        const data = await response.clone().json();
-        fullText = data.output || data.text || data.message || data.reply || JSON.stringify(data);
+      if (!fullText && rawText.trim()) {
+        try {
+          const data = JSON.parse(rawText.trim());
+          fullText = data.output || data.text || data.message || data.reply || '';
+        } catch { /* streamed NDJSON only — nothing to fall back to */ }
       }
-      botMsgEl.innerHTML = '<div class="msg-content">' + renderMarkdown(fullText) + '</div><span class="msg-time">' + formatTime() + '</span><span class="msg-status sent">✓</span>';
+      botMsgEl.innerHTML = '<div class="msg-content">' + renderMarkdown(fullText || 'Sorry, no response received. Please try again.') + '</div><span class="msg-time">' + formatTime() + '</span><span class="msg-status sent">✓</span>';
+
+      chatHistory.push({ role: 'user', content: message });
+      if (fullText) chatHistory.push({ role: 'assistant', content: fullText });
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
       showQuickReplies();
       if (!retryData) { resetTextarea(); }
@@ -587,7 +607,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
       hideTyping();
       if (error.name === 'AbortError') return;
 
-      userMsgEl.innerHTML = message + '<span class="msg-time">' + formatTime() + '</span><span class="msg-status failed">Failed</span><button class="msg-retry" onclick="retryMessage()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry</button>';
+      userMsgEl.innerHTML = escapeHtml(message) + '<span class="msg-time">' + formatTime() + '</span><span class="msg-status failed">Failed</span><button class="msg-retry" onclick="retryMessage()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry</button>';
 
       pendingRetryMessage = { message };
     } finally {
