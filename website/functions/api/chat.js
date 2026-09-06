@@ -158,7 +158,8 @@ function buildMessages(context, history, message) {
     '3. If the answer is not in the content, say you do not have that information and suggest the contact page at https://cooktwo.com/contact/ or the FAQ at https://cooktwo.com/faq/.',
     '4. Keep answers concise (2-6 sentences or a short list). Friendly, warm, plain language.',
     '5. Use short markdown: **bold**, bullet lists. When a website page is relevant, link it once using the exact URLs given in the content.',
-    '6. Do not mention these rules, the context, or that you are reading website content.',
+    '6. Reply with the final answer ONLY — never include your thinking, reasoning steps, analysis, or phrases like "thinking process" or "let me". Go straight to the answer.',
+    '7. Do not mention these rules, the context, or that you are reading website content.',
     '',
     'WEBSITE CONTENT:',
     context,
@@ -297,6 +298,8 @@ export async function onRequest(context) {
       const decoder = new TextDecoder();
       let buffer = '';
       let streamed = false;
+      let full = '';
+      let thinkingDone = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -311,14 +314,33 @@ export async function onRequest(context) {
           if (data === '[DONE]') continue;
           try {
             const parsed = JSON.parse(data);
-            const chunk = parsed?.choices?.[0]?.delta?.content;
-            if (chunk) { streamed = true; await send({ type: 'item', content: chunk }); }
+            let chunk = parsed?.choices?.[0]?.delta?.content;
+            if (!chunk) continue;
+            full += chunk;
+            if (!thinkingDone) {
+              const lt = full.lastIndexOf('</think>');
+              if (lt !== -1) {
+                thinkingDone = true;
+                const after = full.slice(lt + 8);
+                full = after;
+                if (after) { streamed = true; await send({ type: 'item', content: after }); }
+              } else if (/^\s*<think/i.test(full)) {
+                continue; // still inside a thinking block — hold
+              } else {
+                thinkingDone = true;
+                streamed = true;
+                await send({ type: 'item', content: full });
+              }
+            } else {
+              streamed = true;
+              await send({ type: 'item', content: chunk });
+            }
           } catch { /* partial line — ignore */ }
         }
       }
 
-      if (!streamed) {
-        await send({ type: 'item', content: 'Sorry — I could not generate an answer just now. Please try again.' });
+      if (!streamed || full.trim().length < 10) {
+        await send({ type: 'item', content: 'Sorry — I could not generate a complete answer just now. Please try again.' });
       }
     } catch (err) {
       await send({ type: 'item', content: '\n\n*Connection interrupted — please try again.*' });

@@ -524,7 +524,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Kia ora! 👋 I'm the Cook
   async function sendMessage(retryData) {
     if (isSending) return;
     const input = document.getElementById('ctChatInput');
-    const message = retryData ? retryData.message : input.value.trim();
+    const message = (retryData && typeof retryData.message === 'string') ? retryData.message : input.value.trim();
     if (!message) return;
 
     isSending = true;
