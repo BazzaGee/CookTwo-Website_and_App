@@ -19,4 +19,8 @@ export interface Env {
   STRIPE_PRICE_ID_MONTHLY?: string;
   STRIPE_PRICE_ID_YEARLY?: string;
   STRIPE_CUSTOMER_ID?: string;
+  // Engagement email engine
+  OPENROUTER_API_KEY?: string;
+  EMAIL_MODEL?: string;
+  ADMIN_SECRET?: string;
 }

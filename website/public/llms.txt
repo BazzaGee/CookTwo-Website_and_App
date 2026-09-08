@@ -1,0 +1,38 @@
+# CookTwo
+
+> Collaborative adaptive nutrition app for couples. One dinner. Two plates. Zero arguments.
+
+CookTwo is the app for two people who share a kitchen but don't always share the same goals. It links two profiles to one household — a shared pantry, a shared grocery list, and an AI that plans meals around what you already own *and* what each of you is trying to achieve. One recipe is cooked once and plated two ways, with calories and macros personalized per partner.
+
+## What it does
+- AI meal planning for two people with different goals (weight loss, muscle gain, maintenance)
+- Shared grocery list with real-time sync (sub-100ms) and auto-categorization
+- Pantry-first cooking: type what you have in natural language, AI parses and sorts it
+- Adaptive plating: one recipe → two portions with different calories/macros per partner
+- Respects mixed diets & allergies (vegetarian + omnivore, keto, paleo, gluten-free, etc.)
+- Installable PWA, works offline, free during beta
+
+## Key pages
+- https://cooktwo.com/ — homepage
+- https://cooktwo.com/one-meal-two-plates/ — the core "one meal, two plates" method
+- https://cooktwo.com/about/ — what CookTwo is and who it's for
+- https://cooktwo.com/how-it-works/ — 5-step setup guide
+- https://cooktwo.com/app-guide/ — annotated tour of the live app
+- https://cooktwo.com/features/adaptive-cooking/ — signature feature (adaptive plating)
+- https://cooktwo.com/features/pantry-ai/ — pantry-first AI
+- https://cooktwo.com/features/shared-grocery-list/ — real-time shared grocery list
+- https://cooktwo.com/features/meal-planning/ — AI meal planning
+- https://cooktwo.com/features/real-time-sync/ — sync & offline infrastructure
+- https://cooktwo.com/compare/ — how CookTwo differs from calorie trackers, recipe apps & meal kits
+- https://cooktwo.com/different-diets/ — guide for couples with different diet plans
+- https://cooktwo.com/pantry-first-cooking/ — pantry-first cooking guide
+- https://cooktwo.com/blog/ — articles on cooking for two
+
+## Core concept: One meal, two plates
+CookTwo's defining idea. Two partners cook one shared recipe, then each gets a plate portioned and balanced for their own target — different calories, different macros, same pan. No second meal, no separate plans, no nightly "what's for dinner?" argument. Portions are calculated with the Mifflin-St Jeor TDEE equation against each partner's body profile and goal.
+
+## Pricing
+Free during beta, no credit card required. Pro tier is $4.99/month and unlocks higher AI meal limits and priority generation.
+
+## Platform
+Installable PWA for iOS and Android. No app store required. Real-time sync via WebSocket with offline queue. The app lives at https://cooktwo.app.

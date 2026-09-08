@@ -10,11 +10,23 @@ import { handleMealChat } from './routes/mealChat';
 import { handleGetActivity } from './routes/activity';
 import { logToD1 } from './lib/activity';
 import { handleSubscribe, handleVerify, handleValidateAccess } from './routes/waitlist';
+import {
+  handleEngagementSignup,
+  handleEngagementVerify,
+  handleEngagementEvent,
+  handleEngagementUnsubscribe,
+  handleAdminEmails,
+  handleAdminEmailDetail,
+  handleAdminUsers,
+  handleAdminRunCycle,
+  handleAdminRunCycleForUser,
+} from './routes/engagement';
+import { processAllUsers, type EngineEnv } from './lib/engagement/email-engine';
 import { handleListDiets, handleGetDiet, handleListArticles, handleGetArticle } from './routes/diet-info';
 import { getCoupleDietRules } from './lib/diet-rules';
 import { generateMeal } from './lib/ai';
 import { getUsageState, withQuotaAI, tryReserveAI, refundAI, checkPremiumGate } from './lib/usage';
-import { isStripeConfigured, getStripeAccountInfo, verifyPriceAccess, createCheckoutSession, createPortalSession, verifyAndParseWebhook, applyWebhookEvent, StripeNotConfiguredError, updateStripeCustomerId } from './lib/billing';
+import { isStripeConfigured, getStripeAccountInfo, verifyPriceAccess, createCheckoutSession, createPortalSession, verifyAndParseWebhook, applyWebhookEvent, StripeNotConfiguredError, updateStripeCustomerId, verifyAndApplyCheckoutSession } from './lib/billing';
 import type { Env } from './env';
 import type { Category } from './durable-objects/HouseholdSync';
 
@@ -60,6 +72,17 @@ app.get('/health', (c) => c.text('ok'));
 app.post('/api/waitlist/subscribe', (c) => handleSubscribe(c));
 app.get('/api/waitlist/verify', (c) => handleVerify(c));
 app.post('/api/waitlist/validate-access', (c) => handleValidateAccess(c));
+
+// ─── Engagement email engine ──────────────────────────────────────
+app.post('/api/engagement/signup', (c) => handleEngagementSignup(c));
+app.post('/api/engagement/verify', (c) => handleEngagementVerify(c));
+app.post('/api/engagement/events', (c) => handleEngagementEvent(c));
+app.get('/api/engagement/unsubscribe', (c) => handleEngagementUnsubscribe(c));
+app.get('/api/engagement/admin/emails', (c) => handleAdminEmails(c));
+app.get('/api/engagement/admin/emails/:id', (c) => handleAdminEmailDetail(c));
+app.get('/api/engagement/admin/users', (c) => handleAdminUsers(c));
+app.post('/api/engagement/admin/run-cycle', (c) => handleAdminRunCycle(c));
+app.post('/api/engagement/admin/run-cycle/:userId', (c) => handleAdminRunCycleForUser(c));
 
 // ─── Diet reference data (public, no auth) ────────────────────────────────────
 app.get('/api/diets', (c) => handleListDiets(c));
@@ -150,7 +173,7 @@ app.post('/api/household/:id/billing/checkout', async (c) => {
       c.env,
       householdId,
       plan,
-      `${c.env.PWA_URL || 'https://cooktwo.app/PWA'}?upgraded=true`,
+      `${c.env.PWA_URL || 'https://cooktwo.app/PWA'}?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
       `${c.env.PWA_URL || 'https://cooktwo.app/PWA'}`,
     );
     return c.json({ url });
@@ -159,6 +182,23 @@ app.post('/api/household/:id/billing/checkout', async (c) => {
       return c.json({ error: 'Stripe not configured', code: 'stripe_not_configured' }, 503);
     }
     const message = err instanceof Error ? err.message : 'checkout error';
+    return c.json({ error: message }, 500);
+  }
+});
+
+app.post('/api/household/:id/billing/verify-session', async (c) => {
+  const denied = await requireAuth(c);
+  if (denied) return denied;
+  const householdId = c.req.param('id') as string;
+  const body = (await c.req.json().catch(() => ({}))) as { sessionId?: string };
+  if (!body.sessionId) return c.json({ error: 'sessionId is required' }, 400);
+
+  try {
+    const result = await verifyAndApplyCheckoutSession(c.env, c.env.DB, householdId, body.sessionId);
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'verify error';
+    console.error('verify-session error:', message);
     return c.json({ error: message }, 500);
   }
 });
@@ -208,65 +248,72 @@ app.post('/api/household/create', async (c) => {
   const displayName = (body.displayName ?? '').trim();
   if (!displayName) return jsonError('displayName is required', 400);
 
-  const householdId = crypto.randomUUID();
-  const partnerId = crypto.randomUUID();
-  const slot = 1 as const;
-  const now = Date.now();
+  try {
+    const householdId = crypto.randomUUID();
+    const partnerId = crypto.randomUUID();
+    const slot = 1 as const;
+    const now = Date.now();
 
-  const placeholderCode = `__${crypto.randomUUID()}__`;
-  await c.env.DB.prepare(
-    `INSERT INTO households (id, invite_code, created_at) VALUES (?, ?, ?)`,
-  )
-    .bind(householdId, placeholderCode, now)
-    .run();
+    const placeholderCode = `__${crypto.randomUUID()}__`;
+    await c.env.DB.prepare(
+      `INSERT INTO households (id, invite_code, created_at) VALUES (?, ?, ?)`,
+    )
+      .bind(householdId, placeholderCode, now)
+      .run();
 
-  await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
+    await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
 
-  if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
-    await updatePartner(c.env.DB, partnerId, {
-      diet: body.diet,
-      allergies: body.allergies,
-      goal: body.goal,
-      weightKg: body.weightKg,
-      heightCm: body.heightCm,
-      age: body.age,
-      gender: body.gender,
-      activityLevel: body.activityLevel,
+    if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
+      await updatePartner(c.env.DB, partnerId, {
+        diet: body.diet,
+        allergies: body.allergies,
+        goal: body.goal,
+        weightKg: body.weightKg,
+        heightCm: body.heightCm,
+        age: body.age,
+        gender: body.gender,
+        activityLevel: body.activityLevel,
+      });
+    }
+
+    const inviteStub = getInviteStub(c);
+    const createRes = await inviteStub.fetch('https://do/codes', {
+      method: 'POST',
+      body: JSON.stringify({ householdId }),
+      headers: { 'content-type': 'application/json' },
     });
+    if (!createRes.ok) return jsonError('failed to create invite code', 500);
+    const { code } = (await createRes.json()) as { code: string };
+
+    await c.env.DB.prepare(
+      'UPDATE households SET invite_code = ? WHERE id = ?',
+    )
+      .bind(code, householdId)
+      .run();
+
+    const token = await signToken(c.env.JWT_SECRET || 'dev-jwt-secret-cooktwo-2026', { householdId, partnerId, slot, displayName, inviteCode: code });
+    await logToD1(c.env.DB, {
+      householdId,
+      partnerId,
+      partnerSlot: slot,
+      partnerName: displayName,
+      actionType: 'household_created',
+      targetKind: 'household',
+      targetId: householdId,
+      targetName: displayName,
+    }).catch((err) => console.error('activity log failed:', err));
+    return c.json({
+      householdId,
+      inviteCode: code,
+      token,
+      partner: { id: partnerId, slot, displayName },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error';
+    const stack = err instanceof Error ? err.stack : '';
+    console.error('household/create error:', message, stack);
+    return c.json({ error: message, stack }, 500);
   }
-
-  const inviteStub = getInviteStub(c);
-  const createRes = await inviteStub.fetch('https://do/codes', {
-    method: 'POST',
-    body: JSON.stringify({ householdId }),
-    headers: { 'content-type': 'application/json' },
-  });
-  if (!createRes.ok) return jsonError('failed to create invite code', 500);
-  const { code } = (await createRes.json()) as { code: string };
-
-  await c.env.DB.prepare(
-    'UPDATE households SET invite_code = ? WHERE id = ?',
-  )
-    .bind(code, householdId)
-    .run();
-
-  const token = await signToken(c.env.JWT_SECRET, { householdId, partnerId, slot, displayName, inviteCode: code });
-  await logToD1(c.env.DB, {
-    householdId,
-    partnerId,
-    partnerSlot: slot,
-    partnerName: displayName,
-    actionType: 'household_created',
-    targetKind: 'household',
-    targetId: householdId,
-    targetName: displayName,
-  }).catch((err) => console.error('activity log failed:', err));
-  return c.json({
-    householdId,
-    inviteCode: code,
-    token,
-    partner: { id: partnerId, slot, displayName },
-  });
 });
 
 app.post('/api/household/join', async (c) => {
@@ -289,56 +336,63 @@ app.post('/api/household/join', async (c) => {
   if (!/^\d{6}$/.test(inviteCode)) return jsonError('inviteCode must be 6 digits', 400);
   if (!displayName) return jsonError('displayName is required', 400);
 
-  const inviteStub = getInviteStub(c);
-  const lookupRes = await inviteStub.fetch(`https://do/codes/${inviteCode}`, { method: 'GET' });
-  if (lookupRes.status === 404) return jsonError('invite code not found', 404);
-  if (!lookupRes.ok) return jsonError('failed to look up invite code', 500);
-  const { householdId } = (await lookupRes.json()) as { householdId: string };
+  try {
+    const inviteStub = getInviteStub(c);
+    const lookupRes = await inviteStub.fetch(`https://do/codes/${inviteCode}`, { method: 'GET' });
+    if (lookupRes.status === 404) return jsonError('invite code not found', 404);
+    if (!lookupRes.ok) return jsonError('failed to look up invite code', 500);
+    const { householdId } = (await lookupRes.json()) as { householdId: string };
 
-  const partnerId = crypto.randomUUID();
-  const slot = 2 as const;
+    const partnerId = crypto.randomUUID();
+    const slot = 2 as const;
 
-  await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
+    await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
 
-  if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
-    await updatePartner(c.env.DB, partnerId, {
-      diet: body.diet,
-      allergies: body.allergies,
-      goal: body.goal,
-      weightKg: body.weightKg,
-      heightCm: body.heightCm,
-      age: body.age,
-      gender: body.gender,
-      activityLevel: body.activityLevel,
+    if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
+      await updatePartner(c.env.DB, partnerId, {
+        diet: body.diet,
+        allergies: body.allergies,
+        goal: body.goal,
+        weightKg: body.weightKg,
+        heightCm: body.heightCm,
+        age: body.age,
+        gender: body.gender,
+        activityLevel: body.activityLevel,
+      });
+    }
+
+    const token = await signToken(c.env.JWT_SECRET, { householdId, partnerId, slot, displayName, inviteCode });
+    await logToD1(c.env.DB, {
+      householdId,
+      partnerId,
+      partnerSlot: slot,
+      partnerName: displayName,
+      actionType: 'partner_joined',
+      targetKind: 'household',
+      targetId: householdId,
+      targetName: displayName,
+    }).catch((err) => console.error('activity log failed:', err));
+
+    // Notify the existing partner(s) that someone joined their kitchen.
+    getStub(c, householdId)
+      .fetch('https://do/partner-linked', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ partnerName: displayName, joinerSlot: slot }),
+      })
+      .catch((err) => console.error('partner-linked push failed:', err));
+
+    return c.json({
+      householdId,
+      token,
+      partner: { id: partnerId, slot, displayName },
     });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error';
+    const stack = err instanceof Error ? err.stack : '';
+    console.error('household/join error:', message, stack);
+    return c.json({ error: message, stack }, 500);
   }
-
-  const token = await signToken(c.env.JWT_SECRET, { householdId, partnerId, slot, displayName, inviteCode });
-  await logToD1(c.env.DB, {
-    householdId,
-    partnerId,
-    partnerSlot: slot,
-    partnerName: displayName,
-    actionType: 'partner_joined',
-    targetKind: 'household',
-    targetId: householdId,
-    targetName: displayName,
-  }).catch((err) => console.error('activity log failed:', err));
-
-  // Notify the existing partner(s) that someone joined their kitchen.
-  getStub(c, householdId)
-    .fetch('https://do/partner-linked', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ partnerName: displayName, joinerSlot: slot }),
-    })
-    .catch((err) => console.error('partner-linked push failed:', err));
-
-  return c.json({
-    householdId,
-    token,
-    partner: { id: partnerId, slot, displayName },
-  });
 });
 
 app.post('/api/household/link', async (c) => {
@@ -813,3 +867,21 @@ app.get('/api/household/:id/ws', async (c) => {
 });
 
 export default app;
+
+// ─── Cron: daily engagement email cycle ───────────────────────────
+export async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+  console.log(`[cron] Engagement cycle at ${new Date(event.scheduledTime).toISOString()}`);
+  const engine: EngineEnv = {
+    DB: env.DB,
+    OPENROUTER_API_KEY: (env as any).OPENROUTER_API_KEY,
+    RESEND_API_KEY: env.RESEND_API_KEY,
+    RESEND_FROM: env.RESEND_FROM,
+    EMAIL_MODEL: (env as any).EMAIL_MODEL,
+    ADMIN_SECRET: (env as any).ADMIN_SECRET,
+    SITE_URL: env.SITE_URL,
+    PWA_URL: env.PWA_URL,
+  };
+  const result = await processAllUsers(engine);
+  console.log(`[cron] Done: scanned=${result.scanned}, sent=${result.sent}, skipped=${result.skipped}, errors=${result.errors.length}`);
+  if (result.errors.length > 0) console.error('[cron] Errors:', result.errors);
+}

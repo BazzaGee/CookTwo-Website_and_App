@@ -6,6 +6,41 @@
 
 export interface Env {}
 
+// ── Bot / crawler filter ──────────────────────────────────────
+// Blocks known AI crawlers, SEO bots, and requests from data-center cities
+// before they reach the Pages origin. Saves bandwidth and keeps GA4 clean.
+
+const BOT_UA_PATTERNS = [
+  'bot', 'crawler', 'spider', 'scraper', 'headless',
+  'petalbot', 'bytespider', 'gptbot', 'claudebot', 'chatgpt-user',
+  'ccbot', 'anthropic', 'cohere', 'perplexity', 'youbot',
+  'dataforseomarketing', 'mj12bot', 'ahrefsbot', 'semrushbot',
+  'dotbot', 'rogerbot', 'blexbot', 'seekport',
+];
+
+const BOT_CITY_BLOCKLIST = [
+  'Ashburn',        // Google Cloud / AWS us-east-1
+  'Council Bluffs', // Google Cloud us-central1
+  'Glenview',       // Known bot proxy / data center
+  'Boardman',       // AWS us-west-2
+  'The Dalles',     // Google Cloud
+];
+
+function isLikelyBot(request: Request): boolean {
+  const ua = (request.headers.get('user-agent') || '').toLowerCase();
+  // Block if UA matches a known bot pattern
+  if (BOT_UA_PATTERNS.some(pattern => ua.includes(pattern))) {
+    return true;
+  }
+  // Block if city header matches a known data-center city
+  // (cf-ipcity is set by Cloudflare for all requests)
+  const city = request.headers.get('cf-ipcity') || '';
+  if (BOT_CITY_BLOCKLIST.includes(city)) {
+    return true;
+  }
+  return false;
+}
+
 const APEX_REDIRECTS: Record<string, string> = {
   'www.cooktwo.com': 'https://cooktwo.com',
   'www.cooktwo.app': 'https://cooktwo.app',
@@ -42,6 +77,11 @@ export default {
   async fetch(request: Request, _env: Env, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
+
+    // Block bots and data-center traffic before hitting Pages origin
+    if (isLikelyBot(request)) {
+      return new Response('Forbidden', { status: 403 });
+    }
 
     // www -> apex 301 redirect
     const apex = APEX_REDIRECTS[host];

@@ -119,6 +119,9 @@ import { CONFIG } from '../../config';
       if (target.closest('[data-early-access]')) {
         e.preventDefault();
         open();
+        if (typeof gtag === 'function') {
+          gtag('event', 'cta_click', { cta: 'early_access_open' });
+        }
       }
     });
 
@@ -131,6 +134,9 @@ import { CONFIG } from '../../config';
       if (target?.closest('[data-early-access]') && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         open();
+        if (typeof gtag === 'function') {
+          gtag('event', 'cta_click', { cta: 'early_access_open' });
+        }
       }
     });
 
@@ -161,6 +167,9 @@ import { CONFIG } from '../../config';
         formWrap?.classList.add('hidden');
         if (emailDisplay) emailDisplay.textContent = email;
         successEl?.classList.remove('hidden');
+        if (typeof gtag === 'function') {
+          gtag('event', 'sign_up', { method: 'email' });
+        }
       } catch (err) {
         if (errorEl) {
           errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong.';

@@ -104,6 +104,10 @@ const uid = formId;
         form.classList.add('hidden');
         if (emailDisplay) emailDisplay.textContent = email;
         successEl!.classList.remove('hidden');
+
+        if (typeof gtag === 'function') {
+          gtag('event', 'sign_up', { method: 'email' });
+        }
       } catch (err) {
         errorEl!.textContent = err instanceof Error ? err.message : 'Something went wrong.';
         errorEl!.classList.remove('hidden');

@@ -39,3 +39,6 @@ name = "couples-food-system-api-staging"
 
 [env.production]
 name = "couples-food-system-api"
+
+[triggers]
+crons = ["0 9 * * *"]
