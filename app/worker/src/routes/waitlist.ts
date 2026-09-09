@@ -1,5 +1,7 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { ensureEngagementUser, markEngagementVerified } from './engagement';
+import { buildEngineEnv, computeUserState, decideNextEmail, generateAndSendEmail } from '../lib/engagement/email-engine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,6 +49,19 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
 
   const verifyUrl = `${siteUrl}/api/waitlist/verify?token=${verifyToken}`;
 
+  // Mirror the subscribe into the engagement engine so the onboarding
+  // email series has a user to work with.
+  try {
+    await ensureEngagementUser(c.env.DB, {
+      email,
+      source: typeof body.source === 'string' ? body.source : null,
+      country: typeof body.country === 'string' ? body.country : null,
+      gaClientId: typeof body.ga_client_id === 'string' ? body.ga_client_id : null,
+    });
+  } catch (err) {
+    console.error('engagement user upsert failed:', err);
+  }
+
   try {
     await sendVerificationEmail(c.env, email, verifyUrl);
   } catch (err) {
@@ -82,6 +97,25 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
     )
       .bind(accessToken, row.id)
       .run();
+
+    // Engagement engine: mark verified + fire the first onboarding email.
+    c.executionCtx.waitUntil(
+      (async () => {
+        try {
+          const userId = await markEngagementVerified(c.env.DB, row.email);
+          if (!userId) return;
+          const env = buildEngineEnv(c.env);
+          const state = await computeUserState(env, userId, c.env.DB);
+          if (!state) return;
+          const decision = await decideNextEmail(state, c.env.DB);
+          if (decision) {
+            await generateAndSendEmail(env, state, decision);
+          }
+        } catch (err) {
+          console.error('engagement welcome flow failed:', err);
+        }
+      })(),
+    );
 
     c.executionCtx.waitUntil(
       fetch('https://api.resend.com/events/send', {

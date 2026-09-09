@@ -30,6 +30,17 @@ export interface JoinHouseholdInput {
 
 export type CreateOrJoinResult = AuthSession;
 
+// The waitlist access token persists in localStorage after email verification.
+// Sending it with household create/join/link lets the backend connect the
+// waitlist email to the household (used by the engagement email engine).
+function getAccessToken(): string | undefined {
+  try {
+    return localStorage.getItem('cfs.access') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function createHousehold(input: CreateHouseholdInput): Promise<CreateOrJoinResult> {
   const res = await apiFetch<{
     householdId: string;
@@ -38,7 +49,7 @@ export async function createHousehold(input: CreateHouseholdInput): Promise<Crea
     partner: { id: string; slot: 1 | 2; displayName: string };
   }>('/api/household/create', {
     method: 'POST',
-    body: input,
+    body: { ...input, accessToken: getAccessToken() },
   });
   return {
     token: res.token,
@@ -55,7 +66,7 @@ export async function joinHousehold(input: JoinHouseholdInput): Promise<CreateOr
     partner: { id: string; slot: 1 | 2; displayName: string };
   }>('/api/household/join', {
     method: 'POST',
-    body: input,
+    body: { ...input, accessToken: getAccessToken() },
   });
   return {
     token: res.token,
@@ -71,7 +82,7 @@ export async function linkWithPartner(inviteCode: string, token: string): Promis
     partner: { id: string; slot: 1 | 2; displayName: string };
   }>('/api/household/link', {
     method: 'POST',
-    body: { inviteCode },
+    body: { inviteCode, accessToken: getAccessToken() },
     token,
   });
   return {

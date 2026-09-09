@@ -1,14 +1,32 @@
 // CookTwo engagement engine — autonomous brain.
 // computeUserState → decideNextEmail → generateAndSendEmail → processAllUsers.
-// Guardrails: max 1 email/user/day, no double-send, skip unsubscribed/unverified.
+//
+// Email flow is tiered:
+//   Tier 1 — Onboarding series (welcome + 6 feature steps, adaptive skip-ahead,
+//            3-day spacing). While the series is incomplete and the user is
+//            inside the 35-day onboarding window, ONLY onboarding emails send;
+//            lifecycle emails are suppressed.
+//   Tier 2 — Lifecycle emails (celebrations, streaks, premium, tips, nudges),
+//            unlocked once onboarding completes (or the window expires).
+//
+// Guardrails: max 1 email/user/day, no double-send windows per type,
+// skip unsubscribed/unverified.
 
 import { writeEmail, type EmailOutput, type EmailType } from './email-writer';
 import { sendEngagementEmail, type SenderEnv } from './email-sender';
+import type { ActivityEntry } from '../activity';
 
 const DAY_MS = 86400000;
 const TWO_DAYS_MS = DAY_MS * 2;
 const THREE_DAYS_MS = DAY_MS * 3;
 const SEVEN_DAYS_MS = DAY_MS * 7;
+
+// Onboarding series pacing
+const ONBOARDING_SPACING_MS = THREE_DAYS_MS;
+export const ONBOARDING_WINDOW_DAYS = 35;
+// Activity within this window after household creation is treated as the
+// onboarding wizard's initial pantry seed, not deliberate pantry usage.
+const SETUP_GRACE_MS = 60 * 60 * 1000;
 
 export interface UserState {
   userId: string;
@@ -30,6 +48,20 @@ export interface UserState {
   hasHousehold: boolean;
   hasPartner: boolean;
   hasMeals: boolean;
+  // Feature-usage signals (onboarding + lifecycle decisions)
+  groceryAdded: number;
+  pantryAddedPostSetup: number;
+  mealGenerated: number;
+  mealConfirmed: number;
+  recipeSaved: number;
+  partnersWithGoal: number;
+  lastMealAt: number;
+  householdCreatedAt: number | null;
+  // Onboarding sequence state
+  onboardingStep: number;
+  onboardingCompletedAt: number | null;
+  lastOnboardingEmailAt: number;
+  sentOnboardingTypes: string[];
 }
 
 export interface EmailDecision {
@@ -40,6 +72,7 @@ export interface EmailDecision {
 
 export interface EngineEnv extends SenderEnv {
   DB: D1Database;
+  HOUSEHOLD_SYNC: DurableObjectNamespace;
   OPENROUTER_API_KEY?: string;
   EMAIL_MODEL?: string;
   ADMIN_SECRET?: string;
@@ -47,11 +80,116 @@ export interface EngineEnv extends SenderEnv {
   PWA_URL?: string;
 }
 
+export function buildEngineEnv(env: any): EngineEnv {
+  return {
+    DB: env.DB,
+    HOUSEHOLD_SYNC: env.HOUSEHOLD_SYNC,
+    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY,
+    RESEND_API_KEY: env.RESEND_API_KEY,
+    RESEND_FROM: env.RESEND_FROM,
+    EMAIL_MODEL: env.EMAIL_MODEL,
+    ADMIN_SECRET: env.ADMIN_SECRET,
+    SITE_URL: env.SITE_URL,
+    PWA_URL: env.PWA_URL,
+  };
+}
+
 // ──────────────────────────────────────────────────────────────
-// 1. Compute user state from D1
+// Onboarding sequence definition
 // ──────────────────────────────────────────────────────────────
 
-export async function computeUserState(userId: string, db: D1Database): Promise<UserState | null> {
+export interface OnboardingStep {
+  type: EmailType;
+  /** Nominal schedule day (docs/preview only; real pacing = spacing since last onboarding email) */
+  dayOffset: number;
+  /** Brief for the AI writer (and fallback understanding) */
+  brief: string;
+  /** Usage signal meaning the user has already done this step — email is skipped */
+  doneWhen: (s: UserState) => boolean;
+}
+
+export const ONBOARDING_SEQUENCE: OnboardingStep[] = [
+  {
+    type: 'welcome',
+    dayOffset: 0,
+    brief:
+      'Welcome email — the first of a short guided series. Tell the story of WHY CookTwo was built (cooking for two is hard: different goals, different appetites, dinner friction). Explain in one breath how it works: one shared grocery list and pantry, and one recipe plated two ways. Set the expectation that a few short emails will follow, one small thing at a time. CTA: open the app and finish setup (about 2 minutes).',
+    doneWhen: () => false,
+  },
+  {
+    type: 'onboarding_partner',
+    dayOffset: 3,
+    brief:
+      'Step 1 of the series: invite the partner. Explain the 6-digit invite code (in the app settings) and that the list, pantry and meal plans sync live between them once both are in. Reassure solo users it works fine alone too. CTA: open the app and share the invite code.',
+    doneWhen: (s) => s.hasPartner,
+  },
+  {
+    type: 'onboarding_shopping_list',
+    dayOffset: 6,
+    brief:
+      'Step 2: the shared shopping list. Teach typing items like a text ("milk, eggs, 2 bread"), automatic aisle sorting, live sync between partners, checking things off at the store, and that "Done Shopping" moves everything into the pantry automatically. CTA: add tonight\'s ingredients to the list.',
+    doneWhen: (s) => s.groceryAdded > 0,
+  },
+  {
+    type: 'onboarding_pantry',
+    dayOffset: 9,
+    brief:
+      'Step 3: the pantry ("Our kitchen"). Teach typing what\'s in the kitchen in plain English — the AI organizes it — and that Done Shopping keeps it topped up automatically. Frame it as 2 minutes today that fuel the next step. CTA: add a few real items to the pantry.',
+    doneWhen: (s) => s.pantryAddedPostSetup > 0,
+  },
+  {
+    type: 'onboarding_ai_meals',
+    dayOffset: 12,
+    brief:
+      'Step 4: the payoff — asking "What should we cook?". Explain the two modes: "Cook with what we have" (uses only the pantry, nothing wasted) and "Suggest a meal — I\'ll shop" (missing items go straight to the shared list). Mention it respects both diets and allergies. CTA: ask the app what to cook tonight.',
+    doneWhen: (s) => s.mealGenerated > 0,
+  },
+  {
+    type: 'onboarding_two_plates',
+    dayOffset: 15,
+    brief:
+      'Step 5: one prep, two plates — the feature no other app has. Same dinner, each plate portioned for that person\'s calories and goal, from the same pan. Encourage both partners to set a goal (and optional body metrics) in Profiles — under a minute each. CTA: set your goal in Profiles.',
+    doneWhen: (s) =>
+      s.mealConfirmed > 0 && s.partnerCount >= 1 && s.partnersWithGoal >= Math.min(s.partnerCount, 2),
+  },
+  {
+    type: 'onboarding_habit_loop',
+    dayOffset: 18,
+    brief:
+      'Step 6 (final): the habit loop. After cooking, tap "We cooked it": ingredients leave the pantry automatically, the recipe saves itself, and future suggestions get smarter. Frame it as the one small habit that makes the whole system run itself. Close the series warmly. CTA: cook tonight and confirm it.',
+    doneWhen: (s) => s.mealConfirmed > 0 && s.recipeSaved > 0,
+  },
+];
+
+const ONBOARDING_EMAIL_PREFIX = 'onboarding_';
+
+function isOnboardingType(type: string): boolean {
+  // 'app_onboarding' is the deprecated pre-sequence type — treat it as part
+  // of the series so legacy sends count toward onboarding progress.
+  return type === 'welcome' || type === 'app_onboarding' || type.startsWith(ONBOARDING_EMAIL_PREFIX);
+}
+
+// ──────────────────────────────────────────────────────────────
+// 1. Compute user state from D1 + HouseholdSync DO
+// ──────────────────────────────────────────────────────────────
+
+async function getDoActivity(env: EngineEnv, householdId: string): Promise<ActivityEntry[]> {
+  try {
+    const stub = env.HOUSEHOLD_SYNC.get(env.HOUSEHOLD_SYNC.idFromName(householdId));
+    const res = await stub.fetch('https://do/activity?limit=200');
+    if (!res.ok) return [];
+    return (await res.json()) as ActivityEntry[];
+  } catch (err: any) {
+    console.error('Engagement engine: DO activity fetch failed:', err?.message);
+    return [];
+  }
+}
+
+export async function computeUserState(
+  env: EngineEnv,
+  userId: string,
+  db: D1Database,
+): Promise<UserState | null> {
   const user = await db
     .prepare('SELECT * FROM engagement_users WHERE id = ?')
     .bind(userId)
@@ -60,50 +198,106 @@ export async function computeUserState(userId: string, db: D1Database): Promise<
       unsubscribed: number; created_at: number; last_active_at: number;
       household_id: string | null; acquisition_source: string | null;
       acquisition_country: string | null;
+      onboarding_step: number; onboarding_completed_at: number | null;
     }>();
   if (!user) return null;
 
   const now = Date.now();
   const householdId = user.household_id;
 
+  // Sent email history — recent (all types) + onboarding progress
+  const sentRes = await db
+    .prepare(
+      `SELECT email_type, created_at FROM engagement_emails
+       WHERE user_id = ? AND status != 'failed'
+       ORDER BY created_at DESC LIMIT 50`,
+    )
+    .bind(userId)
+    .all<{ email_type: string; created_at: number }>();
+  const sent = sentRes.results || [];
+
+  const sentOnboardingTypes = sent.map((e) => e.email_type).filter(isOnboardingType);
+  const lastOnboardingEmailAt = sentOnboardingTypes.length > 0
+    ? Math.max(
+        ...sent
+          .filter((e) => isOnboardingType(e.email_type))
+          .map((e) => e.created_at),
+      )
+    : 0;
+
+  // Household-derived signals
   let totalActions = 0;
-  let totalMeals = 0;
-  let mealsLast7Days = 0;
+  let groceryAdded = 0;
+  let pantryAddedPostSetup = 0;
+  let mealGenerated = 0;
+  let mealConfirmed = 0;
+  let recipeSaved = 0;
   let lastActionAt = user.last_active_at;
-
-  if (householdId) {
-    const actRes = await db
-      .prepare('SELECT action_type, created_at FROM activity_log WHERE household_id = ?')
-      .bind(householdId)
-      .all<{ action_type: string; created_at: number }>();
-    const actions = actRes.results || [];
-
-    totalActions = actions.length;
-    for (const a of actions) {
-      if (a.created_at > lastActionAt) lastActionAt = a.created_at;
-      if (a.action_type && a.action_type.includes('meal')) {
-        totalMeals++;
-        if (now - a.created_at < SEVEN_DAYS_MS) mealsLast7Days++;
-      }
-    }
-  }
-
+  let lastMealAt = 0;
+  let mealsLast7Days = 0;
+  let householdCreatedAt: number | null = null;
   let partnerCount = 0;
-  if (householdId) {
-    const partRes = await db
-      .prepare('SELECT COUNT(*) as c FROM partners WHERE household_id = ?')
-      .bind(householdId)
-      .first<{ c: number }>();
-    partnerCount = partRes?.c ?? 0;
-  }
-
+  let partnersWithGoal = 0;
   let planLabel: string | null = null;
+
   if (householdId) {
+    const hh = await db
+      .prepare('SELECT created_at FROM households WHERE id = ?')
+      .bind(householdId)
+      .first<{ created_at: number }>();
+    householdCreatedAt = hh?.created_at ?? null;
+
+    const partRes = await db
+      .prepare(
+        `SELECT COUNT(*) as c,
+                SUM(CASE WHEN goal IS NOT NULL AND goal != '' THEN 1 ELSE 0 END) as with_goal
+         FROM partners WHERE household_id = ?`,
+      )
+      .bind(householdId)
+      .first<{ c: number; with_goal: number | null }>();
+    partnerCount = partRes?.c ?? 0;
+    partnersWithGoal = partRes?.with_goal ?? 0;
+
     const sub = await db
       .prepare('SELECT plan FROM household_subscriptions WHERE household_id = ? LIMIT 1')
       .bind(householdId)
       .first<{ plan: string }>();
     planLabel = sub?.plan ?? null;
+
+    // Merge D1 activity (meals/recipes/profiles/household) with DO activity
+    // (grocery/pantry events live in the HouseholdSync DO).
+    const actRes = await db
+      .prepare('SELECT action_type, created_at FROM activity_log WHERE household_id = ?')
+      .bind(householdId)
+      .all<{ action_type: string; created_at: number }>();
+    const d1Actions = (actRes.results || []).map((a) => ({
+      actionType: a.action_type,
+      createdAt: a.created_at,
+    }));
+    const doActions = (await getDoActivity(env, householdId)).map((e) => ({
+      actionType: e.actionType,
+      createdAt: e.createdAt,
+    }));
+    const actions = [...d1Actions, ...doActions];
+
+    const setupCutoff = (householdCreatedAt ?? 0) + SETUP_GRACE_MS;
+
+    totalActions = actions.length;
+    for (const a of actions) {
+      if (a.createdAt > lastActionAt) lastActionAt = a.createdAt;
+      const t = a.actionType;
+      if (t === 'item_added' || t === 'items_added') groceryAdded++;
+      else if (t === 'pantry_added' || t === 'items_moved_to_pantry') {
+        if (a.createdAt > setupCutoff) pantryAddedPostSetup++;
+      } else if (t === 'meal_generated' || t === 'week_plan_generated') mealGenerated++;
+      else if (t === 'meal_confirmed') mealConfirmed++;
+      else if (t === 'recipe_saved') recipeSaved++;
+
+      if (t === 'meal_generated' || t === 'meal_confirmed' || t === 'week_plan_generated') {
+        if (a.createdAt > lastMealAt) lastMealAt = a.createdAt;
+        if (now - a.createdAt < SEVEN_DAYS_MS) mealsLast7Days++;
+      }
+    }
   }
 
   return {
@@ -117,7 +311,7 @@ export async function computeUserState(userId: string, db: D1Database): Promise<
     daysSinceSignup: Math.floor((now - user.created_at) / DAY_MS),
     daysSinceLastActive: Math.floor((now - lastActionAt) / DAY_MS),
     totalActions,
-    totalMeals,
+    totalMeals: mealGenerated + mealConfirmed,
     mealsLast7Days,
     partnerCount,
     planLabel,
@@ -125,7 +319,19 @@ export async function computeUserState(userId: string, db: D1Database): Promise<
     acquisitionCountry: user.acquisition_country,
     hasHousehold: !!householdId,
     hasPartner: partnerCount >= 2,
-    hasMeals: totalMeals > 0,
+    hasMeals: mealGenerated + mealConfirmed > 0,
+    groceryAdded,
+    pantryAddedPostSetup,
+    mealGenerated,
+    mealConfirmed,
+    recipeSaved,
+    partnersWithGoal,
+    lastMealAt,
+    householdCreatedAt,
+    onboardingStep: user.onboarding_step ?? 0,
+    onboardingCompletedAt: user.onboarding_completed_at ?? null,
+    lastOnboardingEmailAt,
+    sentOnboardingTypes,
   };
 }
 
@@ -133,54 +339,136 @@ export async function computeUserState(userId: string, db: D1Database): Promise<
 // 2. Decide which email (if any) is due
 // ──────────────────────────────────────────────────────────────
 
-export async function decideNextEmail(state: UserState, db: D1Database): Promise<EmailDecision | null> {
-  if (state.unsubscribed || !state.verified) return null;
+async function markGraduated(db: D1Database, userId: string, now: number): Promise<void> {
+  await db
+    .prepare('UPDATE engagement_users SET onboarding_completed_at = ? WHERE id = ? AND onboarding_completed_at IS NULL')
+    .bind(now, userId)
+    .run();
+}
 
-  const recentRes = await db
-    .prepare(`SELECT email_type, created_at FROM engagement_emails WHERE user_id = ? AND status != 'failed' ORDER BY created_at DESC LIMIT 20`)
-    .bind(state.userId)
-    .all<{ email_type: string; created_at: number }>();
-  const recent = recentRes.results || [];
+async function markStep(db: D1Database, userId: string, step: number): Promise<void> {
+  await db
+    .prepare('UPDATE engagement_users SET onboarding_step = ? WHERE id = ?')
+    .bind(step, userId)
+    .run();
+}
 
-  const now = Date.now();
-  const lastSent = recent.length > 0 ? (recent[0] as { created_at: number }).created_at : 0;
-  const hoursSinceLastEmail = (now - lastSent) / (1000 * 60 * 60);
+function onboardingContextNote(step: OnboardingStep, state: UserState): string {
+  const position = ONBOARDING_SEQUENCE.findIndex((s) => s.type === step.type) + 1;
+  const facts = [
+    state.name ? `Name: ${state.name}.` : '',
+    `Day ${state.daysSinceSignup} since signup.`,
+    state.hasPartner
+      ? 'Partner has joined the kitchen.'
+      : `Partner has NOT joined yet (${state.partnerCount} partner so far).`,
+    `Grocery items/events added: ${state.groceryAdded}.`,
+    `Pantry items added since setup: ${state.pantryAddedPostSetup}.`,
+    `Meals generated: ${state.mealGenerated}; meals confirmed cooked: ${state.mealConfirmed}; recipes saved: ${state.recipeSaved}.`,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return `[Onboarding series — step ${position} of ${ONBOARDING_SEQUENCE.length}] ${step.brief} Known user state: ${facts}`;
+}
 
-  // Guardrail: max 1 email per day
-  if (hoursSinceLastEmail < 24) return null;
+async function decideOnboarding(
+  state: UserState,
+  db: D1Database,
+  now: number,
+): Promise<EmailDecision | null> {
+  // Reconcile the pointer with what was actually sent (protects users who
+  // received the old welcome or earlier steps before this engine existed).
+  let stepIndex = state.onboardingStep;
+  for (const t of state.sentOnboardingTypes) {
+    // Legacy 'app_onboarding' maps to the first series step.
+    const idx = t === 'app_onboarding'
+      ? 0
+      : ONBOARDING_SEQUENCE.findIndex((s) => s.type === t);
+    if (idx !== -1 && idx + 1 > stepIndex) stepIndex = idx + 1;
+  }
 
-  const wasRecentlySent = (type: string, withinMs: number) =>
-    recent.some((e) => e.email_type === type && now - e.created_at < withinMs);
+  // Skip-ahead: walk past steps the user has already completed.
+  while (stepIndex < ONBOARDING_SEQUENCE.length) {
+    const next = ONBOARDING_SEQUENCE[stepIndex];
+    if (!next || !next.doneWhen(state)) break;
+    stepIndex++;
+  }
 
-  // 1. Welcome — first email after signup, always
-  if (recent.length === 0) {
+  if (stepIndex !== state.onboardingStep) {
+    await markStep(db, state.userId, stepIndex);
+  }
+
+  // Early graduation — they completed the full core loop on their own.
+  if (state.mealGenerated > 0 && state.mealConfirmed > 0 && state.recipeSaved > 0) {
+    await markGraduated(db, state.userId, now);
+    return null;
+  }
+
+  // Sequence exhausted — graduate silently.
+  if (stepIndex >= ONBOARDING_SEQUENCE.length) {
+    await markGraduated(db, state.userId, now);
+    return null;
+  }
+
+  const step = ONBOARDING_SEQUENCE[stepIndex];
+  if (!step) return null;
+
+  // Welcome (step 0) goes out immediately — reaching this branch means the
+  // reconciliation above found no welcome in the send history.
+  if (stepIndex === 0) {
     return {
-      type: 'welcome',
-      reason: 'New user — first email',
-      contextNote: `User just signed up${state.name ? ' (' + state.name + ')' : ''} from ${state.acquisitionSource || 'unknown'} source. Send a warm welcome and point them to the app (https://cooktwo.app/PWA) and website (https://cooktwo.com).`,
+      type: step.type,
+      reason: 'Onboarding step 1: welcome',
+      contextNote: onboardingContextNote(step, state),
     };
   }
 
-  // 2. Partner invite — household exists, only one partner, 3+ days
-  if (state.hasHousehold && !state.hasPartner && state.daysSinceSignup >= 3 && !wasRecentlySent('partner_invite', THREE_DAYS_MS)) {
+  // Spacing: 3 days since the last onboarding email (global 1/day is enforced upstream).
+  if (state.lastOnboardingEmailAt && now - state.lastOnboardingEmailAt < ONBOARDING_SPACING_MS) {
+    return null;
+  }
+
+  const position = stepIndex + 1;
+  return {
+    type: step.type,
+    reason: `Onboarding step ${position}/${ONBOARDING_SEQUENCE.length} due`,
+    contextNote: onboardingContextNote(step, state),
+  };
+}
+
+function decideLifecycle(
+  state: UserState,
+  recent: Array<{ email_type: string; created_at: number }>,
+  now: number,
+): EmailDecision | null {
+  const wasRecentlySent = (types: string[], withinMs: number) =>
+    recent.some((e) => types.includes(e.email_type) && now - e.created_at < withinMs);
+
+  // 1. Partner invite — household exists, only one partner
+  if (
+    state.hasHousehold && !state.hasPartner && state.daysSinceSignup >= 3 &&
+    !wasRecentlySent(['partner_invite', 'onboarding_partner'], THREE_DAYS_MS)
+  ) {
     return {
       type: 'partner_invite',
-      reason: 'Partner not yet joined after 3+ days',
-      contextNote: `User's household has ${state.partnerCount} partner(s). Encourage them to share their invite code so their partner can join.`,
+      reason: 'Partner not yet joined (post-onboarding)',
+      contextNote: `User's household has ${state.partnerCount} partner(s). Encourage them to share their invite code so their partner can join — mention that everything syncs live once both are in.`,
     };
   }
 
-  // 3. First meal logged — celebrate, then set up for habit
-  if (state.totalMeals === 1 && !wasRecentlySent('first_meal_logged', TWO_DAYS_MS)) {
+  // 2. First meal logged — celebrate, but only while it's fresh
+  if (
+    state.totalMeals === 1 && now - state.lastMealAt < THREE_DAYS_MS &&
+    !wasRecentlySent(['first_meal_logged'], TWO_DAYS_MS)
+  ) {
     return {
       type: 'first_meal_logged',
-      reason: 'First meal logged — celebrate + suggest next',
+      reason: 'First meal logged recently — celebrate + suggest next',
       contextNote: `User just logged their first meal. Celebrate and encourage a second.`,
     };
   }
 
-  // 4. Meal streak — 3+ meals in last 7 days
-  if (state.mealsLast7Days >= 3 && !wasRecentlySent('meal_streak', SEVEN_DAYS_MS)) {
+  // 3. Meal streak — 3+ meals in last 7 days
+  if (state.mealsLast7Days >= 3 && !wasRecentlySent(['meal_streak'], SEVEN_DAYS_MS)) {
     return {
       type: 'meal_streak',
       reason: `${state.mealsLast7Days} meals in last 7 days — streak`,
@@ -188,8 +476,11 @@ export async function decideNextEmail(state: UserState, db: D1Database): Promise
     };
   }
 
-  // 5. Premium pitch — power usage without premium
-  if (state.totalMeals >= 10 && !state.planLabel && !wasRecentlySent('premium_pitch', SEVEN_DAYS_MS)) {
+  // 4. Premium pitch — power usage without premium
+  if (
+    state.totalMeals >= 10 && !state.planLabel &&
+    !wasRecentlySent(['premium_pitch'], SEVEN_DAYS_MS)
+  ) {
     return {
       type: 'premium_pitch',
       reason: 'Power usage without premium',
@@ -197,17 +488,11 @@ export async function decideNextEmail(state: UserState, db: D1Database): Promise
     };
   }
 
-  // 6. App onboarding — signed up 2+ days, no app activity
-  if (state.totalActions === 0 && state.daysSinceSignup >= 2 && !wasRecentlySent('app_onboarding', TWO_DAYS_MS)) {
-    return {
-      type: 'app_onboarding',
-      reason: `${state.daysSinceSignup} days since signup, no app activity`,
-      contextNote: `User signed up ${state.daysSinceSignup} days ago but hasn't used the app. Encourage them to open https://cooktwo.app/PWA and set up.`,
-    };
-  }
-
-  // 7. Inactivity nudge — had activity before, 7+ days inactive
-  if (state.totalActions > 0 && state.daysSinceLastActive >= 7 && !wasRecentlySent('inactivity_nudge', SEVEN_DAYS_MS)) {
+  // 5. Inactivity nudge — had activity before, 7+ days inactive
+  if (
+    state.totalActions > 0 && state.daysSinceLastActive >= 7 &&
+    !wasRecentlySent(['inactivity_nudge'], SEVEN_DAYS_MS)
+  ) {
     return {
       type: 'inactivity_nudge',
       reason: `${state.daysSinceLastActive} days inactive (had ${state.totalActions} actions)`,
@@ -215,8 +500,8 @@ export async function decideNextEmail(state: UserState, db: D1Database): Promise
     };
   }
 
-  // 8. App tip — weekly rotation
-  if (state.daysSinceSignup >= 3 && !wasRecentlySent('app_tip', SEVEN_DAYS_MS)) {
+  // 6. App tip — weekly rotation
+  if (state.daysSinceSignup >= 3 && !wasRecentlySent(['app_tip'], SEVEN_DAYS_MS)) {
     return {
       type: 'app_tip',
       reason: 'Weekly tip rotation',
@@ -225,6 +510,48 @@ export async function decideNextEmail(state: UserState, db: D1Database): Promise
   }
 
   return null;
+}
+
+export async function decideNextEmail(
+  state: UserState,
+  db: D1Database,
+  now: number = Date.now(),
+): Promise<EmailDecision | null> {
+  if (state.unsubscribed || !state.verified) return null;
+
+  const recentRes = await db
+    .prepare(
+      `SELECT email_type, created_at FROM engagement_emails
+       WHERE user_id = ? AND status != 'failed'
+       ORDER BY created_at DESC LIMIT 20`,
+    )
+    .bind(state.userId)
+    .all<{ email_type: string; created_at: number }>();
+  const recent = recentRes.results || [];
+
+  const lastSent = recent.length > 0 ? (recent[0] as { created_at: number }).created_at : 0;
+  const hoursSinceLastEmail = (now - lastSent) / (1000 * 60 * 60);
+
+  // Guardrail: max 1 email per day
+  if (hoursSinceLastEmail < 24) return null;
+
+  const onboardingActive =
+    state.onboardingCompletedAt === null && state.daysSinceSignup <= ONBOARDING_WINDOW_DAYS;
+
+  if (onboardingActive) {
+    // TIER 1: onboarding only — lifecycle emails are suppressed.
+    return decideOnboarding(state, db, now);
+  }
+
+  if (state.onboardingCompletedAt === null) {
+    // Onboarding window expired without completion — graduate and pick up
+    // lifecycle emails on the next cycle.
+    await markGraduated(db, state.userId, now);
+    return null;
+  }
+
+  // TIER 2: lifecycle emails.
+  return decideLifecycle(state, recent, now);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -245,6 +572,10 @@ export async function generateAndSendEmail(
     partnerCount: state.partnerCount,
     hasPartner: state.hasPartner,
     hasMeals: state.hasMeals,
+    groceryAdded: state.groceryAdded,
+    pantryAddedPostSetup: state.pantryAddedPostSetup,
+    mealConfirmed: state.mealConfirmed,
+    recipeSaved: state.recipeSaved,
     planLabel: state.planLabel,
     acquisitionSource: state.acquisitionSource,
     acquisitionCountry: state.acquisitionCountry,
@@ -311,7 +642,7 @@ export async function processAllUsers(env: EngineEnv): Promise<{
 
   for (const user of users) {
     try {
-      const state = await computeUserState(user.id, env.DB);
+      const state = await computeUserState(env, user.id, env.DB);
       if (!state) { skipped++; continue; }
       const decision = await decideNextEmail(state, env.DB);
       if (!decision) { skipped++; continue; }

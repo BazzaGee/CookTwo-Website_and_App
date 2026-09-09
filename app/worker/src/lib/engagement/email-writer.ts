@@ -13,8 +13,15 @@ export interface EmailOutput {
 }
 
 export type EmailType =
+  // Onboarding series (sent in order while onboarding is active)
   | 'welcome'
-  | 'app_onboarding'
+  | 'onboarding_partner'
+  | 'onboarding_shopping_list'
+  | 'onboarding_pantry'
+  | 'onboarding_ai_meals'
+  | 'onboarding_two_plates'
+  | 'onboarding_habit_loop'
+  // Lifecycle emails (only after onboarding is complete)
   | 'first_meal_logged'
   | 'meal_streak'
   | 'inactivity_nudge'

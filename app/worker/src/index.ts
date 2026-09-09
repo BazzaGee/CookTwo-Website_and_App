@@ -20,8 +20,10 @@ import {
   handleAdminUsers,
   handleAdminRunCycle,
   handleAdminRunCycleForUser,
+  handleAdminSequencePreview,
+  linkEngagementUserToHousehold,
 } from './routes/engagement';
-import { processAllUsers, type EngineEnv } from './lib/engagement/email-engine';
+import { processAllUsers, buildEngineEnv } from './lib/engagement/email-engine';
 import { handleListDiets, handleGetDiet, handleListArticles, handleGetArticle } from './routes/diet-info';
 import { getCoupleDietRules } from './lib/diet-rules';
 import { generateMeal } from './lib/ai';
@@ -83,6 +85,7 @@ app.get('/api/engagement/admin/emails/:id', (c) => handleAdminEmailDetail(c));
 app.get('/api/engagement/admin/users', (c) => handleAdminUsers(c));
 app.post('/api/engagement/admin/run-cycle', (c) => handleAdminRunCycle(c));
 app.post('/api/engagement/admin/run-cycle/:userId', (c) => handleAdminRunCycleForUser(c));
+app.get('/api/engagement/admin/sequence/:userId', (c) => handleAdminSequencePreview(c));
 
 // ─── Diet reference data (public, no auth) ────────────────────────────────────
 app.get('/api/diets', (c) => handleListDiets(c));
@@ -244,6 +247,7 @@ app.post('/api/household/create', async (c) => {
     age?: number | null;
     gender?: string | null;
     activityLevel?: string | null;
+    accessToken?: string | null;
   };
   const displayName = (body.displayName ?? '').trim();
   if (!displayName) return jsonError('displayName is required', 400);
@@ -302,6 +306,18 @@ app.post('/api/household/create', async (c) => {
       targetId: householdId,
       targetName: displayName,
     }).catch((err) => console.error('activity log failed:', err));
+
+    // Link the waitlist email to this household for the engagement engine.
+    if (body.accessToken) {
+      c.executionCtx.waitUntil(
+        linkEngagementUserToHousehold(c.env.DB, {
+          accessToken: body.accessToken,
+          householdId,
+          name: displayName,
+        }).catch((err) => console.error('engagement household link failed:', err)),
+      );
+    }
+
     return c.json({
       householdId,
       inviteCode: code,
@@ -329,6 +345,7 @@ app.post('/api/household/join', async (c) => {
     age?: number | null;
     gender?: string | null;
     activityLevel?: string | null;
+    accessToken?: string | null;
   };
   const inviteCode = (body.inviteCode ?? '').trim();
   const displayName = (body.displayName ?? '').trim();
@@ -382,6 +399,17 @@ app.post('/api/household/join', async (c) => {
       })
       .catch((err) => console.error('partner-linked push failed:', err));
 
+    // Link the waitlist email to this household for the engagement engine.
+    if (body.accessToken) {
+      c.executionCtx.waitUntil(
+        linkEngagementUserToHousehold(c.env.DB, {
+          accessToken: body.accessToken,
+          householdId,
+          name: displayName,
+        }).catch((err) => console.error('engagement household link failed:', err)),
+      );
+    }
+
     return c.json({
       householdId,
       token,
@@ -401,7 +429,7 @@ app.post('/api/household/link', async (c) => {
   const claims = await readBearer(c.env.JWT_SECRET, c.req.raw);
   if (!claims) return c.json({ error: 'unauthorized' }, 401);
 
-  const body = (await c.req.json().catch(() => ({}))) as { inviteCode?: string };
+  const body = (await c.req.json().catch(() => ({}))) as { inviteCode?: string; accessToken?: string | null };
   const inviteCode = (body.inviteCode ?? '').trim();
   if (!inviteCode) return jsonError('inviteCode is required', 400);
   if (!/^\d{6}$/.test(inviteCode)) return jsonError('inviteCode must be 6 digits', 400);
@@ -568,6 +596,17 @@ app.post('/api/household/link', async (c) => {
       body: JSON.stringify({ partnerName: claims.displayName, joinerSlot: newSlot as 1 | 2 }),
     })
     .catch((err) => console.error('partner-linked push failed:', err));
+
+  // Link the waitlist email to the (possibly new) household for the engagement engine.
+  if (body.accessToken) {
+    c.executionCtx.waitUntil(
+      linkEngagementUserToHousehold(c.env.DB, {
+        accessToken: body.accessToken,
+        householdId: targetHouseholdId,
+        name: claims.displayName,
+      }).catch((err) => console.error('engagement household link failed:', err)),
+    );
+  }
 
   return c.json({
     householdId: targetHouseholdId,
@@ -871,16 +910,7 @@ export default app;
 // ─── Cron: daily engagement email cycle ───────────────────────────
 export async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
   console.log(`[cron] Engagement cycle at ${new Date(event.scheduledTime).toISOString()}`);
-  const engine: EngineEnv = {
-    DB: env.DB,
-    OPENROUTER_API_KEY: (env as any).OPENROUTER_API_KEY,
-    RESEND_API_KEY: env.RESEND_API_KEY,
-    RESEND_FROM: env.RESEND_FROM,
-    EMAIL_MODEL: (env as any).EMAIL_MODEL,
-    ADMIN_SECRET: (env as any).ADMIN_SECRET,
-    SITE_URL: env.SITE_URL,
-    PWA_URL: env.PWA_URL,
-  };
+  const engine = buildEngineEnv(env);
   const result = await processAllUsers(engine);
   console.log(`[cron] Done: scanned=${result.scanned}, sent=${result.sent}, skipped=${result.skipped}, errors=${result.errors.length}`);
   if (result.errors.length > 0) console.error('[cron] Errors:', result.errors);
