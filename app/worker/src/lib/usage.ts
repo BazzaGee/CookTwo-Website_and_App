@@ -84,14 +84,14 @@ async function getOrInitSubscription(
   const tz = timezone || 'UTC';
   await db.prepare(
     `INSERT INTO household_subscriptions (household_id, tier, timezone, daily_quota, created_at, updated_at)
-     VALUES (?, 'free', ?, 10, ?, ?)`,
+     VALUES (?, 'free', ?, ?, ?, ?)`,
   )
-    .bind(householdId, tz, now, now)
+    .bind(householdId, tz, QUOTAS.free, now, now)
     .run();
 
   return {
     tier: 'free',
-    daily_quota: 10,
+    daily_quota: QUOTAS.free,
     used_today: 0,
     last_reset_date: null,
     timezone: tz,

@@ -1,4 +1,6 @@
 import type { Env } from '../env';
+import { QUOTAS } from './usage';
+import { sendPaymentThankYouEmail } from './email';
 
 export class StripeNotConfiguredError extends Error {
   constructor() {
@@ -200,6 +202,126 @@ export async function updateStripeCustomerId(
     .run();
 }
 
+export async function applyPremiumGrant(
+  env: Env,
+  db: D1Database,
+  householdId: string,
+  params: {
+    planPeriod: 'monthly' | 'yearly';
+    customerId?: string | null;
+    subscriptionId?: string | null;
+    periodEnd?: number;
+    customerEmail?: string | null;
+  },
+): Promise<{ wasUpgrade: boolean; customerEmail: string | null }> {
+  const existing = await db.prepare(
+    'SELECT tier, stripe_customer_id FROM household_subscriptions WHERE household_id = ?',
+  ).bind(householdId).first<{ tier: string; stripe_customer_id: string | null }>();
+
+  const wasFree = existing?.tier !== 'premium';
+  const now = Date.now();
+  const { planPeriod, customerId, subscriptionId, periodEnd = 0, customerEmail } = params;
+  const quota = QUOTAS.premium;
+
+  await db.prepare(
+    `INSERT INTO household_subscriptions
+        (household_id, tier, plan_period, timezone, last_reset_date,
+         used_today, daily_quota,
+         stripe_customer_id, stripe_subscription_id, current_period_end,
+         cancel_at_period_end, status, created_at, updated_at)
+     VALUES (?, 'premium', ?, 'UTC', NULL, 0, ?, ?, ?, ?, 0, 'active', ?, ?)
+     ON CONFLICT(household_id) DO UPDATE SET
+         tier = 'premium',
+         daily_quota = ?,
+         used_today = 0,
+         stripe_customer_id = excluded.stripe_customer_id,
+         stripe_subscription_id = excluded.stripe_subscription_id,
+         plan_period = excluded.plan_period,
+         current_period_end = excluded.current_period_end,
+         status = 'active',
+         updated_at = excluded.updated_at`,
+  )
+    .bind(householdId, planPeriod, quota, customerId, subscriptionId, periodEnd, now, now, quota)
+    .run();
+
+  if (wasFree && customerEmail) {
+    try {
+      await sendPaymentThankYouEmail(env, customerEmail, planPeriod);
+    } catch (err) {
+      console.error('Failed to send payment thank-you email:', err);
+    }
+  }
+
+  return { wasUpgrade: wasFree, customerEmail: customerEmail ?? null };
+}
+
+export async function verifyAndApplyCheckoutSession(
+  env: Env,
+  db: D1Database,
+  householdId: string,
+  sessionId: string,
+): Promise<{ ok: boolean; tier: string; dailyQuota: number }> {
+  const res = await stripeApi(env, `/checkout/sessions/${sessionId}`, 'GET');
+  if (!res.ok) {
+    const text = await res.text();
+    console.error('Failed to retrieve checkout session:', text);
+    return { ok: false, tier: 'free', dailyQuota: QUOTAS.free };
+  }
+
+  const session = (await res.json()) as {
+    mode?: string;
+    payment_status?: string;
+    client_reference_id?: string;
+    customer?: string | null;
+    subscription?: string | null;
+    customer_email?: string | null;
+    customer_details?: { email?: string };
+    metadata?: Record<string, string>;
+  };
+
+  if (session.mode !== 'subscription') {
+    console.error('Checkout session is not a subscription:', session.mode);
+    return { ok: false, tier: 'free', dailyQuota: QUOTAS.free };
+  }
+
+  if (session.payment_status !== 'paid') {
+    console.error('Checkout session not paid:', session.payment_status);
+    return { ok: false, tier: 'free', dailyQuota: QUOTAS.free };
+  }
+
+  if (session.client_reference_id !== householdId) {
+    console.error('Checkout session household mismatch:', session.client_reference_id, '!=', householdId);
+    return { ok: false, tier: 'free', dailyQuota: QUOTAS.free };
+  }
+
+  let planPeriod: 'monthly' | 'yearly' = 'monthly';
+  let periodEnd = 0;
+  if (session.subscription) {
+    const subRes = await stripeApi(env, `/subscriptions/${session.subscription}`, 'GET');
+    if (subRes.ok) {
+      const subData = (await subRes.json()) as {
+        items?: { data?: Array<{ price?: { recurring?: { interval?: string } } }> };
+        current_period_end?: number;
+      };
+      const interval = subData.items?.data?.[0]?.price?.recurring?.interval;
+      if (interval === 'year') planPeriod = 'yearly';
+      periodEnd = (subData.current_period_end ?? 0) * 1000;
+    }
+  }
+
+  const email = session.customer_email || session.customer_details?.email || null;
+
+  await applyPremiumGrant(env, db, householdId, {
+    planPeriod,
+    customerId: session.customer ?? null,
+    subscriptionId: session.subscription ?? null,
+    periodEnd,
+    customerEmail: email,
+  });
+
+  return { ok: true, tier: 'premium', dailyQuota: QUOTAS.premium };
+}
+
 export async function applyWebhookEvent(
   env: Env,
   db: D1Database,
@@ -218,44 +340,31 @@ export async function applyWebhookEvent(
 
       if (!householdId || mode !== 'subscription') return;
 
-      const subRes = await stripeApi(
-        env,
-        `/subscriptions/${subscriptionId}`,
-        'GET',
-      );
-
       let planPeriod: 'monthly' | 'yearly' = 'monthly';
       let periodEnd = 0;
-      if (subRes.ok) {
-        const subData = (await subRes.json()) as {
-          items?: { data?: Array<{ price?: { recurring?: { interval?: string } } }> };
-          current_period_end?: number;
-        };
-        const interval = subData.items?.data?.[0]?.price?.recurring?.interval;
-        if (interval === 'year') planPeriod = 'yearly';
-        periodEnd = (subData.current_period_end ?? 0) * 1000;
+      if (subscriptionId) {
+        const subRes = await stripeApi(env, `/subscriptions/${subscriptionId}`, 'GET');
+        if (subRes.ok) {
+          const subData = (await subRes.json()) as {
+            items?: { data?: Array<{ price?: { recurring?: { interval?: string } } }> };
+            current_period_end?: number;
+          };
+          const interval = subData.items?.data?.[0]?.price?.recurring?.interval;
+          if (interval === 'year') planPeriod = 'yearly';
+          periodEnd = (subData.current_period_end ?? 0) * 1000;
+        }
       }
 
-      await db.prepare(
-        `INSERT INTO household_subscriptions
-            (household_id, tier, plan_period, timezone, last_reset_date,
-             used_today, daily_quota,
-             stripe_customer_id, stripe_subscription_id, current_period_end,
-             cancel_at_period_end, status, created_at, updated_at)
-         VALUES (?, 'premium', ?, 'UTC', NULL, 0, 70, ?, ?, ?, 0, 'active', ?, ?)
-         ON CONFLICT(household_id) DO UPDATE SET
-             tier = 'premium',
-             daily_quota = 70,
-             used_today = 0,
-             stripe_customer_id = excluded.stripe_customer_id,
-             stripe_subscription_id = excluded.stripe_subscription_id,
-             plan_period = excluded.plan_period,
-             current_period_end = excluded.current_period_end,
-             status = 'active',
-             updated_at = excluded.updated_at`,
-      )
-        .bind(householdId, planPeriod, customerId, subscriptionId, periodEnd, now, now)
-        .run();
+      const customerDetails = obj.customer_details as { email?: string } | undefined;
+      const email = (obj.customer_email as string) || customerDetails?.email || null;
+
+      await applyPremiumGrant(env, db, householdId, {
+        planPeriod,
+        customerId,
+        subscriptionId,
+        periodEnd,
+        customerEmail: email,
+      });
       break;
     }
 
@@ -287,13 +396,13 @@ export async function applyWebhookEvent(
       await db.prepare(
         `UPDATE household_subscriptions
             SET tier = 'free',
-                daily_quota = 10,
+                daily_quota = ?,
                 stripe_subscription_id = NULL,
                 status = 'canceled',
                 updated_at = ?
           WHERE stripe_subscription_id = ?`,
       )
-        .bind(now, deletedSubId)
+        .bind(QUOTAS.free, now, deletedSubId)
         .run();
       break;
     }
