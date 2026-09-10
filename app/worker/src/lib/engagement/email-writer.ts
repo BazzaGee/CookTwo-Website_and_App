@@ -27,7 +27,8 @@ export type EmailType =
   | 'inactivity_nudge'
   | 'partner_invite'
   | 'premium_pitch'
-  | 'app_tip';
+  | 'app_tip'
+  | 'feedback_request';
 
 function buildUserMessage(type: EmailType, state: any, contextNote: string): string {
   return JSON.stringify({
@@ -65,6 +66,7 @@ export async function writeEmail(
   state: any,
   contextNote: string,
   model = 'openrouter/free',
+  variant?: string,
 ): Promise<{ output: EmailOutput; usedFallback: boolean }> {
   const fallbackCtx: FallbackContext = {
     name: state.name || '',
@@ -77,7 +79,7 @@ export async function writeEmail(
     planLabel: state.planLabel || null,
   };
 
-  const fallback = getFallbackTemplate(type, fallbackCtx);
+  const fallback = getFallbackTemplate(type, fallbackCtx, variant);
 
   if (!apiKey) {
     return { output: toOutput(fallback), usedFallback: true };

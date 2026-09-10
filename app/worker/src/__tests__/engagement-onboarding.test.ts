@@ -3,10 +3,13 @@ import { createTestD1, createTestDoNamespace } from './helpers';
 import {
   computeUserState,
   decideNextEmail,
+  dailyRoll,
+  pickTipTopic,
   ONBOARDING_SEQUENCE,
   type EngineEnv,
   type UserState,
 } from '../lib/engagement/email-engine';
+import { TIP_TOPICS } from '../lib/engagement/email-templates';
 import type { ActivityEntry } from '../lib/activity';
 
 const DAY = 86400000;
@@ -304,9 +307,10 @@ describe('Onboarding email sequence — decision engine', () => {
     expect(await decideNextEmail(state, db)).toBeNull();
     expect(await getOnboardingCompletedAt(db, userId)).not.toBeNull();
 
-    // Next cycle: lifecycle tier is active.
+    // Next cycle: lifecycle tier is active. Roll fails feedback but passes tip.
     const state2 = await getState(env, db, userId);
-    const decision = await decideNextEmail(state2, db);
+    const roll = (key: string) => (key.includes(':feedback:') ? 99 : 0);
+    const decision = await decideNextEmail(state2, db, Date.now(), roll);
     expect(decision?.type).toBe('app_tip');
   });
 
@@ -388,5 +392,177 @@ describe('Onboarding email sequence — decision engine', () => {
       'onboarding_two_plates',
       'onboarding_habit_loop',
     ]);
+  });
+});
+
+describe('Randomized lifecycle pacing — tips & feedback', () => {
+  // Roll helper: passes (0) or fails (99) selectively per email kind.
+  const rollFor = (tip: number, feedback: number) => (key: string) =>
+    key.includes(':feedback:') ? feedback : tip;
+  const allPass = rollFor(0, 0);
+
+  async function seedGraduatedUser(db: ReturnType<typeof createTestD1>, daysAgo: number) {
+    const hh = await seedHousehold(db, daysAgo);
+    // Two partners so partner_invite never pre-empts tip/feedback rules.
+    await seedPartner(db, hh, 1, 'lose');
+    await seedPartner(db, hh, 2, 'maintain');
+    const userId = await seedUser(db, {
+      daysAgo,
+      householdId: hh,
+      onboardingCompletedAt: Date.now() - (daysAgo - 5) * DAY,
+    });
+    await markSent(db, userId, 'welcome', Date.now() - daysAgo * DAY);
+    return userId;
+  }
+
+  it('tip respects the 2-day minimum gap even when the roll passes', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 30);
+    await markSent(db, userId, 'app_tip', Date.now() - 1 * DAY);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), rollFor(0, 99));
+    expect(decision).toBeNull();
+  });
+
+  it('tip sends when the gap is met and the roll passes', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 30);
+    await markSent(db, userId, 'app_tip', Date.now() - 3 * DAY);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), rollFor(0, 99));
+    expect(decision?.type).toBe('app_tip');
+    expect(decision?.variant).toBeTruthy();
+  });
+
+  it('tip chance is lower for users active today', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const hh = await seedHousehold(db, 30);
+    await seedPartner(db, hh, 1, 'lose');
+    await seedPartner(db, hh, 2, 'maintain');
+    const userId = await seedUser(db, {
+      daysAgo: 30, householdId: hh, onboardingCompletedAt: Date.now() - 20 * DAY,
+    });
+    await markSent(db, userId, 'welcome', Date.now() - 30 * DAY);
+    await markSent(db, userId, 'app_tip', Date.now() - 3 * DAY);
+    await seedActivity(db, hh, 'item_added', Date.now() - 60 * 60 * 1000); // active 1h ago
+
+    const state = await getState(env, db, userId);
+    expect(state.daysSinceLastActive).toBeLessThanOrEqual(1);
+    // roll 20 < base 30 but >= active 15 → must NOT send
+    const decision = await decideNextEmail(state, db, Date.now(), rollFor(20, 99));
+    expect(decision).toBeNull();
+  });
+
+  it('tip chance is higher for quiet users', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const hh = await seedHousehold(db, 30);
+    await seedPartner(db, hh, 1, 'lose');
+    await seedPartner(db, hh, 2, 'maintain');
+    const userId = await seedUser(db, {
+      daysAgo: 30, householdId: hh, onboardingCompletedAt: Date.now() - 20 * DAY,
+    });
+    await markSent(db, userId, 'welcome', Date.now() - 30 * DAY);
+    await markSent(db, userId, 'app_tip', Date.now() - 3 * DAY);
+    await seedActivity(db, hh, 'item_added', Date.now() - 5 * DAY); // inactive 5 days (< 7, no nudge)
+
+    const state = await getState(env, db, userId);
+    expect(state.daysSinceLastActive).toBe(5);
+    // roll 40 >= base 30 but < quiet 45 → must send
+    const decision = await decideNextEmail(state, db, Date.now(), rollFor(40, 99));
+    expect(decision?.type).toBe('app_tip');
+  });
+
+  it('tip roll failing means no tip that day', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 30);
+    await markSent(db, userId, 'app_tip', Date.now() - 5 * DAY);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), rollFor(99, 99));
+    expect(decision).toBeNull();
+  });
+
+  it('tip topic is deterministic per user-week and comes from the pool', async () => {
+    const now = Date.now();
+    const t1 = pickTipTopic('user-x', now);
+    const t1again = pickTipTopic('user-x', now);
+    expect(t1.key).toBe(t1again.key);
+    expect(TIP_TOPICS.map((t) => t.key)).toContain(t1.key);
+    // Different user or different week is valid pool member too
+    const t2 = pickTipTopic('user-y', now + 8 * DAY);
+    expect(TIP_TOPICS.map((t) => t.key)).toContain(t2.key);
+  });
+
+  it('feedback fires for eligible graduated users when the roll passes', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 25);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), allPass);
+    expect(decision?.type).toBe('feedback_request');
+    expect(decision?.contextNote).toContain('early development');
+    expect(decision?.contextNote).toContain('cooktwo.com/contact');
+  });
+
+  it('feedback does not fire before 21 days since signup', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 15);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), allPass);
+    expect(decision?.type).toBe('app_tip'); // falls through to tips
+  });
+
+  it('feedback respects the 30-day gap after a previous ask', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 60);
+    await markSent(db, userId, 'feedback_request', Date.now() - 10 * DAY);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), allPass);
+    expect(decision?.type).toBe('app_tip');
+
+    // 35 days later, eligible again.
+    const db2 = createTestD1();
+    const env2 = makeEnv(db2);
+    const userId2 = await seedGraduatedUser(db2, 60);
+    await markSent(db2, userId2, 'feedback_request', Date.now() - 35 * DAY);
+    const state2 = await getState(env2, db2, userId2);
+    const decision2 = await decideNextEmail(state2, db2, Date.now(), allPass);
+    expect(decision2?.type).toBe('feedback_request');
+  });
+
+  it('feedback outranks tips when both are due', async () => {
+    const db = createTestD1();
+    const env = makeEnv(db);
+    const userId = await seedGraduatedUser(db, 30);
+    await markSent(db, userId, 'app_tip', Date.now() - 5 * DAY);
+
+    const state = await getState(env, db, userId);
+    const decision = await decideNextEmail(state, db, Date.now(), allPass);
+    expect(decision?.type).toBe('feedback_request');
+  });
+
+  it('dailyRoll is deterministic and bounded', () => {
+    for (let i = 0; i < 50; i++) {
+      const key = `key-${i}`;
+      expect(dailyRoll(key)).toBe(dailyRoll(key));
+      const v = dailyRoll(key);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(100);
+    }
+    // Distinct keys spread across the range (sanity, not a strict uniformity test)
+    const values = new Set(Array.from({ length: 30 }, (_, i) => dailyRoll(`spread-${i}`)));
+    expect(values.size).toBeGreaterThan(10);
   });
 });

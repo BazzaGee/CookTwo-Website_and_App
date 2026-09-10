@@ -193,19 +193,127 @@ function premiumPitch(ctx: FallbackContext): TemplateOutput {
   };
 }
 
-function appTip(ctx: FallbackContext): TemplateOutput {
-  const body = `<p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 18px;">${greet(ctx)} A quick tip: type what's in your fridge in plain English — like "chicken, 2 cups rice, spinach" — and the pantry AI sorts it and suggests what to cook right now.</p>
-  <p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 24px;">No dropdowns, no forms. Just type.</p>
+// ── Tip topic pool ───────────────────────────────────────────────
+// Each tip covers ONE small feature. The engine picks a topic per user-week
+// (deterministic) and passes the key as the template variant; the AI writer
+// gets `brief`, the fallback uses the rest.
+
+export interface TipTopic {
+  key: string;
+  /** AI writer brief — what to teach in this tip */
+  brief: string;
+  subject: string;
+  preview: string;
+  /** Single-paragraph fallback body (appended after the greeting) */
+  line: string;
+  /** Plain-text fallback body */
+  textLine: string;
+}
+
+export const TIP_TOPICS: TipTopic[] = [
+  {
+    key: 'regulars',
+    brief: 'Teach "Your regulars" on the shopping list: items they buy often appear as one-tap chips, so re-adding the weekly staples takes seconds.',
+    subject: 'Your usuals, one tap away',
+    preview: 'The things you buy every week are already waiting.',
+    line: 'Quick tip: the things you buy most often show up as one-tap chips on your shopping list under "Your regulars" — your weekly staples are basically pre-typed for you.',
+    textLine: 'Quick tip: your most-bought items appear as one-tap chips on your shopping list ("Your regulars") — weekly staples are basically pre-typed.',
+  },
+  {
+    key: 'offline',
+    brief: 'Teach offline mode: CookTwo works without internet — add or check off items anywhere, and everything syncs the moment you reconnect.',
+    subject: 'No internet? No problem',
+    preview: 'CookTwo works offline — it catches up later.',
+    line: 'Quick tip: CookTwo works offline. Add items or check things off with zero bars — everything queues up and syncs to your partner\'s phone the moment you\'re back online.',
+    textLine: 'Quick tip: CookTwo works offline — add or check off items with no signal and it syncs to your partner once you reconnect.',
+  },
+  {
+    key: 'push',
+    brief: 'Teach notifications: enable push so each partner sees the moment the other adds to the list, checks something off, or joins an activity — no "did you get milk?" texts.',
+    subject: 'See it the moment they add it',
+    preview: 'Turn on notifications — no more "did you get milk?" texts.',
+    line: 'Quick tip: turn on notifications in the app and you\'ll see the moment your partner adds something to the list or checks it off at the store — which quietly kills the "did you get the milk?" text.',
+    textLine: 'Quick tip: turn on notifications to see the moment your partner adds or checks off list items — no more "did you get the milk?" texts.',
+  },
+  {
+    key: 'diet_browser',
+    brief: 'Teach the built-in diet reference: browse evidence-graded diets (rules, what to eat) and intermittent-fasting protocols (16:8, 5:2, OMAD) that stack on top of any diet.',
+    subject: 'There\'s a diet guide hiding in your app',
+    preview: 'Evidence-graded diets + fasting protocols, built in.',
+    line: 'Quick tip: the app has a built-in diet reference — tap through a diet to see its rules and what to eat, plus intermittent-fasting protocols (16:8, 5:2, OMAD and more) that stack on top of any diet.',
+    textLine: 'Quick tip: the app has a built-in diet reference — rules, what to eat, plus fasting protocols (16:8, 5:2, OMAD) that stack on any diet.',
+  },
+  {
+    key: 'two_plates',
+    brief: 'Teach adaptive plating: with goals set, every AI meal shows per-plate calories and macros — same pan, each plate portioned for that person.',
+    subject: 'Same pan. Two different plates.',
+    preview: 'Each plate portioned to each of you — here\'s how.',
+    line: 'Quick tip: once you both have a goal set in Profiles, every meal suggestion shows each plate\'s calories and protein separately — one pan on the stove, two portions that fit the two of you.',
+    textLine: 'Quick tip: with goals set in Profiles, every meal shows each plate\'s calories and protein — one pan, two portions that fit you both.',
+  },
+  {
+    key: 'bulk_add',
+    brief: 'Teach bulk adding: type a whole shop at once — comma-separated ("milk, eggs, 2 bread, chicken") — and the list auto-categorizes into aisles.',
+    subject: 'Type your whole shop in one line',
+    preview: '"milk, eggs, 2 bread" — done. It sorts itself.',
+    line: 'Quick tip: you don\'t have to add items one by one — type the whole shop in one line like "milk, eggs, 2 bread, chicken" and the list sorts everything into aisles for you.',
+    textLine: 'Quick tip: type your whole shop in one line — "milk, eggs, 2 bread, chicken" — and the list sorts it into aisles.',
+  },
+  {
+    key: 'done_shopping',
+    brief: 'Teach the Done Shopping flow: check items off in-store, tap Done Shopping at home, and everything moves into the pantry automatically — stocking the pantry with zero extra effort.',
+    subject: 'The one tap that stocks your pantry',
+    preview: 'Done Shopping moves everything where it belongs.',
+    line: 'Quick tip: when you\'re home from the store, tap "Done Shopping" — everything you checked off moves straight into your pantry automatically. Your pantry stays stocked with zero extra effort.',
+    textLine: 'Quick tip: tap "Done Shopping" at home and everything you checked off moves straight into your pantry automatically.',
+  },
+  {
+    key: 'privacy',
+    brief: 'Teach body-profile privacy: weight/height/age are private by default between partners — the AI still uses them for portions, but only you can see them. Toggle visibility in your profile.',
+    subject: 'Your numbers stay yours',
+    preview: 'Body metrics are private by default — here\'s the toggle.',
+    line: 'Quick tip: your body metrics are private by default — the AI uses them to size your plate, but your partner can\'t see your weight, height or age unless you flip the visibility toggle in your profile.',
+    textLine: 'Quick tip: body metrics are private by default — the AI uses them for your portions, but only you can see them (toggle in your profile).',
+  },
+  {
+    key: 'pantry_plain_english',
+    brief: 'Teach plain-English pantry input: type "chicken, 2 cups rice, spinach" and the AI parses quantities, units and categories — no dropdowns.',
+    subject: 'Type your fridge like you\'d say it',
+    preview: '"chicken, 2 cups rice, spinach" — the AI sorts it.',
+    line: 'Quick tip: type what\'s in your kitchen in plain English — "chicken, 2 cups rice, spinach" — and the pantry AI works out the items, quantities and categories. No dropdowns, no forms. Just type.',
+    textLine: 'Quick tip: type your pantry in plain English ("chicken, 2 cups rice, spinach") and the AI sorts out items, quantities and categories.',
+  },
+];
+
+function appTip(ctx: FallbackContext, variant?: string): TemplateOutput {
+  const topic = TIP_TOPICS.find((t) => t.key === variant) ?? TIP_TOPICS[0];
+  if (!topic) throw new Error('TIP_TOPICS pool must not be empty');
+  const body = `<p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 18px;">${greet(ctx)} ${topic.line}</p>
+  <p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 24px;">One small thing — that's the whole email.</p>
   <a href="https://cooktwo.app/PWA" style="display:inline-block;background:#7A9E7E;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;">Try it</a>`;
   return {
-    subject: 'A CookTwo trick: type your pantry in plain English',
-    preview: 'No dropdowns — just type what you have.',
+    subject: topic.subject,
+    preview: topic.preview,
     html: wrap(body),
-    text: `${greet(ctx)} Quick tip: type what's in your fridge in plain English ("chicken, 2 cups rice, spinach") and the pantry AI suggests what to cook. https://cooktwo.app/PWA`,
+    text: `${greet(ctx)} ${topic.textLine} https://cooktwo.app/PWA`,
   };
 }
 
-export function getFallbackTemplate(type: string, ctx: FallbackContext): TemplateOutput {
+function feedbackRequest(ctx: FallbackContext): TemplateOutput {
+  const body = `<p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 18px;">${greet(ctx)} Quick one — and an honest one.</p>
+  <p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 18px;">CookTwo is in early development. What you're using isn't the finished product — it's the start of one, and it improves every week because of the people actually using it.</p>
+  <p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 18px;">So I'd genuinely love your feedback: anything at all — something confusing, something missing, something you love, or an idea that would make it work better for you and your partner. Big or small, it goes straight into what gets built next.</p>
+  <p style="color:#6B7B6C;font-size:15px;line-height:1.7;margin:0 0 24px;">The easiest way: <strong>just reply to this email</strong> — it comes straight to us. Or use the form at <a href="https://cooktwo.com/contact" style="color:#7A9E7E;">cooktwo.com/contact</a> and pick "App Feedback".</p>
+  <a href="https://cooktwo.com/contact" style="display:inline-block;background:#7A9E7E;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;">Share your feedback</a>`;
+  return {
+    subject: 'What would make CookTwo better for you?',
+    preview: 'It\'s early days — your feedback decides what gets built next.',
+    html: wrap(body),
+    text: `${greet(ctx)} Quick one — and an honest one. CookTwo is in early development; what you're using isn't the finished product, and it improves every week because of the people using it. I'd genuinely love your feedback — something confusing, missing, loved, or an idea. Big or small, it goes straight into what gets built next. Just reply to this email, or use cooktwo.com/contact (pick "App Feedback").`,
+  };
+}
+
+export function getFallbackTemplate(type: string, ctx: FallbackContext, variant?: string): TemplateOutput {
   switch (type) {
     case 'welcome': return welcome(ctx);
     case 'onboarding_partner': return onboardingPartner(ctx);
@@ -219,7 +327,8 @@ export function getFallbackTemplate(type: string, ctx: FallbackContext): Templat
     case 'inactivity_nudge': return inactivityNudge(ctx);
     case 'partner_invite': return partnerInvite(ctx);
     case 'premium_pitch': return premiumPitch(ctx);
-    case 'app_tip': return appTip(ctx);
+    case 'app_tip': return appTip(ctx, variant);
+    case 'feedback_request': return feedbackRequest(ctx);
     default: return welcome(ctx);
   }
 }

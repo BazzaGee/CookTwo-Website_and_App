@@ -8,6 +8,7 @@ import {
   computeUserState,
   decideNextEmail,
   generateAndSendEmail,
+  getRandomnessSnapshot,
   processAllUsers,
   ONBOARDING_SEQUENCE,
   ONBOARDING_WINDOW_DAYS,
@@ -308,6 +309,7 @@ export async function handleAdminSequencePreview(c: Context<{ Bindings: Env }>):
       recipeSaved: state.recipeSaved,
       partnersWithGoal: state.partnersWithGoal,
     },
+    randomness: await getRandomnessSnapshot(state, c.env.DB),
     nextDecision: await decideNextEmail(state, c.env.DB),
   });
 }

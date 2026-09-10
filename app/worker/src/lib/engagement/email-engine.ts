@@ -14,6 +14,7 @@
 
 import { writeEmail, type EmailOutput, type EmailType } from './email-writer';
 import { sendEngagementEmail, type SenderEnv } from './email-sender';
+import { TIP_TOPICS } from './email-templates';
 import type { ActivityEntry } from '../activity';
 
 const DAY_MS = 86400000;
@@ -27,6 +28,51 @@ export const ONBOARDING_WINDOW_DAYS = 35;
 // Activity within this window after household creation is treated as the
 // onboarding wizard's initial pantry seed, not deliberate pantry usage.
 const SETUP_GRACE_MS = 60 * 60 * 1000;
+
+// Randomized lifecycle pacing
+// Tips: min 2-day gap + a daily roll. Activity-aware chance keeps tips for
+// engaged users rare and uses them as gentle re-engagement for quiet users.
+const TIP_MIN_GAP_MS = TWO_DAYS_MS;
+const TIP_CHANCE_BASE = 30;   // ~1-2/week
+const TIP_CHANCE_ACTIVE = 15; // used the app within the last day
+const TIP_CHANCE_QUIET = 45;  // inactive 4+ days
+const TIP_TOPIC_WEEK_MS = SEVEN_DAYS_MS;
+
+// Feedback: eligible ~monthly + a daily roll, so asks land at varied,
+// organic times instead of everyone getting one the same day.
+const FEEDBACK_MIN_SIGNUP_DAYS = 21;
+const FEEDBACK_MIN_GAP_MS = 30 * DAY_MS;
+const FEEDBACK_DAILY_CHANCE = 25;
+
+// Deterministic pseudo-random roll in [0, 100) keyed by e.g. `${userId}:tip:2026-09-10`.
+// Same key → same result all day (cron re-runs, admin previews, tests are stable).
+export function dailyRoll(key: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) % 100;
+}
+
+function dateKeyOf(now: number): string {
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+export function tipChance(state: UserState): number {
+  if (state.daysSinceLastActive <= 1) return TIP_CHANCE_ACTIVE;
+  if (state.daysSinceLastActive >= 4) return TIP_CHANCE_QUIET;
+  return TIP_CHANCE_BASE;
+}
+
+// Deterministic tip topic per user-week — varies week to week and across users.
+export function pickTipTopic(userId: string, now: number): (typeof TIP_TOPICS)[number] {
+  const week = Math.floor(now / TIP_TOPIC_WEEK_MS);
+  const idx = dailyRoll(`${userId}:tip-topic:${week}`) % TIP_TOPICS.length;
+  const topic = TIP_TOPICS[idx] ?? TIP_TOPICS[0];
+  if (!topic) throw new Error('TIP_TOPICS pool must not be empty');
+  return topic;
+}
 
 export interface UserState {
   userId: string;
@@ -68,6 +114,8 @@ export interface EmailDecision {
   type: EmailType;
   reason: string;
   contextNote: string;
+  /** Optional template variant (e.g. tip topic key) used by fallback templates */
+  variant?: string;
 }
 
 export interface EngineEnv extends SenderEnv {
@@ -439,9 +487,13 @@ function decideLifecycle(
   state: UserState,
   recent: Array<{ email_type: string; created_at: number }>,
   now: number,
+  roll: (key: string) => number,
 ): EmailDecision | null {
   const wasRecentlySent = (types: string[], withinMs: number) =>
     recent.some((e) => types.includes(e.email_type) && now - e.created_at < withinMs);
+  const lastSentOfType = (type: string): number =>
+    recent.find((e) => e.email_type === type)?.created_at ?? 0;
+  const dateKey = dateKeyOf(now);
 
   // 1. Partner invite — household exists, only one partner
   if (
@@ -500,12 +552,35 @@ function decideLifecycle(
     };
   }
 
-  // 6. App tip — weekly rotation
-  if (state.daysSinceSignup >= 3 && !wasRecentlySent(['app_tip'], SEVEN_DAYS_MS)) {
+  // 6. Feedback request — early-development feedback ask. Roughly monthly per
+  //    user, staggered by a daily roll so sends land at varied, organic times.
+  if (
+    state.daysSinceSignup >= FEEDBACK_MIN_SIGNUP_DAYS &&
+    now - lastSentOfType('feedback_request') >= FEEDBACK_MIN_GAP_MS &&
+    roll(`${state.userId}:feedback:${dateKey}`) < FEEDBACK_DAILY_CHANCE
+  ) {
+    return {
+      type: 'feedback_request',
+      reason: 'Feedback ask due (randomized, ~monthly)',
+      contextNote: `Ask for feedback on CookTwo. Be honest that the app is in early development — not the final product — and that you are actively improving it. Invite feedback of any size (confusing parts, missing features, bugs, ideas) and emphasise it directly shapes what gets built, making the app better for them. Make replying feel zero-effort: "just hit reply" (replies come straight to the team at Krystle@CookTwo.com). Also mention the contact form at https://cooktwo.com/contact (pick "App Feedback"). Warm, founder-to-user tone; no begging, no bribery.`,
+    };
+  }
+
+  // 7. App tips — randomized, low-frequency, activity-aware. Min 2-day gap,
+  //    then a daily roll: ~30%/day baseline, rarer for users active today,
+  //    more frequent for quiet users (gentle re-engagement, not spam).
+  const lastTipAt = lastSentOfType('app_tip');
+  if (
+    state.daysSinceSignup >= 3 &&
+    now - lastTipAt >= TIP_MIN_GAP_MS &&
+    roll(`${state.userId}:tip:${dateKey}`) < tipChance(state)
+  ) {
+    const topic = pickTipTopic(state.userId, now);
     return {
       type: 'app_tip',
-      reason: 'Weekly tip rotation',
-      contextNote: `Weekly CookTwo tip for ${state.name || 'this user'}. Pick a useful feature tip.`,
+      variant: topic.key,
+      reason: `Tip roll passed (${topic.key})`,
+      contextNote: `[Tip email — topic: ${topic.key}] ${topic.brief} Cover ONLY this one small thing — name the exact tab and what to do. Two to four sentences plus the CTA. Frame it as "one small thing".`,
     };
   }
 
@@ -516,6 +591,7 @@ export async function decideNextEmail(
   state: UserState,
   db: D1Database,
   now: number = Date.now(),
+  roll: (key: string) => number = dailyRoll,
 ): Promise<EmailDecision | null> {
   if (state.unsubscribed || !state.verified) return null;
 
@@ -551,7 +627,7 @@ export async function decideNextEmail(
   }
 
   // TIER 2: lifecycle emails.
-  return decideLifecycle(state, recent, now);
+  return decideLifecycle(state, recent, now, roll);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -592,6 +668,7 @@ export async function generateAndSendEmail(
     llmState,
     decision.contextNote,
     env.EMAIL_MODEL || 'openrouter/free',
+    decision.variant,
   );
 
   const unsubRow = await env.DB
@@ -621,10 +698,62 @@ export async function generateAndSendEmail(
   };
 }
 
+// Randomness snapshot for admin preview — shows today's tip/feedback rolls
+// and whether each is eligible, without sending anything.
+export async function getRandomnessSnapshot(
+  state: UserState,
+  db: D1Database,
+): Promise<{
+  dateKey: string;
+  tip: { chance: number; roll: number; willSendToday: boolean; lastTipAt: number; daysSinceLastTip: number | null };
+  feedback: { chance: number; roll: number; eligible: boolean; willSendToday: boolean; lastFeedbackAt: number; daysSinceLastFeedback: number | null };
+}> {
+  const now = Date.now();
+  const dateKey = dateKeyOf(now);
+
+  const res = await db
+    .prepare(
+      `SELECT email_type, created_at FROM engagement_emails
+       WHERE user_id = ? AND email_type IN ('app_tip', 'feedback_request') AND status != 'failed'
+       ORDER BY created_at DESC`,
+    )
+    .bind(state.userId)
+    .all<{ email_type: string; created_at: number }>();
+  const rows = res.results || [];
+  const lastTipAt = rows.find((r) => r.email_type === 'app_tip')?.created_at ?? 0;
+  const lastFeedbackAt = rows.find((r) => r.email_type === 'feedback_request')?.created_at ?? 0;
+
+  const tipRoll = dailyRoll(`${state.userId}:tip:${dateKey}`);
+  const tipChanceValue = tipChance(state);
+  const tipGapOk = now - lastTipAt >= TIP_MIN_GAP_MS;
+  const feedbackRoll = dailyRoll(`${state.userId}:feedback:${dateKey}`);
+  const feedbackEligible =
+    state.daysSinceSignup >= FEEDBACK_MIN_SIGNUP_DAYS &&
+    now - lastFeedbackAt >= FEEDBACK_MIN_GAP_MS;
+
+  return {
+    dateKey,
+    tip: {
+      chance: tipChanceValue,
+      roll: tipRoll,
+      willSendToday: tipGapOk && tipRoll < tipChanceValue,
+      lastTipAt,
+      daysSinceLastTip: lastTipAt ? Math.floor((now - lastTipAt) / DAY_MS) : null,
+    },
+    feedback: {
+      chance: FEEDBACK_DAILY_CHANCE,
+      roll: feedbackRoll,
+      eligible: feedbackEligible,
+      willSendToday: feedbackEligible && feedbackRoll < FEEDBACK_DAILY_CHANCE,
+      lastFeedbackAt,
+      daysSinceLastFeedback: lastFeedbackAt ? Math.floor((now - lastFeedbackAt) / DAY_MS) : null,
+    },
+  };
+}
+
 // ──────────────────────────────────────────────────────────────
 // 4. Cron processor — scans all users, sends due emails
 // ──────────────────────────────────────────────────────────────
-
 export async function processAllUsers(env: EngineEnv): Promise<{
   scanned: number;
   sent: number;

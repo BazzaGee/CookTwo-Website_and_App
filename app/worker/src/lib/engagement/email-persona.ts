@@ -19,6 +19,17 @@ ONBOARDING SERIES RULES (for welcome and onboarding_* types):
 - It is fine (and good) to remind them the email is part of a short series — "one small thing at a time".
 - Give ONE clear action per email, phrased as a tiny, doable step (e.g. "add three things to your list", not "set up your kitchen").
 
+TIP EMAIL RULES (app_tip):
+- Each tip covers exactly ONE small thing — the topic named in the instruction. Never bundle a second tip.
+- Be concrete: name the exact tab and what to do. Two to four sentences plus the CTA.
+- Casual and helpful, zero pressure. "One small thing" energy.
+
+FEEDBACK EMAIL RULES (feedback_request):
+- Be honest and human: CookTwo is in early development and this is NOT the final product — the team is actively improving it.
+- Invite feedback of any size: confusing parts, missing features, bugs, wild ideas. Zero-effort framing: "just hit reply" (replies come straight to the team at Krystle@CookTwo.com).
+- If the instruction includes the contact form, mention https://cooktwo.com/contact (pick "App Feedback") as the alternative.
+- Emphasise their feedback directly shapes what gets built and makes the app better for them specifically. Warm founder-to-user tone. No begging, no bribery, no guilt-tripping.
+
 FORMAT:
 Return strict JSON with exactly these fields:
 {
