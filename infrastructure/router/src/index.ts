@@ -3,43 +3,15 @@
 // - cooktwo.app -> cfs-app.pages.dev (PWA)
 // - www.* -> 301 redirect to apex
 // - PWA routes /PWA/* on cooktwo.com are proxied to the PWA origin
+//
+// NOTE: routing behaviour here is intentionally identical to the version that
+// has been live in production since 2026-06-20. A bot/crawler filter exists in
+// git history (commit 418897d) but was never deployed and MUST NOT be enabled
+// as written: its UA pattern list includes 'bot', which matches Googlebot and
+// Bingbot and would return 403 to search engine crawlers and deindex the site.
+// See TODO below before revisiting that filter.
 
 export interface Env {}
-
-// ── Bot / crawler filter ──────────────────────────────────────
-// Blocks known AI crawlers, SEO bots, and requests from data-center cities
-// before they reach the Pages origin. Saves bandwidth and keeps GA4 clean.
-
-const BOT_UA_PATTERNS = [
-  'bot', 'crawler', 'spider', 'scraper', 'headless',
-  'petalbot', 'bytespider', 'gptbot', 'claudebot', 'chatgpt-user',
-  'ccbot', 'anthropic', 'cohere', 'perplexity', 'youbot',
-  'dataforseomarketing', 'mj12bot', 'ahrefsbot', 'semrushbot',
-  'dotbot', 'rogerbot', 'blexbot', 'seekport',
-];
-
-const BOT_CITY_BLOCKLIST = [
-  'Ashburn',        // Google Cloud / AWS us-east-1
-  'Council Bluffs', // Google Cloud us-central1
-  'Glenview',       // Known bot proxy / data center
-  'Boardman',       // AWS us-west-2
-  'The Dalles',     // Google Cloud
-];
-
-function isLikelyBot(request: Request): boolean {
-  const ua = (request.headers.get('user-agent') || '').toLowerCase();
-  // Block if UA matches a known bot pattern
-  if (BOT_UA_PATTERNS.some(pattern => ua.includes(pattern))) {
-    return true;
-  }
-  // Block if city header matches a known data-center city
-  // (cf-ipcity is set by Cloudflare for all requests)
-  const city = request.headers.get('cf-ipcity') || '';
-  if (BOT_CITY_BLOCKLIST.includes(city)) {
-    return true;
-  }
-  return false;
-}
 
 const APEX_REDIRECTS: Record<string, string> = {
   'www.cooktwo.com': 'https://cooktwo.com',
@@ -55,6 +27,10 @@ const PWA_ON_COM: { test: (path: string) => boolean; target: string } = {
   test: (p) => p.startsWith('/PWA') || p === '/PWA/' || p === '/PWA',
   target: 'https://cfs-app.pages.dev',
 };
+
+// TODO: if the bot filter is ever wanted, allowlist major search engines first
+// (Googlebot, GoogleOther, AdsBot-Google, bingbot, Applebot, DuckDuckBot) and
+// exempt them from any 'bot' substring match before enabling it in production.
 
 function pickTarget(host: string, path: string): string | null {
   // www.* -> 301 to apex
@@ -77,11 +53,6 @@ export default {
   async fetch(request: Request, _env: Env, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
-
-    // Block bots and data-center traffic before hitting Pages origin
-    if (isLikelyBot(request)) {
-      return new Response('Forbidden', { status: 403 });
-    }
 
     // www -> apex 301 redirect
     const apex = APEX_REDIRECTS[host];
@@ -109,11 +80,19 @@ export default {
     headers.delete('cf-ipcountry');
     headers.delete('cf-ray');
     headers.delete('cf-visitor');
+    // Bypass any cached copy of this upstream URL so the Pages origin is always
+    // consulted. Without this the edge can serve a stale build from before a
+    // deploy (observed serving a pre-change HTML for cooktwo.com/).
+    headers.set('cache-control', 'no-cache');
 
-    const init: RequestInit = {
+    const init: RequestInit & { cf?: { cacheTtl?: number; cacheEverything?: boolean } } = {
       method: request.method,
       headers,
       redirect: 'manual',
+      cf: {
+        cacheTtl: 0,
+        cacheEverything: false,
+      },
     };
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       init.body = request.body;
