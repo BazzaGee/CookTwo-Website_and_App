@@ -1,0 +1,84 @@
+---
+// src/components/ByteDigitalBadge.astro
+// Byte Digital brand badge — displayed below the footer on every page.
+---
+
+<div class="byte-brand">
+  <div class="byte-mini-logo-grid">
+    <div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.1s"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.2s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.1s"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.2s"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div>
+    <div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.3s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.4s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.3s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.4s"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div>
+    <div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.5s"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.6s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.5s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.6s"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div>
+    <div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.7s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.8s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.7s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.8s"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div>
+    <div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:0.9s"></div><div class="byte-mini-dot active" style="--active-color:#8B78E6;animation-delay:1.0s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:1.9s"></div><div class="byte-mini-dot active" style="--active-color:#5EEAD4;animation-delay:2.0s"></div><div class="byte-mini-dot blank"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div><div class="byte-mini-dot faint"></div>
+  </div>
+  <a href="https://www.bytedigital.co.nz/" class="byte-brand-link" target="_blank" rel="noopener noreferrer">
+    <div class="byte-brand-text">Made with <span class="byte-heart">&#10084;&#65039;</span> by <span class="byte-brand-name"><span class="byte-purple">BYTE</span><span class="byte-mint">DIGITAL</span></span></div>
+  </a>
+  <div class="byte-brand-sub">Digital solutions for local businesses.</div>
+</div>
+
+<style>
+  .byte-brand {
+    background: #030304;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 40px 0;
+    text-align: center;
+  }
+  .byte-mini-logo-grid {
+    display: grid;
+    grid-template-columns: repeat(15, 5px);
+    gap: 2px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .byte-mini-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .byte-mini-dot.faint {
+    background-color: rgba(139, 120, 230, 0.12);
+    opacity: 0.15;
+  }
+  .byte-mini-dot.active {
+    background-color: #1a1a24;
+    opacity: 0.15;
+    animation: byte-logo-populate 4s infinite;
+  }
+  .byte-mini-dot.blank {
+    background-color: transparent;
+  }
+  @keyframes byte-logo-populate {
+    0%, 10%, 100% { opacity: 0.15; background-color: #1a1a24; box-shadow: none; }
+    25%, 85% { opacity: 1; background-color: var(--active-color); box-shadow: 0 0 12px var(--active-color); }
+  }
+  .byte-brand-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .byte-heart { color: #ef4444; font-size: 14px; }
+  .byte-brand-name { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .byte-purple { color: #8B78E6; }
+  .byte-mint { color: #5EEAD4; }
+  .byte-brand-sub { font-size: 11px; color: #94A3B8; }
+  .byte-brand-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .byte-brand-link:hover .byte-brand-name span {
+    filter: brightness(1.2);
+  }
+  .byte-brand-link:hover .byte-heart {
+    transform: scale(1.2);
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+</style>
