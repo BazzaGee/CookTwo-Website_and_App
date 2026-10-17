@@ -16,9 +16,22 @@ interface Props {
   articleAuthor?: string;
   articleTags?: string[];
   isArticle?: boolean;
+  minimal?: boolean;
+  chatEndpoint?: string;
+  chatTitle?: string;
+  chatSubtitle?: string;
+  chatShowLogo?: boolean;
+  chatWelcome?: string;
+  chatPlaceholder?: string;
+  chatSource?: string;
 }
 
-const { title, description, canonicalURL, ogImage, articlePublishedDate, articleAuthor, articleTags, isArticle } = Astro.props;
+const {
+  title, description, canonicalURL, ogImage, articlePublishedDate, articleAuthor,
+  articleTags, isArticle, minimal = false,
+  chatEndpoint, chatTitle, chatSubtitle, chatShowLogo, chatWelcome,
+  chatPlaceholder, chatSource,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -26,15 +39,24 @@ const { title, description, canonicalURL, ogImage, articlePublishedDate, article
   <head>
     <BaseHead title={title} description={description} canonicalURL={canonicalURL} ogImage={ogImage} articlePublishedDate={articlePublishedDate} articleAuthor={articleAuthor} articleTags={articleTags} isArticle={isArticle} />
   </head>
-  <body class="min-h-screen flex flex-col pt-20">
-    <Header />
+  <body class={`min-h-screen flex flex-col ${minimal ? '' : 'pt-20'}`}>
+    {!minimal && <Header />}
     <main class="flex-grow">
       <slot />
     </main>
-    <Footer />
-    <ByteDigitalBadge />
+    {!minimal && <Footer />}
+    {!minimal && <ByteDigitalBadge />}
     <EarlyAccessModal />
     <slot name="after-footer" />
-    <ChatWidget />
+    <ChatWidget
+      position={minimal ? 'top' : 'bottom'}
+      endpoint={chatEndpoint}
+      title={chatTitle}
+      subtitle={chatSubtitle}
+      showLogo={chatShowLogo}
+      welcomeMessage={chatWelcome}
+      placeholder={chatPlaceholder}
+      source={chatSource}
+    />
   </body>
 </html>

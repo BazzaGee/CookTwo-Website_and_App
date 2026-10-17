@@ -1,0 +1,327 @@
+---
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+---
+
+<div data-shopping-tool data-ns={audience}>
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-text-primary">{isCouples ? 'Our shopping list' : 'My shopping list'}</h2>
+      <p class="text-sm text-text-secondary mt-1" data-shopping-summary>Add what you need below.</p>
+    </div>
+    {isCouples && (
+      <div class="flex items-center gap-2" data-adding-as-toggle>
+        <span class="text-xs text-text-secondary font-medium">Adding as</span>
+        <div class="flex rounded-full bg-cream-dark p-0.5">
+          <button type="button" data-adding-as="1" aria-pressed="true" class="adding-as-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Partner 1</button>
+          <button type="button" data-adding-as="2" aria-pressed="false" class="adding-as-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Partner 2</button>
+        </div>
+      </div>
+    )}
+  </div>
+
+  <form data-shopping-form class="flex gap-2">
+    <input
+      type="text"
+      data-add
+      autocomplete="off"
+      placeholder="Milk, 2 loaves of bread, dishwasher tablets…"
+      class="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-white text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+    />
+    <button
+      type="submit"
+      class="flex-shrink-0 px-5 py-3 rounded-xl bg-sage text-white font-medium hover:bg-sage-dark active:scale-[0.98] transition-all disabled:opacity-40"
+    >
+      Add
+    </button>
+  </form>
+  <p class="text-xs text-text-secondary mt-2 mb-6">Type exactly what you need — quantities, brands, all of it. Separate items with commas.</p>
+
+  <div data-shopping-empty class="text-center py-14 border-2 border-dashed border-border rounded-2xl hidden">
+    <p class="text-lg font-semibold text-text-primary">{isCouples ? 'Your list is empty.' : 'Your list is empty.'}</p>
+    <p class="text-sm text-text-secondary mt-2 max-w-xs mx-auto">Add what you need above — &ldquo;milk, eggs, dishwasher tablets&rdquo; — and watch it sort itself into categories.</p>
+  </div>
+
+  <div data-shopping-list class="space-y-4"></div>
+
+  <p data-moved-note class="hidden mt-4 text-sm text-sage-dark font-medium"></p>
+  <p data-dup-note class="hidden mt-4 text-sm text-text-secondary"></p>
+
+  <div class="mt-6 pt-5 border-t border-border flex flex-wrap items-center justify-between gap-3">
+    <span class="text-sm text-text-secondary" data-shopping-count></span>
+    <div class="flex gap-2">
+      <button
+        type="button"
+        data-move-checked
+        class="px-4 py-2 rounded-xl border border-sage text-sage text-sm font-medium hover:bg-sage/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Move checked to pantry
+      </button>
+      <button
+        type="button"
+        data-clear
+        class="px-4 py-2 rounded-xl border border-border text-text-secondary text-sm font-medium hover:text-error hover:border-error/40 transition-colors"
+      >
+        Clear list
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .adding-as-btn {
+    color: #6B7B6C;
+  }
+  .adding-as-btn[data-active='1'] {
+    background: #fff;
+    color: #2C3E2D;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+</style>
+
+<script>
+  import { parsePantryItemSync, CATEGORY_ORDER, CATEGORY_EMOJIS, type Category } from '../../lib/pantry-parse';
+  import { loadList, saveList, itemFromParsed, type ToolItem } from '../../lib/tool-store';
+
+  document.querySelectorAll<HTMLElement>('[data-shopping-tool]').forEach((root) => {
+    const ns = root.dataset.ns ?? 'couples';
+    let items: ToolItem[] = loadList(ns, 'shopping');
+    let addingAs: 1 | 2 = 1;
+
+    const listEl = root.querySelector<HTMLElement>('[data-shopping-list]')!;
+    const emptyEl = root.querySelector<HTMLElement>('[data-shopping-empty]')!;
+    const summaryEl = root.querySelector<HTMLElement>('[data-shopping-summary]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-shopping-count]')!;
+    const moveBtn = root.querySelector<HTMLButtonElement>('[data-move-checked]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-shopping-form]')!;
+    const input = root.querySelector<HTMLInputElement>('[data-add]')!;
+    const toggleBtns = root.querySelectorAll<HTMLButtonElement>('[data-adding-as]');
+
+    function persist() {
+      saveList(ns, 'shopping', items);
+      window.dispatchEvent(new Event('cooktwo:changed'));
+    }
+
+    function updateToggle() {
+      toggleBtns.forEach((btn) => {
+        const active = btn.dataset.addingAs === String(addingAs);
+        btn.dataset.active = active ? '1' : '0';
+        btn.setAttribute('aria-pressed', String(active));
+      });
+    }
+
+    function itemLabel(item: ToolItem): string {
+      const bits: string[] = [];
+      if (item.qty) bits.push(item.qty);
+      if (item.brand) bits.push(item.brand);
+      return bits.length > 0 ? `(${bits.join(' · ')})` : '';
+    }
+
+    function buildRow(item: ToolItem): HTMLLIElement {
+      const li = document.createElement('li');
+
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 px-4 py-3 group';
+
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.checked = item.checked;
+      check.className = 'w-4 h-4 rounded accent-sage cursor-pointer flex-shrink-0';
+      check.setAttribute('aria-label', `Mark ${item.name} as ${item.checked ? 'not bought' : 'bought'}`);
+      check.addEventListener('change', () => {
+        item.checked = check.checked;
+        persist();
+        render();
+      });
+      row.appendChild(check);
+
+      const label = document.createElement('button');
+      label.type = 'button';
+      label.className = 'flex-1 min-w-0 text-left';
+      const name = document.createElement('span');
+      name.className = item.checked ? 'text-text-secondary line-through' : 'text-text-primary';
+      name.textContent = item.name;
+      label.appendChild(name);
+      const extra = itemLabel(item);
+      if (extra) {
+        const meta = document.createElement('span');
+        meta.className = 'text-text-secondary text-xs ml-2';
+        meta.textContent = extra;
+        label.appendChild(meta);
+      }
+      if (!item.isFood) {
+        const warn = document.createElement('span');
+        warn.className = 'text-error text-xs ml-2';
+        warn.textContent = 'not a food item';
+        label.appendChild(warn);
+      }
+      label.addEventListener('click', () => {
+        item.checked = !item.checked;
+        persist();
+        render();
+      });
+      row.appendChild(label);
+
+      if (toggleBtns.length > 0) {
+        const dot = document.createElement('span');
+        dot.className = `w-2 h-2 rounded-full flex-shrink-0 ${item.addedBy === 1 ? 'bg-sage' : 'bg-terracotta'}`;
+        dot.title = item.addedBy === 1 ? 'Added by Partner 1' : 'Added by Partner 2';
+        row.appendChild(dot);
+      }
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'flex-shrink-0 p-1 rounded-full text-text-secondary/40 hover:text-error transition-colors';
+      del.setAttribute('aria-label', `Remove ${item.name}`);
+      del.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      del.addEventListener('click', () => {
+        items = items.filter((it) => it.id !== item.id);
+        persist();
+        render();
+      });
+      row.appendChild(del);
+
+      li.appendChild(row);
+      li.className = 'border-b border-border/60 last:border-b-0';
+      return li;
+    }
+
+    function render() {
+      listEl.textContent = '';
+
+      const remaining = items.filter((it) => !it.checked).length;
+      const checkedCount = items.length - remaining;
+
+      summaryEl.textContent =
+        items.length === 0
+          ? 'Add what you need below.'
+          : remaining === 0
+            ? 'All in the trolley — move them to the pantry when you unpack.'
+            : `${remaining} to buy`;
+
+      countEl.textContent =
+        items.length === 0
+          ? 'No items yet'
+          : `${items.length} item${items.length === 1 ? '' : 's'} · ${checkedCount} in the trolley`;
+
+      emptyEl.classList.toggle('hidden', items.length > 0);
+      moveBtn.disabled = checkedCount === 0;
+
+      const grouped = new Map<Category, ToolItem[]>();
+      for (const item of items) {
+        const cat = (CATEGORY_ORDER.includes(item.category) ? item.category : 'Pantry') as Category;
+        if (!grouped.has(cat)) grouped.set(cat, []);
+        grouped.get(cat)!.push(item);
+      }
+
+      for (const cat of CATEGORY_ORDER) {
+        const catItems = grouped.get(cat);
+        if (!catItems || catItems.length === 0) continue;
+
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl border border-border overflow-hidden';
+
+        const head = document.createElement('div');
+        head.className = 'flex items-center gap-2 px-4 py-2.5 bg-cream/70 border-b border-border';
+        const emoji = document.createElement('span');
+        emoji.textContent = CATEGORY_EMOJIS[cat];
+        head.appendChild(emoji);
+        const title = document.createElement('span');
+        title.className = 'text-sm font-semibold text-text-primary';
+        title.textContent = cat;
+        head.appendChild(title);
+        const count = document.createElement('span');
+        count.className = 'ml-auto text-xs text-text-secondary';
+        count.textContent = String(catItems.length);
+        head.appendChild(count);
+        card.appendChild(head);
+
+        const ul = document.createElement('ul');
+        ul.className = 'divide-y divide-border/60';
+        for (const item of catItems) ul.appendChild(buildRow(item));
+        card.appendChild(ul);
+
+        listEl.appendChild(card);
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const parts = text.split(/[,;]/).map((p) => p.trim()).filter(Boolean);
+      let skipped = 0;
+      for (const part of parts) {
+        const parsed = parsePantryItemSync(part);
+        if (!parsed.name) continue;
+        const exists = items.some((it) => it.name.toLowerCase() === parsed.name.toLowerCase());
+        if (exists) {
+          skipped += 1;
+          continue;
+        }
+        items.push(itemFromParsed(parsed, addingAs));
+      }
+      input.value = '';
+      persist();
+      render();
+      const dupNote = root.querySelector<HTMLElement>('[data-dup-note]');
+      if (dupNote) {
+        if (skipped > 0) {
+          dupNote.textContent = `${skipped} item${skipped === 1 ? '' : 's'} already on the list — skipped.`;
+          dupNote.classList.remove('hidden');
+          window.setTimeout(() => dupNote.classList.add('hidden'), 3000);
+        } else {
+          dupNote.classList.add('hidden');
+        }
+      }
+    });
+
+    toggleBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        addingAs = btn.dataset.addingAs === '2' ? 2 : 1;
+        updateToggle();
+      });
+    });
+
+    moveBtn.addEventListener('click', () => {
+      const checked = items.filter((it) => it.checked && it.isFood);
+      const skipped = items.filter((it) => it.checked && !it.isFood).length;
+      if (checked.length === 0) {
+        if (skipped > 0) window.alert('Only food items can move to the pantry.');
+        return;
+      }
+      const pantry = loadList(ns, 'pantry');
+      for (const it of checked) {
+        pantry.push({ ...it, checked: false });
+      }
+      saveList(ns, 'pantry', pantry);
+      items = items.filter((it) => !(it.checked && it.isFood));
+      persist();
+      render();
+      window.dispatchEvent(new Event('cooktwo:changed'));
+      const msg = root.querySelector<HTMLElement>('[data-moved-note]');
+      if (msg) {
+        msg.textContent = `${checked.length} item${checked.length === 1 ? '' : 's'} moved to the pantry${
+          skipped > 0 ? ` · ${skipped} non-food item${skipped === 1 ? '' : 's'} stayed on the list` : ''
+        }.`;
+        msg.classList.remove('hidden');
+        window.setTimeout(() => msg.classList.add('hidden'), 4000);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (items.length === 0) return;
+      if (!window.confirm('Clear the whole shopping list?')) return;
+      items = [];
+      persist();
+      render();
+    });
+
+    updateToggle();
+    render();
+  });
+</script>

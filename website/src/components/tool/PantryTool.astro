@@ -1,0 +1,276 @@
+---
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+---
+
+<div data-pantry-tool data-ns={audience}>
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-text-primary">{isCouples ? 'Our kitchen' : 'My kitchen'}</h2>
+      <p class="text-sm text-text-secondary mt-1" data-pantry-summary>Tell us what you have.</p>
+    </div>
+  </div>
+
+  <form data-pantry-form class="flex gap-2">
+    <input
+      type="text"
+      data-add
+      autocomplete="off"
+      placeholder="1 litre whole milk, 250g Swiss cheddar, half an onion…"
+      class="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-white text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+    />
+    <button
+      type="submit"
+      class="flex-shrink-0 px-5 py-3 rounded-xl bg-sage text-white font-medium hover:bg-sage-dark active:scale-[0.98] transition-all disabled:opacity-40"
+    >
+      Add
+    </button>
+  </form>
+  <p class="text-xs text-text-secondary mt-2 mb-6">
+    Type naturally — quantities, brands, all of it. Separate items with commas. Items moved from your shopping list land here too.
+  </p>
+
+  <div data-pantry-empty class="text-center py-14 border-2 border-dashed border-border rounded-2xl hidden">
+    <p class="text-lg font-semibold text-text-primary">Your kitchen is empty.</p>
+    <p class="text-sm text-text-secondary mt-2 max-w-sm mx-auto">Type what you have above — &ldquo;chicken, 2 cups rice, spinach&rdquo; — and it gets sorted, quantified, and categorised instantly, right in your browser.</p>
+  </div>
+
+  <div data-pantry-list class="space-y-4"></div>
+
+  <div class="mt-6 pt-5 border-t border-border flex flex-wrap items-center justify-between gap-3">
+    <span class="text-sm text-text-secondary" data-pantry-count></span>
+    <button
+      type="button"
+      data-clear
+      class="px-4 py-2 rounded-xl border border-border text-text-secondary text-sm font-medium hover:text-error hover:border-error/40 transition-colors"
+    >
+      Clear kitchen
+    </button>
+  </div>
+</div>
+
+<script>
+  import { parsePantryItemSync, CATEGORY_ORDER, CATEGORY_EMOJIS, type Category } from '../../lib/pantry-parse';
+  import { loadList, saveList, itemFromParsed, type ToolItem } from '../../lib/tool-store';
+
+  const FOOD = new Set<Category>(['Produce', 'Meat', 'Dairy', 'Pantry']);
+
+  document.querySelectorAll<HTMLElement>('[data-pantry-tool]').forEach((root) => {
+    const ns = root.dataset.ns ?? 'couples';
+    let items: ToolItem[] = loadList(ns, 'pantry');
+
+    const listEl = root.querySelector<HTMLElement>('[data-pantry-list]')!;
+    const emptyEl = root.querySelector<HTMLElement>('[data-pantry-empty]')!;
+    const summaryEl = root.querySelector<HTMLElement>('[data-pantry-summary]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-pantry-count]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-pantry-form]')!;
+    const input = root.querySelector<HTMLInputElement>('[data-add]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+
+    function persist() {
+      saveList(ns, 'pantry', items);
+    }
+
+    function closePopovers() {
+      root.querySelectorAll('[data-reclass-popover]').forEach((p) => p.remove());
+    }
+
+    function buildRow(item: ToolItem): HTMLLIElement {
+      const li = document.createElement('li');
+      li.className = 'border-b border-border/60 last:border-b-0 relative';
+
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 py-3 px-4 group';
+
+      const main = document.createElement('div');
+      main.className = 'flex-1 min-w-0';
+
+      const name = document.createElement('span');
+      name.className = item.isFood ? 'text-text-primary' : 'text-text-secondary';
+      name.textContent = item.name;
+      main.appendChild(name);
+
+      const bits: string[] = [];
+      if (item.qty) bits.push(item.qty);
+      if (item.brand) bits.push(item.brand);
+      if (bits.length > 0) {
+        const meta = document.createElement('span');
+        meta.className = 'text-text-secondary text-xs ml-2';
+        meta.textContent = `(${bits.join(' · ')})`;
+        main.appendChild(meta);
+      }
+
+      if (!item.isFood) {
+        const bad = document.createElement('span');
+        bad.className = 'text-error text-xs ml-2';
+        bad.textContent = '⚠ not a food item';
+        main.appendChild(bad);
+      }
+
+      if (item.needsReview) {
+        const rev = document.createElement('span');
+        rev.className = 'ml-2 inline-block px-2 py-0.5 rounded-full bg-terracotta/15 text-terracotta-dark text-[11px] font-medium';
+        rev.textContent = 'check category';
+        rev.title = "Low confidence — the app's AI fixes this automatically";
+        main.appendChild(rev);
+      }
+
+      row.appendChild(main);
+
+      // Reclassify
+      const wrap = document.createElement('div');
+      wrap.className = 'relative flex-shrink-0';
+      const reBtn = document.createElement('button');
+      reBtn.type = 'button';
+      reBtn.className = 'p-1.5 rounded-md text-text-secondary/50 hover:text-sage transition-colors';
+      reBtn.setAttribute('aria-label', `Move ${item.name} to another category`);
+      reBtn.title = 'Move to another category';
+      reBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+      reBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const existing = wrap.querySelector('[data-reclass-popover]');
+        closePopovers();
+        if (existing) return;
+
+        const pop = document.createElement('div');
+        pop.className = 'absolute right-0 top-9 z-20 bg-white border border-border rounded-xl shadow-lg p-2 min-w-44';
+        pop.setAttribute('data-reclass-popover', '');
+        const label = document.createElement('p');
+        label.className = 'text-text-secondary text-[10px] uppercase tracking-wide font-medium px-2 pb-1';
+        label.textContent = 'Move to…';
+        pop.appendChild(label);
+        for (const cat of CATEGORY_ORDER) {
+          const opt = document.createElement('button');
+          opt.type = 'button';
+          opt.className = `w-full text-left text-sm py-1.5 px-2 rounded-lg hover:bg-cream transition-colors flex items-center gap-2 ${
+            item.category === cat ? 'text-sage font-medium' : 'text-text-primary'
+          }`;
+          const em = document.createElement('span');
+          em.textContent = CATEGORY_EMOJIS[cat];
+          opt.appendChild(em);
+          const tx = document.createElement('span');
+          tx.textContent = cat;
+          opt.appendChild(tx);
+          opt.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            item.category = cat;
+            item.isFood = FOOD.has(cat);
+            item.needsReview = false;
+            persist();
+            render();
+          });
+          pop.appendChild(opt);
+        }
+        wrap.appendChild(pop);
+      });
+      wrap.appendChild(reBtn);
+      row.appendChild(wrap);
+
+      // Delete
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'flex-shrink-0 p-1 rounded-full text-text-secondary/40 hover:text-error transition-colors';
+      del.setAttribute('aria-label', `Remove ${item.name}`);
+      del.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      del.addEventListener('click', () => {
+        items = items.filter((it) => it.id !== item.id);
+        persist();
+        render();
+      });
+      row.appendChild(del);
+
+      li.appendChild(row);
+      return li;
+    }
+
+    function render() {
+      listEl.textContent = '';
+      closePopovers();
+
+      const reviewCount = items.filter((it) => it.needsReview).length;
+      summaryEl.textContent =
+        items.length === 0
+          ? 'Tell us what you have.'
+          : `${items.length} item${items.length === 1 ? '' : 's'} in your kitchen.${
+              reviewCount > 0 ? ` · ${reviewCount} to review` : ''
+            }`;
+      countEl.textContent = items.length === 0 ? 'Nothing in the pantry yet' : `${items.length} item${items.length === 1 ? '' : 's'}`;
+      emptyEl.classList.toggle('hidden', items.length > 0);
+
+      const grouped = new Map<Category, ToolItem[]>();
+      for (const item of items) {
+        const cat = (CATEGORY_ORDER.includes(item.category) ? item.category : 'Pantry') as Category;
+        if (!grouped.has(cat)) grouped.set(cat, []);
+        grouped.get(cat)!.push(item);
+      }
+
+      for (const cat of CATEGORY_ORDER) {
+        const catItems = grouped.get(cat);
+        if (!catItems || catItems.length === 0) continue;
+
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl border border-border overflow-hidden';
+
+        const head = document.createElement('div');
+        head.className = 'flex items-center gap-2 px-4 py-2.5 bg-cream/70 border-b border-border';
+        const emoji = document.createElement('span');
+        emoji.textContent = CATEGORY_EMOJIS[cat];
+        head.appendChild(emoji);
+        const title = document.createElement('span');
+        title.className = 'text-sm font-semibold text-text-primary';
+        title.textContent = cat;
+        head.appendChild(title);
+        const count = document.createElement('span');
+        count.className = 'ml-auto text-xs text-text-secondary';
+        count.textContent = String(catItems.length);
+        head.appendChild(count);
+        card.appendChild(head);
+
+        const ul = document.createElement('ul');
+        ul.className = 'divide-y divide-border/60';
+        for (const item of catItems) ul.appendChild(buildRow(item));
+        card.appendChild(ul);
+
+        listEl.appendChild(card);
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const parts = text.split(/[,;]/).map((p) => p.trim()).filter(Boolean);
+      for (const part of parts) {
+        const parsed = parsePantryItemSync(part);
+        if (!parsed.name) continue;
+        items.push(itemFromParsed(parsed, 1));
+      }
+      input.value = '';
+      persist();
+      render();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (items.length === 0) return;
+      if (!window.confirm('Clear the whole pantry?')) return;
+      items = [];
+      persist();
+      render();
+    });
+
+    document.addEventListener('click', () => closePopovers());
+    window.addEventListener('cooktwo:changed', () => {
+      items = loadList(ns, 'pantry');
+      render();
+    });
+    window.addEventListener('cooktwo:tab', () => {
+      items = loadList(ns, 'pantry');
+      render();
+    });
+
+    render();
+  });
+</script>

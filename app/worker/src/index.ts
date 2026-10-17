@@ -10,6 +10,7 @@ import { handleMealChat } from './routes/mealChat';
 import { handleGetActivity } from './routes/activity';
 import { logToD1 } from './lib/activity';
 import { handleSubscribe, handleVerify, handleValidateAccess } from './routes/waitlist';
+import { handleLeadCapture, handleLeadVerify, handleLeadStatus } from './routes/lead';
 import {
   handleEngagementSignup,
   handleEngagementVerify,
@@ -74,6 +75,11 @@ app.get('/health', (c) => c.text('ok'));
 app.post('/api/waitlist/subscribe', (c) => handleSubscribe(c));
 app.get('/api/waitlist/verify', (c) => handleVerify(c));
 app.post('/api/waitlist/validate-access', (c) => handleValidateAccess(c));
+
+// ─── Lead magnet captures (Portion Split Calculator) ───────────────────
+app.post('/api/lead/portion-split', (c) => handleLeadCapture(c));
+app.get('/api/lead/verify', (c) => handleLeadVerify(c));
+app.get('/api/lead/status', (c) => handleLeadStatus(c));
 
 // ─── Engagement email engine ──────────────────────────────────────
 app.post('/api/engagement/signup', (c) => handleEngagementSignup(c));

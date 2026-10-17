@@ -1,0 +1,158 @@
+---
+import ShoppingTool from './ShoppingTool.astro';
+import PantryTool from './PantryTool.astro';
+import PlatesTool from './PlatesTool.astro';
+import DietTool from './DietTool.astro';
+import AiTeaser from './AiTeaser.astro';
+import EarlyAccessButton from '../forms/EarlyAccessButton.astro';
+
+interface Props {
+  audience: 'couples' | 'solo';
+}
+
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+
+const tabs = [
+  { key: 'shopping', label: 'Shopping list' },
+  { key: 'pantry', label: 'Pantry' },
+  { key: 'plates', label: isCouples ? 'Two plates' : 'Your plate' },
+  { key: 'diet', label: isCouples ? 'Diet match' : 'Your diet' },
+] as const;
+---
+
+<section class="bg-cream pt-20 md:pt-24 pb-16 md:pb-24" data-kitchen-tool data-audience={audience}>
+  <h1 class="sr-only">{isCouples ? 'The CookTwo Kitchen Tool — the kitchen that works for both of you' : 'The CookTwo Kitchen Tool — your kitchen, finally sorted'}</h1>
+  <div class="container-custom">
+    <!-- Tool card -->
+    <div class="max-w-5xl mx-auto bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
+      <!-- Tabs -->
+      <div class="border-b border-border bg-cream/60 px-3 pt-3 md:px-5 md:pt-4" role="tablist" aria-label="Kitchen tool sections">
+        <div class="flex gap-1 overflow-x-auto pb-0">
+          {tabs.map((tab) => (
+            <button
+              type="button"
+              role="tab"
+              id={`kitchen-tab-${tab.key}`}
+              data-tab={tab.key}
+              aria-selected={tab.key === 'shopping'}
+              aria-controls={`kitchen-panel-${tab.key}`}
+              tabindex={tab.key === 'shopping' ? 0 : -1}
+              class="kitchen-tool-tab flex-shrink-0 px-4 py-2.5 md:px-5 text-sm font-medium rounded-t-xl border border-b-0 transition-colors"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 md:p-8">
+        <div data-panel="shopping" role="tabpanel" id="kitchen-panel-shopping" aria-labelledby="kitchen-tab-shopping" tabindex="0">
+          <ShoppingTool audience={audience} />
+        </div>
+        <div data-panel="pantry" role="tabpanel" id="kitchen-panel-pantry" aria-labelledby="kitchen-tab-pantry" tabindex="0" hidden>
+          <PantryTool audience={audience} />
+        </div>
+        <div data-panel="plates" role="tabpanel" id="kitchen-panel-plates" aria-labelledby="kitchen-tab-plates" tabindex="0" hidden>
+          <PlatesTool audience={audience} />
+        </div>
+        <div data-panel="diet" role="tabpanel" id="kitchen-panel-diet" aria-labelledby="kitchen-tab-diet" tabindex="0" hidden>
+          <DietTool audience={audience} />
+        </div>
+      </div>
+    </div>
+
+    <!-- What the AI adds -->
+    <div class="max-w-5xl mx-auto mt-12 md:mt-16">
+      <AiTeaser audience={audience} />
+    </div>
+
+    <!-- Final CTA -->
+    <div class="max-w-5xl mx-auto mt-12 md:mt-16">
+      <div class="bg-sage rounded-3xl px-6 py-10 md:px-12 md:py-14 text-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" aria-hidden="true">
+          <div class="absolute top-0 right-0 w-72 h-72 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="absolute bottom-0 left-0 w-64 h-64 bg-terracotta rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        </div>
+        <div class="relative z-10">
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+            {isCouples ? 'One recipe. Two plates. Zero arguments.' : 'Pantry in. Dinner decided.'}
+          </h2>
+          <p class="text-lg text-white/80 max-w-xl mx-auto mb-8">
+            {isCouples
+              ? 'The free tool is the starting line — the app adds real-time sync, push, offline, and AI meals built from your pantry and both your goals.'
+              : 'The free tool is the starting line — the app adds cloud sync, offline, and AI meals built from your pantry and your goals.'}
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <EarlyAccessButton variant="white" label="Get early access" />
+            <a
+              href="https://cooktwo.app"
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 text-lg rounded-xl font-medium border-2 border-white/70 text-white hover:bg-white/10 transition-colors"
+            >
+              Open the app
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+          <p class="text-white/60 mt-5 text-sm">Free to try. No credit card required.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .kitchen-tool-tab {
+    border-color: transparent;
+    color: #6B7B6C;
+    background: transparent;
+  }
+  .kitchen-tool-tab:hover {
+    color: #2C3E2D;
+    background: rgba(0, 0, 0, 0.03);
+  }
+  .kitchen-tool-tab[aria-selected='true'] {
+    background: #fff;
+    border-color: #E5E1DA;
+    color: #2C3E2D;
+    font-weight: 600;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.03);
+  }
+</style>
+
+<script>
+  function activateTab(root: HTMLElement, name: string, focus = false) {
+    root.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((tab) => {
+      const selected = tab.dataset.tab === name;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      if (selected && focus) tab.focus();
+    });
+    root.querySelectorAll<HTMLElement>('[data-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.panel !== name;
+    });
+    window.dispatchEvent(new CustomEvent('cooktwo:tab', { detail: { name } }));
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-kitchen-tool]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => activateTab(root, tab.dataset.tab ?? 'shopping'));
+    });
+
+    root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+      const event = e as KeyboardEvent;
+      const current = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-tab]');
+      if (!current || !tabs.includes(current)) return;
+
+      let next: HTMLButtonElement | undefined;
+      if (event.key === 'ArrowRight') next = tabs[(tabs.indexOf(current) + 1) % tabs.length];
+      else if (event.key === 'ArrowLeft') next = tabs[(tabs.indexOf(current) - 1 + tabs.length) % tabs.length];
+      else if (event.key === 'Home') next = tabs[0];
+      else if (event.key === 'End') next = tabs[tabs.length - 1];
+      if (!next) return;
+
+      event.preventDefault();
+      activateTab(root, next.dataset.tab ?? 'shopping', true);
+    });
+  });
+</script>

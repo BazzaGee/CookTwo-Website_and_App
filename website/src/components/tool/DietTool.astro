@@ -1,0 +1,338 @@
+---
+import { DIETS } from '../../data/diets';
+
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+
+const CAT_LABELS: Record<string, string> = {
+  balanced: 'Balanced',
+  therapeutic: 'Therapeutic / Medical',
+  lowCarb: 'Low-carb',
+  'macronutrient-focused': 'Macronutrient-focused',
+  'plant-based': 'Plant-based',
+  ancestral: 'Ancestral / Whole-food',
+  timing: 'Timing patterns',
+};
+
+const CAT_ORDER = ['balanced', 'therapeutic', 'lowCarb', 'macronutrient-focused', 'plant-based', 'ancestral', 'timing'];
+
+const grouped = new Map<string, typeof DIETS>();
+for (const diet of DIETS) {
+  if (!grouped.has(diet.category)) grouped.set(diet.category, []);
+  grouped.get(diet.category)!.push(diet);
+}
+const groups = CAT_ORDER.filter((cat) => grouped.has(cat)).map((cat) => ({
+  cat,
+  label: CAT_LABELS[cat] ?? cat,
+  diets: grouped.get(cat)!,
+}));
+---
+
+<div data-diet-tool data-audience={audience}>
+  <div class="mb-5">
+    <h2 class="text-2xl font-bold tracking-tight text-text-primary">{isCouples ? 'Two diets, one dinner?' : 'Your diet, decoded'}</h2>
+    <p class="text-sm text-text-secondary mt-1">
+      {isCouples
+        ? 'Pick both diets. See whether you can cook one meal together — using the app\u2019s own compatibility rules.'
+        : 'Pick your diet. See what\u2019s on the table, what\u2019s off it, and how the app uses it.'}
+    </p>
+  </div>
+
+  {isCouples ? (
+    <div class="grid sm:grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="flex items-center gap-2 text-xs font-medium text-text-secondary mb-1.5" for="diet-a">
+          <span class="w-2.5 h-2.5 rounded-full bg-sage" aria-hidden="true"></span>
+          Partner 1&rsquo;s diet
+        </label>
+        <select id="diet-a" data-diet-a class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all">
+          {groups.map((g) => (
+            <optgroup label={g.label}>
+              {g.diets.map((d) => <option value={d.dietKey}>{d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}</option>)}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label class="flex items-center gap-2 text-xs font-medium text-text-secondary mb-1.5" for="diet-b">
+          <span class="w-2.5 h-2.5 rounded-full bg-terracotta" aria-hidden="true"></span>
+          Partner 2&rsquo;s diet
+        </label>
+        <select id="diet-b" data-diet-b class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all">
+          {groups.map((g) => (
+            <optgroup label={g.label}>
+              {g.diets.map((d) => <option value={d.dietKey}>{d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}</option>)}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+    </div>
+  ) : (
+    <div class="mb-5 max-w-md">
+      <label class="block text-xs font-medium text-text-secondary mb-1.5" for="diet-a">
+        Your diet
+      </label>
+      <select id="diet-a" data-diet-a class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all">
+        {groups.map((g) => (
+          <optgroup label={g.label}>
+            {g.diets.map((d) => <option value={d.dietKey}>{d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    </div>
+  )}
+
+  <div data-verdict class="rounded-2xl border p-5 mb-5 bg-cream-dark border-border">
+    <span data-verdict-chip class="badge-signature inline-block mb-2.5">—</span>
+    <p data-verdict-text class="text-text-primary leading-relaxed text-sm md:text-base"></p>
+  </div>
+
+  <div data-diet-cards class="grid gap-4 sm:grid-cols-2"></div>
+
+  <p class="text-xs text-text-secondary mt-4">
+    Based on CookTwo&rsquo;s diet compatibility catalogue — {isCouples ? 'the same rules the app uses to plan shared meals.' : 'the same rules the app uses to plan your meals.'}
+    {isCouples ? '' : ' In the app, your diet quietly shapes every suggestion, swap, and shopping list.'}
+  </p>
+</div>
+
+<script>
+  import { DIETS, type DietEntry } from '../../data/diets';
+  import { loadDiet, saveDiet } from '../../lib/tool-store';
+
+  const BY_KEY = new Map<string, DietEntry>(DIETS.map((d) => [d.dietKey, d]));
+
+  function readableGroup(slug: string): string {
+    const s = slug.replace(/-/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  interface Verdict {
+    kind: 'same' | 'easy' | 'adaptable' | 'conflict' | 'timing' | 'unknown';
+    chip: string;
+    text: string;
+  }
+
+  function verdictFor(a: DietEntry, b: DietEntry): Verdict {
+    if (a.dietKey === b.dietKey) {
+      return {
+        kind: 'same',
+        chip: 'Same diet',
+        text: `You're both on ${a.displayLabel} — exactly the same meals, zero compromises. The app just scales the recipe and portions to your targets.`,
+      };
+    }
+
+    if (a.isTimingPattern || b.isTimingPattern) {
+      const tp = a.isTimingPattern ? a : b;
+      const other = a.isTimingPattern ? b : a;
+      return {
+        kind: 'timing',
+        chip: 'Pairs freely',
+        text: `${tp.displayLabel} is about when you eat, not what you eat — so ${other.displayLabel} meals work for both of you. The app simply times each plate.`,
+      };
+    }
+
+    if (a.easyMatches.includes(b.dietKey) || b.easyMatches.includes(a.dietKey)) {
+      return {
+        kind: 'easy',
+        chip: 'Easy match',
+        text: `${a.displayLabel} and ${b.displayLabel} sit happily on the same table — one recipe, both plates, no substitutions.`,
+      };
+    }
+
+    if (a.adaptableMatches[b.dietKey]) {
+      return { kind: 'adaptable', chip: 'One meal + a tweak', text: a.adaptableMatches[b.dietKey]! };
+    }
+    if (b.adaptableMatches[a.dietKey]) {
+      return { kind: 'adaptable', chip: 'One meal + a tweak', text: b.adaptableMatches[a.dietKey]! };
+    }
+
+    if (a.hardConflicts[b.dietKey]) {
+      return { kind: 'conflict', chip: 'Cook separately', text: a.hardConflicts[b.dietKey]! };
+    }
+    if (b.hardConflicts[a.dietKey]) {
+      return { kind: 'conflict', chip: 'Cook separately', text: b.hardConflicts[a.dietKey]! };
+    }
+
+    return {
+      kind: 'unknown',
+      chip: 'App territory',
+      text: `An unusual pairing — this is exactly where the CookTwo app's AI earns its keep, working out a shared meal that satisfies both plans.`,
+    };
+  }
+
+  const VERDICT_STYLES: Record<Verdict['kind'], { wrap: string; chip: string }> = {
+    same: { wrap: 'bg-sage/5 border-sage/30', chip: 'bg-sage text-white' },
+    easy: { wrap: 'bg-sage/5 border-sage/30', chip: 'bg-sage text-white' },
+    timing: { wrap: 'bg-sage/5 border-sage/30', chip: 'bg-sage text-white' },
+    adaptable: { wrap: 'bg-terracotta/10 border-terracotta/40', chip: 'bg-terracotta text-white' },
+    conflict: { wrap: 'bg-error/5 border-error/30', chip: 'bg-error text-white' },
+    unknown: { wrap: 'bg-cream-dark border-border', chip: 'bg-terracotta text-white' },
+  };
+
+  function chipsFor(slugs: string[], tone: 'good' | 'limit', max = 8): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex flex-wrap gap-1.5';
+    const chipClass =
+      tone === 'good'
+        ? 'px-2.5 py-1 rounded-full bg-sage/10 text-sage-dark text-xs font-medium'
+        : 'px-2.5 py-1 rounded-full bg-terracotta/10 text-terracotta-dark text-xs font-medium';
+    const addChip = (slug: string) => {
+      const chip = document.createElement('span');
+      chip.className = chipClass;
+      chip.textContent = readableGroup(slug);
+      wrap.appendChild(chip);
+    };
+    slugs.slice(0, max).forEach(addChip);
+    if (slugs.length > max) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'px-2.5 py-1 rounded-full bg-cream-dark text-text-secondary text-xs font-medium hover:text-text-primary transition-colors';
+      more.textContent = `+${slugs.length - max} more`;
+      more.setAttribute('aria-label', `Show ${slugs.length - max} more food groups`);
+      more.addEventListener('click', () => {
+        slugs.slice(max).forEach(addChip);
+        more.remove();
+      });
+      wrap.appendChild(more);
+    }
+    return wrap;
+  }
+
+  function dotsFor(level: number): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex items-center gap-1';
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.createElement('span');
+      dot.className = `w-2 h-2 rounded-full ${i <= level ? 'bg-terracotta' : 'bg-cream-dark border border-border'}`;
+      wrap.appendChild(dot);
+    }
+    const label = document.createElement('span');
+    label.className = 'text-xs text-text-secondary ml-1.5';
+    label.textContent = `${level}/5 restrictive`;
+    wrap.appendChild(label);
+    return wrap;
+  }
+
+  function dietCard(diet: DietEntry, showGroups: boolean): HTMLElement {
+    const card = document.createElement('div');
+    card.className = 'rounded-2xl border border-border p-5 bg-white';
+
+    const head = document.createElement('div');
+    head.className = 'flex items-start gap-3 mb-3';
+    const emoji = document.createElement('span');
+    emoji.className = 'text-2xl leading-none';
+    emoji.textContent = diet.emoji || '🍽️';
+    head.appendChild(emoji);
+    const titles = document.createElement('div');
+    titles.className = 'flex-1 min-w-0';
+    const name = document.createElement('p');
+    name.className = 'font-bold text-text-primary';
+    name.textContent = diet.displayLabel;
+    titles.appendChild(name);
+    const desc = document.createElement('p');
+    desc.className = 'text-sm text-text-secondary mt-0.5';
+    desc.textContent = diet.shortDesc;
+    titles.appendChild(desc);
+    head.appendChild(titles);
+    const grade = document.createElement('span');
+    grade.className = 'flex-shrink-0 px-2.5 py-1 rounded-full bg-cream-dark text-text-secondary text-xs font-semibold';
+    grade.textContent = `Evidence ${diet.evidenceGrade}`;
+    grade.title = 'Evidence grade from the CookTwo diet catalogue';
+    head.appendChild(grade);
+    card.appendChild(head);
+
+    card.appendChild(dotsFor(diet.restrictiveness));
+
+    if (diet.isTimingPattern) {
+      const note = document.createElement('p');
+      note.className = 'text-xs text-sage-dark bg-sage/10 rounded-lg px-3 py-2 mt-3';
+      note.textContent = 'Timing pattern — it decides when you eat, not what you eat.';
+      card.appendChild(note);
+    }
+
+    if (showGroups && (diet.allowedGroups.length > 0 || diet.restrictedGroups.length > 0)) {
+      if (diet.allowedGroups.length > 0) {
+        const label = document.createElement('p');
+        label.className = 'text-xs font-semibold text-text-secondary uppercase tracking-wide mt-4 mb-2';
+        label.textContent = 'Eat freely';
+        card.appendChild(label);
+        card.appendChild(chipsFor(diet.allowedGroups, 'good'));
+      }
+      if (diet.restrictedGroups.length > 0) {
+        const label = document.createElement('p');
+        label.className = 'text-xs font-semibold text-text-secondary uppercase tracking-wide mt-4 mb-2';
+        label.textContent = 'Limit or avoid';
+        card.appendChild(label);
+        card.appendChild(chipsFor(diet.restrictedGroups, 'limit'));
+      }
+    }
+
+    return card;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-diet-tool]').forEach((root) => {
+    const isCouples = root.dataset.audience === 'couples';
+    const selectA = root.querySelector<HTMLSelectElement>('[data-diet-a]')!;
+    const selectB = root.querySelector<HTMLSelectElement>('[data-diet-b]');
+    const verdictWrap = root.querySelector<HTMLElement>('[data-verdict]')!;
+    const verdictChip = root.querySelector<HTMLElement>('[data-verdict-chip]')!;
+    const verdictText = root.querySelector<HTMLElement>('[data-verdict-text]')!;
+    const cardsWrap = root.querySelector<HTMLElement>('[data-diet-cards]')!;
+
+    selectA.value = 'mediterranean';
+    if (selectB) selectB.value = 'keto';
+
+    const ns = root.dataset.audience === 'solo' ? 'solo' : 'couples';
+    const saved = loadDiet(ns);
+    if (saved?.a && BY_KEY.has(saved.a)) selectA.value = saved.a;
+    if (selectB && saved?.b && BY_KEY.has(saved.b)) selectB.value = saved.b;
+
+    function persistDiet() {
+      saveDiet(ns, { a: selectA.value, b: selectB?.value });
+    }
+
+    function render() {
+      const a = BY_KEY.get(selectA.value);
+      cardsWrap.textContent = '';
+      if (!a) return;
+
+      let verdict: Verdict;
+      if (isCouples && selectB) {
+        const b = BY_KEY.get(selectB.value);
+        if (!b) return;
+        verdict = verdictFor(a, b);
+        cardsWrap.appendChild(dietCard(a, false));
+        cardsWrap.appendChild(dietCard(b, false));
+      } else {
+        verdict = {
+          kind: 'unknown',
+          chip: 'How the app uses it',
+          text: `In the app, ${a.displayLabel.toLowerCase()} quietly shapes every meal suggestion, each swap, and what lands on your shopping list — no label-reading required.`,
+        };
+        cardsWrap.appendChild(dietCard(a, true));
+      }
+
+      const style = VERDICT_STYLES[verdict.kind];
+      verdictWrap.className = `rounded-2xl border p-5 mb-5 ${style.wrap}`;
+      verdictChip.className = `inline-block mb-2.5 ${style.chip}`;
+      verdictChip.textContent = verdict.chip;
+      verdictText.textContent = verdict.text;
+    }
+
+    selectA.addEventListener('change', () => {
+      persistDiet();
+      render();
+    });
+    if (selectB) {
+      selectB.addEventListener('change', () => {
+        persistDiet();
+        render();
+      });
+    }
+
+    render();
+  });
+</script>

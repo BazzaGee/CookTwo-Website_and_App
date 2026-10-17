@@ -1,0 +1,166 @@
+---
+// Shopping list tool — port of the app's shared list, running locally.
+// Comma-separated adds parse through the same pantry parser, items group by
+// aisle, checked items move to the pantry. On the couples page the "adding as"
+// toggle tags each item like the app's per-partner items.
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const couples = audience === 'couples';
+---
+
+<section data-shopping-tool class="space-y-6">
+  <div class="bg-white border border-border rounded-2xl p-6 md:p-8 shadow-sm">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="badge-live">Interactive</span>
+      <span class="text-xs text-text-secondary">Runs in your browser · saved on this device</span>
+    </div>
+    <h3 class="text-2xl font-bold text-text-primary mt-3 mb-1">Shared shopping list</h3>
+    <p class="text-text-secondary mb-5">Type a whole list at once — "milk, eggs, chicken breast" — and it groups itself by aisle.</p>
+
+    {couples && (
+      <div class="flex items-center gap-3 mb-4" role="group" aria-label="Adding as">
+        <span class="text-sm text-text-secondary">Adding as</span>
+        <div class="inline-flex rounded-xl border border-border overflow-hidden bg-white">
+          <button type="button" data-adding-as="a" aria-pressed="true" class="px-4 py-2 text-sm font-medium transition-colors">
+            <span class="inline-block w-2 h-2 rounded-full bg-sage mr-2 align-middle"></span><span data-label-a>You</span>
+          </button>
+          <button type="button" data-adding-as="b" aria-pressed="false" class="px-4 py-2 text-sm font-medium transition-colors border-l border-border">
+            <span class="inline-block w-2 h-2 rounded-full bg-terracotta mr-2 align-middle"></span><span data-label-b>Your partner</span>
+          </button>
+        </div>
+      </div>
+    )}
+
+    <div class="flex flex-col md:flex-row gap-3">
+      <input data-shopping-input class="input-field flex-1" placeholder="milk, eggs, chicken breast…" />
+      <button type="button" data-shopping-add class="btn-primary md:self-start whitespace-nowrap">Add</button>
+    </div>
+  </div>
+
+  <div data-shopping-list class="space-y-4" aria-live="polite"></div>
+
+  <div data-shopping-actions class="hidden flex-wrap items-center gap-4 bg-cream-dark rounded-2xl p-4"></div>
+</section>
+
+<script>
+  import {
+    addToShopping,
+    clearCheckedShopping,
+    getState,
+    moveCheckedToPantry,
+    onChange,
+    removeShopping,
+    setShoppingDone,
+    type Partner,
+  } from '../../lib/kitchen-store';
+  import { CATEGORY_EMOJIS, confidenceClass, escapeHtml, groupByCategory, qtyLabel } from '../../lib/tool-format';
+
+  document.querySelectorAll<HTMLElement>('[data-shopping-tool]').forEach((root) => {
+    const input = root.querySelector<HTMLInputElement>('[data-shopping-input]')!;
+    const list = root.querySelector<HTMLElement>('[data-shopping-list]')!;
+    const actions = root.querySelector<HTMLElement>('[data-shopping-actions]')!;
+    const couple = root.querySelector('[data-adding-as]') !== null;
+
+    let addingAs: Partner = 'a';
+    root.querySelectorAll<HTMLButtonElement>('[data-adding-as]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        addingAs = btn.dataset.addingAs as Partner;
+        root.querySelectorAll<HTMLButtonElement>('[data-adding-as]').forEach((b) => {
+          const on = b === btn;
+          b.setAttribute('aria-pressed', String(on));
+          b.classList.toggle('bg-sage', on);
+          b.classList.toggle('text-white', on);
+          b.classList.toggle('bg-terracotta', on && addingAs === 'b');
+        });
+      });
+    });
+    if (couple) {
+      root.querySelector<HTMLButtonElement>('[data-adding-as="a"]')!.classList.add('bg-sage', 'text-white');
+    }
+
+    const labelA = root.querySelector('[data-label-a]');
+    const labelB = root.querySelector('[data-label-b]');
+    if (labelA) labelA.textContent = getState().profiles.a.name || 'You';
+    if (labelB) labelB.textContent = getState().profiles.b.name || 'Your partner';
+
+    root.querySelector<HTMLButtonElement>('[data-shopping-add]')!.addEventListener('click', () => {
+      if (input.value.trim()) addToShopping(input.value, addingAs);
+      input.value = '';
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        addToShopping(input.value, addingAs);
+        input.value = '';
+      }
+    });
+
+    list.addEventListener('click', (e) => {
+      const target = e.target instanceof HTMLElement ? e.target : null;
+      if (!target) return;
+      const check = target.closest<HTMLElement>('[data-shopping-check]');
+      if (check) {
+        setShoppingDone(check.dataset.shoppingCheck!, check.dataset.done !== 'true');
+        return;
+      }
+      const remove = target.closest<HTMLElement>('[data-shopping-remove]');
+      if (remove) removeShopping(remove.dataset.shoppingRemove!);
+    });
+
+    actions.addEventListener('click', (e) => {
+      const target = e.target instanceof HTMLElement ? e.target : null;
+      if (!target) return;
+      if (target.closest('[data-move-to-pantry]')) moveCheckedToPantry();
+      if (target.closest('[data-clear-checked]')) clearCheckedShopping();
+    });
+
+    function render() {
+      const { shopping } = getState();
+      const toBuy = shopping.filter((it) => !it.done).length;
+
+      if (!shopping.length) {
+        list.innerHTML = '<div class="bg-white border border-dashed border-border rounded-2xl p-8 text-center text-text-secondary">Nothing on the list yet. Add a few things above.</div>';
+        actions.className = 'hidden flex-wrap items-center gap-4 bg-cream-dark rounded-2xl p-4';
+        return;
+      }
+
+      list.innerHTML = groupByCategory(shopping)
+        .map(([category, items]) => `
+          <div class="bg-cream-dark rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <span aria-hidden="true">${CATEGORY_EMOJIS[category]}</span>
+              <h4 class="font-semibold text-text-primary">${category}</h4>
+              <span class="text-xs text-text-secondary">${items.length}</span>
+            </div>
+            <div class="space-y-2">
+              ${items.map((it) => `
+                <div class="flex items-center gap-3 bg-white border border-border rounded-xl px-4 py-2.5">
+                  <button type="button" data-shopping-check="${it.id}" data-done="${it.done}" aria-label="${it.done ? 'Uncheck' : 'Check off'} ${escapeHtml(it.name)}"
+                    class="w-5 h-5 rounded-md border flex-shrink-0 flex items-center justify-center transition-colors ${it.done ? 'bg-sage border-sage text-white' : 'border-border hover:border-sage'}">
+                    ${it.done ? '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                  </button>
+                  ${couple ? `<span class="w-2 h-2 rounded-full flex-shrink-0 ${it.addedBy === 'a' ? 'bg-sage' : 'bg-terracotta'}" title="${it.addedBy === 'a' ? 'You' : 'Partner'} added this"></span>` : ''}
+                  <span class="flex-1 text-sm font-medium text-text-primary ${it.done ? 'line-through opacity-50' : ''}">
+                    ${escapeHtml(it.name)}
+                    ${qtyLabel(it) ? `<span class="text-text-secondary font-normal"> · ${escapeHtml(qtyLabel(it))}</span>` : ''}
+                  </span>
+                  ${it.needsReview ? `<span class="text-xs px-2 py-0.5 rounded-full ${confidenceClass(it.confidence)}">check</span>` : ''}
+                  <button type="button" data-shopping-remove="${it.id}" aria-label="Remove ${escapeHtml(it.name)}" class="text-text-secondary hover:text-terracotta text-lg leading-none px-1">×</button>
+                </div>`).join('')}
+            </div>
+          </div>`)
+        .join('');
+
+      actions.className = 'flex-wrap items-center gap-4 bg-cream-dark rounded-2xl p-4';
+      actions.innerHTML = `
+        <span class="text-sm font-medium text-text-primary">${toBuy === 0 ? 'All done — nice.' : `${toBuy} thing${toBuy === 1 ? '' : 's'} to buy`}</span>
+        <button type="button" data-move-to-pantry class="btn-secondary !px-5 !py-2.5 !text-sm">Move checked to pantry</button>
+        <button type="button" data-clear-checked class="text-sm text-text-secondary underline hover:text-terracotta">Clear checked</button>`;
+    }
+
+    onChange(render);
+    render();
+  });
+</script>

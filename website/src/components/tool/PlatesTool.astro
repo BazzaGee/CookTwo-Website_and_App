@@ -1,0 +1,441 @@
+---
+import { ACTIVITY_LABELS, GOAL_LABELS, type Gender, type ActivityLevel, type Goal } from '../../lib/tdee';
+
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+
+const colors: Record<string, { border: string; dot: string; text: string }> = {
+  sage: { border: 'border-sage', dot: 'bg-sage', text: 'text-sage-dark' },
+  terracotta: { border: 'border-terracotta', dot: 'bg-terracotta', text: 'text-terracotta-dark' },
+};
+
+const profiles = isCouples
+  ? [
+      { id: 1, name: 'Partner 1', color: colors.sage! },
+      { id: 2, name: 'Partner 2', color: colors.terracotta! },
+    ]
+  : [{ id: 1, name: 'You', color: colors.sage! }];
+
+const genders: Array<{ value: Gender; label: string }> = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other / prefer not to say' },
+];
+
+const activityLevels = Object.entries(ACTIVITY_LABELS) as Array<[ActivityLevel, string]>;
+const goals = Object.entries(GOAL_LABELS) as Array<[Goal, string]>;
+---
+
+<div data-plates-tool data-ns={audience} data-audience={audience}>
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-text-primary">{isCouples ? 'Two plates from one pan' : 'Your daily plate'}</h2>
+      <p class="text-sm text-text-secondary mt-1">
+        {isCouples
+          ? "Each partner's daily calories from the same math the app uses — so one dinner can serve both goals."
+          : 'Your daily calories from the same math the app uses — the number every meal is built around.'}
+      </p>
+    </div>
+    <div class="flex rounded-full bg-cream-dark p-0.5" data-units-toggle>
+      <button type="button" data-units="metric" aria-pressed="true" class="units-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Metric</button>
+      <button type="button" data-units="imperial" aria-pressed="false" class="units-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Imperial</button>
+    </div>
+  </div>
+
+  <div class={`grid gap-5 ${isCouples ? 'md:grid-cols-2' : ''}`}>
+    {profiles.map((profile) => (
+      <section class={`rounded-2xl border-2 ${profile.color.border} bg-white p-5`} data-profile-card={profile.id}>
+        <div class="flex items-center gap-2.5 mb-4">
+          <span class={`w-3 h-3 rounded-full ${profile.color.dot}`} aria-hidden="true"></span>
+          <h3 class="font-bold text-text-primary">{profile.name}</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-weight`}>
+              Weight (<span data-weight-unit>kg</span>)
+            </label>
+            <input
+              id={`p${profile.id}-weight`}
+              data-field="weight"
+              type="number"
+              inputmode="decimal"
+              min="1"
+              step="0.5"
+              class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-height-cm`}>
+              Height
+            </label>
+            <div data-height-metric>
+              <div class="flex items-center gap-1.5">
+                <input
+                  id={`p${profile.id}-height-cm`}
+                  data-field="height-cm"
+                  type="number"
+                  inputmode="decimal"
+                  min="1"
+                  step="0.5"
+                  class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+                />
+                <span class="text-xs text-text-secondary flex-shrink-0">cm</span>
+              </div>
+            </div>
+            <div data-height-imperial hidden>
+              <div class="flex items-center gap-1.5">
+                <input
+                  data-field="height-ft"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  step="1"
+                  placeholder="ft"
+                  aria-label="Height feet"
+                  class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+                />
+                <input
+                  data-field="height-in"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max="11"
+                  step="1"
+                  placeholder="in"
+                  aria-label="Height inches"
+                  class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-age`}>
+              Age
+            </label>
+            <input
+              id={`p${profile.id}-age`}
+              data-field="age"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-gender`}>
+              Gender
+            </label>
+            <select
+              id={`p${profile.id}-gender`}
+              data-field="gender"
+              class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+            >
+              {genders.map((g) => <option value={g.value}>{g.label}</option>)}
+            </select>
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-activity`}>
+              Activity level
+            </label>
+            <select
+              id={`p${profile.id}-activity`}
+              data-field="activity"
+              class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+            >
+              {activityLevels.map(([value, label]) => <option value={value}>{label}</option>)}
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-text-secondary mb-1.5" for={`p${profile.id}-goal`}>
+              Goal
+            </label>
+            <select
+              id={`p${profile.id}-goal`}
+              data-field="goal"
+              class="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all"
+            >
+              {goals.map(([value, label]) => <option value={value}>{label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-5 bg-cream rounded-xl p-4">
+          <div class="text-center">
+            <p class="text-lg md:text-xl font-bold text-text-primary" data-out="bmr">—</p>
+            <p class="text-[11px] text-text-secondary font-medium mt-0.5">BMR</p>
+          </div>
+          <div class="text-center border-x border-border">
+            <p class="text-lg md:text-xl font-bold text-text-primary" data-out="tdee">—</p>
+            <p class="text-[11px] text-text-secondary font-medium mt-0.5">Maintenance</p>
+          </div>
+          <div class="text-center">
+            <p class={`text-lg md:text-xl font-bold ${profile.color.text}`} data-out="target">—</p>
+            <p class="text-[11px] text-text-secondary font-medium mt-0.5">{isCouples ? 'Daily target each' : 'Daily target'}</p>
+          </div>
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <div class="mt-5 bg-sage/5 border border-sage/30 rounded-2xl p-5">
+    <p class="text-sm font-semibold text-sage-dark mb-2">{isCouples ? 'What this looks like on the plate' : 'How the app uses this'}</p>
+    <p class="text-text-primary leading-relaxed text-sm md:text-base" data-plates-summary>—</p>
+  </div>
+
+  <p class="text-xs text-text-secondary mt-4">
+    Mifflin-St Jeor equation with standard activity multipliers, plus a −500 / 0 / +300 kcal goal adjustment — the exact math CookTwo uses.
+    Illustrative guidance, not medical advice.
+  </p>
+</div>
+
+<style>
+  .units-btn {
+    color: #6B7B6C;
+  }
+  .units-btn[data-active='1'] {
+    background: #fff;
+    color: #2C3E2D;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+</style>
+
+<script>
+  import { calculateTDEE, type Gender, type ActivityLevel, type Goal, GOAL_LABELS } from '../../lib/tdee';
+  import { lbToKg, kgToLb, cmToFtIn, ftInToCm, type UnitSystem } from '../../lib/units';
+
+  interface ProfileState {
+    weightKg: number | null;
+    heightCm: number | null;
+    age: number | null;
+    gender: Gender;
+    activity: ActivityLevel;
+    goal: Goal;
+  }
+
+  interface PlatesState {
+    units: UnitSystem;
+    profiles: Record<string, ProfileState>;
+  }
+
+  const DEFAULTS: PlatesState = {
+    units: 'metric',
+    profiles: {
+      '1': { weightKg: 75, heightCm: 170, age: 32, gender: 'female', activity: 'sedentary', goal: 'lose' },
+      '2': { weightKg: 85, heightCm: 180, age: 34, gender: 'male', activity: 'moderate', goal: 'gain' },
+    },
+  };
+
+  function storageKeyOf(ns: string) {
+    return `cooktwo-kitchen-tool:${ns}:plates`;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-plates-tool]').forEach((root) => {
+    const ns = root.dataset.ns ?? 'couples';
+    const isCouples = root.dataset.audience === 'couples';
+
+    let state: PlatesState;
+    try {
+      const raw = localStorage.getItem(storageKeyOf(ns));
+      const parsed = raw ? (JSON.parse(raw) as PlatesState) : null;
+      state = parsed && parsed.profiles ? parsed : structuredClone(DEFAULTS);
+    } catch {
+      state = structuredClone(DEFAULTS);
+    }
+    if (!isCouples) delete state.profiles['2'];
+
+    const unitBtns = root.querySelectorAll<HTMLButtonElement>('[data-units]');
+    const cards = root.querySelectorAll<HTMLElement>('[data-profile-card]');
+    const summaryEl = root.querySelector<HTMLElement>('[data-plates-summary]')!;
+
+    function persist() {
+      try {
+        localStorage.setItem(storageKeyOf(ns), JSON.stringify(state));
+      } catch {
+        /* ignore */
+      }
+    }
+
+    function cardField<T extends HTMLElement>(card: HTMLElement, field: string): T | null {
+      return card.querySelector<T>(`[data-field="${field}"]`);
+    }
+
+    function setInputValue(input: HTMLInputElement | null, value: string) {
+      if (!input) return;
+      if (document.activeElement === input) return; // don't fight the user's typing
+      input.value = value;
+    }
+
+    function writeViews(card: HTMLElement, p: ProfileState) {
+      const imperial = state.units === 'imperial';
+      const weightInput = cardField<HTMLInputElement>(card, 'weight');
+      const cmInput = cardField<HTMLInputElement>(card, 'height-cm');
+      const ftInput = cardField<HTMLInputElement>(card, 'height-ft');
+      const inInput = cardField<HTMLInputElement>(card, 'height-in');
+      const unitLabel = card.querySelector('[data-weight-unit]');
+      const metricWrap = card.querySelector<HTMLElement>('[data-height-metric]');
+      const imperialWrap = card.querySelector<HTMLElement>('[data-height-imperial]');
+
+      if (unitLabel) unitLabel.textContent = imperial ? 'lb' : 'kg';
+      if (metricWrap) metricWrap.hidden = imperial;
+      if (imperialWrap) imperialWrap.hidden = !imperial;
+
+      if (weightInput) {
+        setInputValue(weightInput, p.weightKg == null ? '' : String(imperial ? Math.round(kgToLb(p.weightKg) * 10) / 10 : p.weightKg));
+      }
+      if (cmInput) setInputValue(cmInput, p.heightCm == null ? '' : String(p.heightCm));
+      if (ftInput || inInput) {
+        const { ft, inch } = p.heightCm == null ? { ft: 0, inch: 0 } : cmToFtIn(p.heightCm);
+        setInputValue(ftInput, p.heightCm == null ? '' : String(ft));
+        setInputValue(inInput, p.heightCm == null ? '' : String(inch));
+      }
+      const ageInput = cardField<HTMLInputElement>(card, 'age');
+      if (ageInput) setInputValue(ageInput, p.age == null ? '' : String(p.age));
+      const genderSel = cardField<HTMLSelectElement>(card, 'gender');
+      if (genderSel) genderSel.value = p.gender;
+      const activitySel = cardField<HTMLSelectElement>(card, 'activity');
+      if (activitySel) activitySel.value = p.activity;
+      const goalSel = cardField<HTMLSelectElement>(card, 'goal');
+      if (goalSel) goalSel.value = p.goal;
+    }
+
+    function readCard(card: HTMLElement, p: ProfileState) {
+      const imperial = state.units === 'imperial';
+      const weightInput = cardField<HTMLInputElement>(card, 'weight');
+      const w = weightInput ? parseFloat(weightInput.value) : NaN;
+      p.weightKg = Number.isFinite(w) && w > 0 ? (imperial ? lbToKg(w) : w) : null;
+
+      if (imperial) {
+        const ftInput = cardField<HTMLInputElement>(card, 'height-ft');
+        const inInput = cardField<HTMLInputElement>(card, 'height-in');
+        const ft = ftInput ? parseFloat(ftInput.value) : NaN;
+        const inch = inInput ? parseFloat(inInput.value) : NaN;
+        p.heightCm = Number.isFinite(ft) && ft > 0 ? ftInToCm(ft, Number.isFinite(inch) ? inch : 0) : null;
+      } else {
+        const cmInput = cardField<HTMLInputElement>(card, 'height-cm');
+        const cm = cmInput ? parseFloat(cmInput.value) : NaN;
+        p.heightCm = Number.isFinite(cm) && cm > 0 ? cm : null;
+      }
+
+      const ageInput = cardField<HTMLInputElement>(card, 'age');
+      const age = ageInput ? parseFloat(ageInput.value) : NaN;
+      p.age = Number.isFinite(age) && age > 0 ? Math.round(age) : null;
+
+      const genderSel = cardField<HTMLSelectElement>(card, 'gender');
+      if (genderSel) p.gender = genderSel.value as Gender;
+      const activitySel = cardField<HTMLSelectElement>(card, 'activity');
+      if (activitySel) p.activity = activitySel.value as ActivityLevel;
+      const goalSel = cardField<HTMLSelectElement>(card, 'goal');
+      if (goalSel) p.goal = goalSel.value as Goal;
+    }
+
+    function updateToggle() {
+      unitBtns.forEach((btn) => {
+        const active = btn.dataset.units === state.units;
+        btn.dataset.active = active ? '1' : '0';
+        btn.setAttribute('aria-pressed', String(active));
+      });
+    }
+
+    function render() {
+      updateToggle();
+      const results: Record<string, { target: number; tdee: number; goal: Goal } | null> = {};
+
+      cards.forEach((card) => {
+        const id = card.dataset.profileCard!;
+        const p = state.profiles[id];
+        if (!p) return;
+        writeViews(card, p);
+
+        const valid = p.weightKg != null && p.heightCm != null && p.age != null;
+        const setOut = (field: string, value: string) => {
+          const el = card.querySelector<HTMLElement>(`[data-out="${field}"]`);
+          if (el) el.textContent = value;
+        };
+
+        if (valid) {
+          const r = calculateTDEE({
+            weightKg: p.weightKg!,
+            heightCm: p.heightCm!,
+            age: p.age!,
+            gender: p.gender,
+            activityLevel: p.activity,
+            goal: p.goal,
+          });
+          setOut('bmr', String(r.bmr));
+          setOut('tdee', String(r.tdee));
+          setOut('target', String(r.targetCalories));
+          results[id] = { target: r.targetCalories, tdee: r.tdee, goal: p.goal };
+        } else {
+          setOut('bmr', '—');
+          setOut('tdee', '—');
+          setOut('target', '—');
+          results[id] = null;
+        }
+      });
+
+      const a = results['1'];
+      const b = results['2'];
+
+      if (!a) {
+        summaryEl.textContent = 'Fill in a valid weight, height, and age to see the numbers.';
+        return;
+      }
+
+      if (b) {
+        if (Math.abs(a.target - b.target) < 100) {
+          summaryEl.textContent = `Both plates land near ${Math.round((a.target + b.target) / 2)} kcal — same portion for both of you, plate it however you like.`;
+          return;
+        }
+        const aLow = a.target < b.target;
+        const lo = aLow ? a : b;
+        const hi = aLow ? b : a;
+        const loName = aLow ? 'Partner 1' : 'Partner 2';
+        const hiName = aLow ? 'Partner 2' : 'Partner 1';
+        const pct = Math.round(((hi.target - lo.target) / lo.target) * 100);
+        const loGoal = lo.goal === 'lose' ? 'smaller starch portion, extra greens' : 'lighter portion, full veg';
+        const hiGoal = hi.goal === 'gain' ? 'full protein, full carbs, a little more cooking fat' : 'full protein and carbs, extra of the starch';
+        summaryEl.textContent = `${loName} eats ${lo.target} kcal and ${hiName} eats ${hi.target} kcal — a ${pct}% bigger plate. Same pan, same timing: give ${loName} the ${loGoal}, and ${hiName} the ${hiGoal}. One cook, both goals.`;
+        return;
+      }
+
+      summaryEl.textContent = `Your daily target is ${a.target} kcal — maintenance ${a.tdee} kcal, adjusted for "${GOAL_LABELS[a.goal]}". In the app, every meal, swap, and shopping list is built around this number.`;
+    }
+
+    cards.forEach((card) => {
+      card.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-field]').forEach((el) => {
+        el.addEventListener('input', () => {
+          const p = state.profiles[card.dataset.profileCard!];
+          if (!p) return;
+          readCard(card, p);
+          persist();
+          render();
+        });
+        el.addEventListener('change', () => {
+          const p = state.profiles[card.dataset.profileCard!];
+          if (!p) return;
+          readCard(card, p);
+          persist();
+          render();
+        });
+      });
+    });
+
+    unitBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.units = btn.dataset.units === 'imperial' ? 'imperial' : 'metric';
+        (document.activeElement as HTMLElement | null)?.blur();
+        persist();
+        render();
+      });
+    });
+
+    render();
+  });
+</script>

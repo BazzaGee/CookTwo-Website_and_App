@@ -3,6 +3,7 @@ import { Sparkles, Check, ChevronRight, ExternalLink } from 'lucide-react';
 import { useUsage } from '../hooks/useUsage';
 import { useBilling, type BillingPlan, BillingError } from '../hooks/useBilling';
 import { usePaywallStore } from '../stores/paywallStore';
+import CountdownBanner from './CountdownBanner';
 
 const MONTHLY_PRICE = 4.99;
 const YEARLY_PRICE = 44.99;
@@ -20,6 +21,8 @@ export default function UpgradeSection() {
   return (
     <section className="space-y-4 mb-8">
       <h2 className="text-text-primary text-lg font-semibold">Plan</h2>
+
+      <CountdownBanner />
 
       <div className="bg-white border border-border rounded-2xl p-5">
         <div className="flex items-center justify-between mb-2">

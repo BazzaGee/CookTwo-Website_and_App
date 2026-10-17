@@ -1,0 +1,111 @@
+---
+import EarlyAccessButton from '../forms/EarlyAccessButton.astro';
+
+interface Props {
+  audience: 'couples' | 'solo';
+}
+const { audience } = Astro.props;
+const isCouples = audience === 'couples';
+
+const bullets = isCouples
+  ? [
+      'Meals invented from what\u2019s actually in your pantry — nothing wasted',
+      'Both diets and every allergy respected before a dish is suggested',
+      'One recipe, plated twice — portions split to each partner\u2019s target',
+      'Recipes you love get saved, and a week\u2019s plan builds itself',
+    ]
+  : [
+      'Meals invented from what\u2019s actually in your pantry — nothing wasted',
+      'Your diet and allergies respected before a dish is suggested',
+      'Every suggestion lands on your daily calorie target',
+      'Recipes you love get saved, and the shopping list writes itself',
+    ];
+---
+
+<div class="bg-white border border-border rounded-3xl overflow-hidden shadow-sm">
+  <div class="grid md:grid-cols-2">
+    <!-- Copy -->
+    <div class="p-6 sm:p-8 md:p-10 flex flex-col justify-center">
+      <span class="badge-signature inline-block mb-4 self-start">In the app · AI</span>
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-text-primary mb-4 leading-tight">
+        Dinner, decided — from what you already have
+      </h2>
+      <p class="text-text-secondary leading-relaxed mb-6">
+        {isCouples
+          ? 'The tool above is the app\u2019s engine room. On top of it, CookTwo\u2019s AI reads your pantry, both your goals, and both your diets — then writes the meal that makes everyone happy.'
+          : 'The tool above is the app\u2019s engine room. On top of it, CookTwo\u2019s AI reads your pantry and your goal — then writes the meal that fits the day.'}
+      </p>
+      <ul class="space-y-3 mb-8">
+        {bullets.map((b) => (
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 mt-0.5 text-sage flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="text-text-secondary leading-relaxed">{b}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="flex flex-col sm:flex-row gap-3 items-center">
+        <EarlyAccessButton variant="primary" label="Get early access" />
+        <a
+          href="https://cooktwo.app"
+          class="inline-flex items-center gap-2 px-6 py-4 text-base font-medium text-sage hover:text-sage-dark transition-colors"
+        >
+          Open cooktwo.app
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Mock AI chat -->
+    <div class="relative bg-cream-dark border-t md:border-t-0 md:border-l border-border p-6 sm:p-8 md:p-10 flex items-center justify-center">
+      <div class="relative w-full max-w-sm" aria-hidden="true">
+        <!-- User bubble -->
+        <div class="flex justify-end mb-3">
+          <div class="bg-sage text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm max-w-[85%] shadow-sm">
+            {isCouples ? 'Something quick with the chicken — I\u2019m cutting, she\u2019s bulking' : 'Something quick with the chicken, I\u2019m on a cut'}
+          </div>
+        </div>
+        <!-- App response, blurred -->
+        <div class="blur-[5px] select-none pointer-events-none">
+          <div class="bg-white border border-border rounded-2xl rounded-bl-sm p-4 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-6 h-6 rounded-full bg-sage/20 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 text-sage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg>
+              </span>
+              <span class="text-xs font-semibold text-text-secondary">CookTwo</span>
+            </div>
+            <p class="text-sm font-bold text-text-primary mb-1">Quick chicken &amp; chickpea traybake</p>
+            <p class="text-xs text-text-secondary mb-3">25 min · one pan · uses your spinach before it turns</p>
+            {isCouples ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-cream rounded-lg p-2.5">
+                  <p class="text-xs font-semibold text-sage-dark">Partner 1</p>
+                  <p class="text-sm font-bold text-text-primary">~460 cal</p>
+                  <p class="text-[10px] text-text-secondary">extra greens, half rice</p>
+                </div>
+                <div class="bg-cream rounded-lg p-2.5">
+                  <p class="text-xs font-semibold text-terracotta-dark">Partner 2</p>
+                  <p class="text-sm font-bold text-text-primary">~720 cal</p>
+                  <p class="text-[10px] text-text-secondary">full portion, full rice</p>
+                </div>
+              </div>
+            ) : (
+              <div class="bg-cream rounded-lg p-2.5">
+                <p class="text-xs font-semibold text-sage-dark">Your plate</p>
+                <p class="text-sm font-bold text-text-primary">~640 cal</p>
+                <p class="text-[10px] text-text-secondary">full portion, extra greens</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <!-- Lock overlay -->
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="bg-white/95 backdrop-blur-sm border border-border rounded-2xl px-5 py-4 text-center shadow-md">
+            <svg class="w-6 h-6 text-terracotta mx-auto mb-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <p class="text-sm font-semibold text-text-primary">AI meal generation lives in the app</p>
+            <p class="text-xs text-text-secondary mt-0.5">{isCouples ? 'Pantry in. Dinner out. Both goals served.' : 'Pantry in. Dinner out. Your goal served.'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import KitchenTool from '../components/tool/KitchenTool.astro';
+---
+
+<BaseLayout
+  title="The CookTwo Kitchen Tool — Shared Pantry, Shopping List & Two Plates for Couples | CookTwo"
+  description="A free interactive tool for couples: type out your pantry and watch it sort itself, share one shopping list, and see how one recipe plates two different goals. Runs entirely in your browser — no account needed."
+  minimal
+  chatEndpoint="/api/tool-chat"
+  chatTitle="App AI Assistant"
+  chatSubtitle=""
+  chatShowLogo={false}
+  chatWelcome={'Hi! 👋 I’m the App AI Assistant for this Kitchen Tool. Ask me anything about how it works — the shopping list, pantry, two plates, or diet match. Questions about the full CookTwo app are welcome too.'}
+  chatPlaceholder="Ask how this tool works…"
+  chatSource="tool-couples"
+>
+  <KitchenTool audience="couples" />
+</BaseLayout>
