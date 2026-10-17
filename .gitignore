@@ -49,6 +49,7 @@ nul
 
 # ── Playwright MCP tool artifacts ────────────────────────────────
 .playwright-mcp/
+.playwright-cli/
 
 # ── Stray screenshots at root ───────────────────────────────────
 /guide-*.png
