@@ -11,7 +11,7 @@ const faqs = [
   { q: 'How does CookTwo personalize portions for each partner?', a: 'Each partner enters their body metrics (weight, height, age, gender, activity level) and a goal. CookTwo calculates daily energy needs with the Mifflin-St Jeor TDEE equation, applies a deficit or surplus, then splits the same recipe into two plates with different calories, protein, carbs, and fat.' },
   { q: 'Do both partners need the app installed?', a: 'Yes. One person creates the kitchen and shares a 6-digit invite code; the partner enters it from their own device. Both profiles then sync to the same household in real time over a WebSocket connection.' },
   { q: 'Does CookTwo work offline?', a: 'Yes. CookTwo is an installable PWA. Grocery and pantry changes are queued locally when the connection drops and sync automatically the moment you reconnect — so you can keep shopping in a dead-zone aisle.' },
-  { q: 'How much does CookTwo cost?', a: 'CookTwo is free during beta with no credit card required. The Pro tier is $4.99 and unlocks higher AI meal limits and priority generation.' },
+  { q: 'How much does CookTwo cost?', a: 'CookTwo is free to try with no credit card required — shared grocery list, pantry, real-time sync, partner profiles, and 10 AI requests a day shared between the two of you. Premium is US$4.99 a month or US$44.99 a year per household, which lifts the shared quota to 70 AI requests a day with priority generation. One payment covers both partners.' },
   { q: 'Is CookTwo a meal-kit delivery service?', a: 'No. CookTwo plans around the food you already own and adds only what\'s missing to a shared shopping list. There are no weekly boxes, shipping fees, or subscriptions to a delivery service.' },
   { q: 'What diets and goals does CookTwo support?', a: 'Vegetarian, vegan, keto, paleo and gluten-free preferences, plus common allergies, and goals spanning weight loss, maintenance, muscle gain, or simply "just eat well".' }
 ];
@@ -77,7 +77,7 @@ const aboutPageSchema = {
     "applicationCategory": "LifestyleApplication",
     "operatingSystem": "Web, iOS, Android (PWA)",
     "description": "Collaborative adaptive nutrition app for couples. AI meal planning, shared grocery list, shared pantry, and personalized portions per partner.",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free during beta; Pro tier $4.99" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier $0; Premium $4.99/month or $44.99/year per household" },
     "featureList": [
       "Adaptive shared cooking — one recipe, two personalized plates",
       "Real-time shared grocery list with sub-100ms sync",
@@ -132,7 +132,7 @@ const faqSchema = {
       <div class="max-w-3xl mx-auto text-center mb-12">
         <span class="badge-signature mb-6 inline-block">About CookTwo</span>
         <h1 class="text-4xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">The cooking app <span class="text-sage">built for two.</span></h1>
-        <p class="text-xl md:text-2xl text-text-secondary leading-relaxed">CookTwo is a collaborative, adaptive nutrition app. One shared kitchen, one meal — plated two different ways, so couples with different goals never have to cook separately again.</p>
+        <p class="text-xl md:text-2xl text-text-secondary leading-relaxed">Built for the couple who never agrees on dinner. One shared kitchen, one meal — plated two different ways, so nobody has to cook separately again.</p>
       </div>
       <figure class="max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-border bg-white">
         <img src="/images/pages/about/product-showcase.webp" alt="CookTwo app screens showing the shared grocery list, pantry-first AI, and adaptive meal plating for two partners" class="w-full" width="1600" height="1000" fetchpriority="high" decoding="async" />
@@ -164,9 +164,10 @@ const faqSchema = {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div>
           <span class="badge-live mb-6 inline-block">What is CookTwo?</span>
-          <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-6">A shared kitchen that lives on both your phones</h2>
-          <p class="text-lg text-text-secondary leading-relaxed mb-6">Most cooking apps are built for one person tracking one diet. CookTwo is different: it links <strong class="text-text-primary">two profiles to one household</strong> — a shared pantry, a shared grocery list, and an AI that plans meals around what you already own <em>and</em> what each of you is trying to achieve.</p>
-          <p class="text-lg text-text-secondary leading-relaxed mb-8">The result is a single dinner, cooked once, that arrives on two differently-sized plates — each with the calories and macros that partner needs. No second meal. No separate plans. No nightly argument.</p>
+          <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-6">One kitchen, two eaters, no compromise dinners</h2>
+          <p class="text-lg text-text-secondary leading-relaxed mb-6"><strong class="text-text-primary">Most meal planners assume one eater.</strong> Set a goal and the whole household eats that way — or the cook makes two separate dinners and does the dishes twice. Couples with different diets end up compromising every night, and one of them quietly loses.</p>
+          <p class="text-lg text-text-secondary leading-relaxed mb-6"><strong class="text-text-primary">CookTwo starts from the couple, not the individual.</strong> It links two profiles to one household: a shared pantry, a shared grocery list, and an AI that plans around what you already own <em>and</em> what each of you is trying to achieve. Every dinner is one shared recipe with personalized portions per plate.</p>
+          <p class="text-lg text-text-secondary leading-relaxed mb-8"><strong class="text-text-primary">Pantry first, shop once.</strong> The AI suggests dinners from what is already in your kitchen, and the shared list collapses the week's plan into a single organized shop on both phones. The result is a single dinner, cooked once, arriving on two differently-sized plates — no second meal, no nightly argument.</p>
           <div class="grid grid-cols-2 gap-4">
             <div class="bg-white rounded-xl border border-border p-5">
               <div class="flex items-center gap-2 mb-2">
@@ -195,7 +196,7 @@ const faqSchema = {
             <div class="flex justify-between gap-4 py-3"><dt class="text-text-secondary text-sm">Core promise</dt><dd class="font-semibold text-text-primary text-sm text-right">One meal, two personalized plates</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt class="text-text-secondary text-sm">Platform</dt><dd class="font-semibold text-text-primary text-sm text-right">Installable PWA (iOS &amp; Android)</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt class="text-text-secondary text-sm">Sync</dt><dd class="font-semibold text-text-primary text-sm text-right">Real-time, sub-100ms, offline-ready</dd></div>
-            <div class="flex justify-between gap-4 py-3"><dt class="text-text-secondary text-sm">Price</dt><dd class="font-semibold text-text-primary text-sm text-right">Free in beta · Pro $4.99</dd></div>
+            <div class="flex justify-between gap-4 py-3"><dt class="text-text-secondary text-sm">Price</dt><dd class="font-semibold text-text-primary text-sm text-right">Free $0 · Premium $4.99/mo</dd></div>
           </dl>
         </div>
       </div>
@@ -208,7 +209,7 @@ const faqSchema = {
       <div class="text-center mb-12 max-w-2xl mx-auto">
         <span class="badge-signature mb-4 inline-block">Why CookTwo exists</span>
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">Every couple knows these struggles</h2>
-        <p class="text-xl text-text-secondary">CookTwo was created to end the nightly "what's for dinner?" loop — the duplicate groceries, wasted food, and separate meals when two people eat differently.</p>
+        <p class="text-xl text-text-secondary">Two separate dinners, a Thursday takeaway, and one partner quietly keeping score. CookTwo was built to end that loop.</p>
       </div>
       <figure class="max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-xl border border-border bg-white mb-12">
         <img src="/images/pages/about/why-exists.webp" alt="Infographic: common couple cooking struggles without CookTwo versus how CookTwo solves them, including food waste and decision fatigue statistics" class="w-full" width="1200" height="1256" loading="lazy" decoding="async" />
@@ -492,7 +493,7 @@ const faqSchema = {
         <div class="bg-white rounded-2xl border border-border p-6 shadow-sm">
           <div class="w-10 h-10 rounded-lg bg-terracotta/10 flex items-center justify-center mb-4"><svg class="w-5 h-5 text-terracotta" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg></div>
           <h3 class="font-bold text-text-primary mb-1">Free to start</h3>
-          <p class="text-sm text-text-secondary">Free during beta, no credit card. Pro unlocks more AI meals for $4.99.</p>
+          <p class="text-sm text-text-secondary">Free to try, no credit card. Premium lifts the shared quota to 70 AI requests a day for $4.99.</p>
         </div>
       </div>
     </div>
@@ -503,7 +504,7 @@ const faqSchema = {
     <div class="container-custom">
       <div class="text-center mb-12 max-w-2xl mx-auto">
         <span class="badge-signature mb-4 inline-block">FAQ</span>
-        <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">Questions, answered</h2>
+        <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">Asked at real dinner tables</h2>
         <p class="text-xl text-text-secondary">Everything you might want to know about what CookTwo is and how it works.</p>
       </div>
       <div class="max-w-3xl mx-auto space-y-3">
@@ -534,7 +535,7 @@ const faqSchema = {
     </div>
     <div class="container-custom relative z-10 text-center">
       <h2 class="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">The "what's for dinner?" argument ends tonight.</h2>
-      <p class="text-xl text-white/80 max-w-xl mx-auto mb-8">One dinner. Two plates. Zero arguments. Set up your shared kitchen in under five minutes — free during beta.</p>
+      <p class="text-xl text-white/80 max-w-xl mx-auto mb-8">One recipe. Two plates. One shop. Set up your shared kitchen in about two minutes — free to try.</p>
       <a href="/#get-early-access" class="inline-block bg-white text-sage px-8 py-4 rounded-xl text-lg font-semibold transition-colors hover:bg-cream shadow-lg">Get Started Free</a>
       <p class="text-white/60 mt-6 text-sm">No credit card required · Installable on iOS &amp; Android</p>
     </div>

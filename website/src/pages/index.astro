@@ -22,18 +22,18 @@ const softwareApplicationSchema = {
 const { features, steps } = featuresData;
 
 const beforeItems = [
-  "What should we make tonight? I don't know, what do you want?",
+  "Training for an event while your partner eats vegetarian — so the kitchen runs two separate dinners and does the dishes twice",
+  "Shopping with no plan, then ordering takeaways by Thursday because the fridge makes no sense",
+  "One of you compromises every night — and keeps a quiet score of whose turn it was",
   "Buying the same thing twice because nobody wrote it down",
-  "Eating the same 5 meals on rotation because planning is exhausting",
-  "One partner trying to lose weight, the other trying to bulk — cooking separately",
-  "Good ingredients going bad because you forgot they were in the fridge"
+  "Good ingredients going bad at the back of the fridge because you forgot they were there"
 ];
 
 const afterItems = [
-  "AI suggests dinner based on what's in your pantry and both partners' goals",
-  "One shared list. Real-time sync. Zero duplicates.",
-  "AI generates meals from your pantry — or adds what's missing to your list",
-  "One recipe, two personalized plates — different portions, same meal",
+  "AI suggests dinner from what's already in your pantry and both partners' goals",
+  "One shared recipe, two personalized plates — different portions, same pan",
+  "One live list replaces two half-shops and the Thursday top-up run",
+  "Either partner can add from the couch or tick off in the aisle — no duplicates",
   "Pantry-aware suggestions use what you have before it expires"
 ];
 ---
@@ -46,23 +46,19 @@ const afterItems = [
 <script type="application/ld+json" set:html={JSON.stringify(softwareApplicationSchema)}></script>
 
   <!-- Hero -->
-  <section class="section-padding bg-cream relative overflow-hidden">
+  <section class="pt-8 pb-16 md:pt-14 md:pb-20 bg-cream relative overflow-hidden">
     <div class="absolute inset-0 opacity-30">
       <div class="absolute top-20 left-10 w-72 h-72 bg-sage/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-10 right-10 w-96 h-96 bg-terracotta/15 rounded-full blur-3xl"></div>
     </div>
     <div class="container-custom relative z-10 text-center">
-      <div class="inline-flex items-center gap-2 bg-sage/10 text-sage px-4 py-2 rounded-full text-sm font-medium mb-8">
-        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-        Now Live — Built App, Not Just a Landing Page
-      </div>
-      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary max-w-4xl mx-auto leading-tight mb-6">
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary max-w-4xl mx-auto leading-tight mb-5 md:mb-6">
         One dinner.<br/>
         <span class="text-sage">Two plates.</span><br/>
         <span class="text-terracotta">Zero arguments.</span>
       </h1>
-      <p class="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-        CookTwo is the collaborative adaptive nutrition app that lets couples with different goals cook one meal together — with personalized portions for each partner.
+      <p class="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed">
+        You share one kitchen but eat to different goals. CookTwo turns a single recipe into two personalized plates — one shop, one cook, portions tuned to each of you.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <EarlyAccessButton variant="primary" />
@@ -79,7 +75,7 @@ const afterItems = [
     <div class="container-custom">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">Everything Your Kitchen Needs</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Five core features, all built and live. No vaporware.</p>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Five linked tools on one rail — start from what's already in your pantry, plan once, shop once, cook once. All built, all live.</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {features.map((feature) => (
@@ -122,7 +118,7 @@ const afterItems = [
       <div class="text-center mb-16">
         <span class="badge-signature mb-4 inline-block">Signature Feature</span>
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">One Recipe. Two Plates.</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Same Chicken Stir-Fry, personalized for each partner's goals.</p>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Same pan, same Chicken Stir-Fry — plated twice so each partner gets the portion their goal needs.</p>
       </div>
       <div class="max-w-4xl mx-auto">
         <div class="text-center mb-10">
@@ -276,7 +272,7 @@ const afterItems = [
     <div class="container-custom">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">Sound Familiar?</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Every couple knows these struggles. CookTwo solves them.</p>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">The weeknight loop you didn't choose — two separate dinners, a Thursday takeaway, and one of you quietly keeping score.</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         <!-- Before -->
@@ -327,7 +323,7 @@ const afterItems = [
     <div class="container-custom">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">How It Works</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Five steps from setup to your first adaptive dinner.</p>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">From "what's for dinner?" to plates up — five steps, about two minutes to set up.</p>
       </div>
       <div class="max-w-4xl mx-auto space-y-0">
         {steps.map((step, index) => (
@@ -355,7 +351,7 @@ const afterItems = [
     <div class="container-custom">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold text-text-primary mb-4">The Self-Reinforcing Loop</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">Every action feeds the next. Your kitchen gets smarter every week.</p>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">The more you use what you have, the smarter the week gets. Every action feeds the next.</p>
       </div>
       <div class="max-w-3xl mx-auto">
         <!-- Circular flow diagram -->
@@ -502,12 +498,12 @@ const afterItems = [
         The "What's for dinner?"<br/>argument ends tonight.
       </h2>
       <p class="text-xl text-white/80 max-w-xl mx-auto mb-10">
-        One dinner. Two plates. Zero arguments. Get the link to unlock CookTwo.
+        One recipe. Two plates. One shop. Free to try — dinner tomorrow can already feel different.
       </p>
       <div class="flex justify-center">
-        <EarlyAccessButton variant="white" />
+        <EarlyAccessButton variant="white" label="Try CookTwo Free" />
       </div>
-      <p class="text-white/60 mt-6 text-sm">Free during beta. No credit card required.</p>
+      <p class="text-white/60 mt-6 text-sm">Free to try. No credit card required.</p>
     </div>
   </section>
 
