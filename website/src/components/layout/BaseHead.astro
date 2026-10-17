@@ -14,6 +14,10 @@ const { title, description, canonicalURL, ogImage, articlePublishedDate, article
 const siteURL = 'https://cooktwo.com';
 const canonical = canonicalURL ? `${siteURL}${canonicalURL}` : Astro.url;
 const ogImg = ogImage || `${siteURL}/images/hero/og-homepage.webp`;
+// Cloudflare Web Analytics — set PUBLIC_CF_RUM_TOKEN (real token from the CF
+// Pages project settings) to enable the beacon. Skipped while unset so the
+// placeholder token doesn't emit /cdn-cgi/rum CORS errors on every page.
+const cfRumToken = import.meta.env.PUBLIC_CF_RUM_TOKEN;
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -92,8 +96,8 @@ const articleSchema = isArticle && articlePublishedDate ? {
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="apple-touch-icon" href="/images/logo/logo-icon.png" />
 
-<!-- Cloudflare Web Analytics — beacon token replaced in Phase 4 with the real token from the CF Pages project settings -->
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "PLACEHOLDER_REPLACE_IN_PHASE_4"}'></script>
+<!-- Cloudflare Web Analytics — rendered only when PUBLIC_CF_RUM_TOKEN is set -->
+{cfRumToken && <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: cfRumToken })}></script>}
 
 <!-- Google Analytics (gtag.js) -->
 <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-VVZFC3RYZ7"></script>

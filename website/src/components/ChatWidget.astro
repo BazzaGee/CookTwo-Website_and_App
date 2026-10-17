@@ -1,9 +1,12 @@
 ---
 const chatEndpoint = Astro.props.endpoint || '/api/chat';
 const chatTitle = Astro.props.title || 'CookTwo';
-const chatSubtitle = Astro.props.subtitle || 'Ask me anything about cooking for two';
+const chatSubtitle = Astro.props.subtitle === undefined ? 'Ask me anything about cooking for two' : Astro.props.subtitle;
+const showLogo = Astro.props.showLogo === undefined ? true : Boolean(Astro.props.showLogo);
 const inputPlaceholder = Astro.props.placeholder || 'Ask about features, pricing, diets...';
 const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTwo assistant. I can help with adaptive cooking, pricing, supported diets, how the app works — anything about cooking for two. What would you like to know?";
+const source = Astro.props.source || 'site';
+const position = Astro.props.position === 'top' ? 'top' : 'bottom';
 ---
 
 <style is:global>
@@ -229,25 +232,6 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
     0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
     30% { transform: translateY(-5px); opacity: 1; }
   }
-  .ct-chat-quick-replies {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: 0 14px 6px;
-    animation: ct-fadeInUp 0.3s ease;
-  }
-  .ct-chat-quick-reply {
-    padding: 6px 12px; border-radius: 16px;
-    background: rgba(122,158,126,0.12);
-    border: 1px solid rgba(122,158,126,0.3);
-    color: var(--ct-chat--color-primary-dark);
-    font-family: var(--ct-chat--font-family); font-size: 12px;
-    cursor: pointer; transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-  .ct-chat-quick-reply:hover {
-    background: rgba(122,158,126,0.22);
-    border-color: var(--ct-chat--color-primary);
-    transform: translateY(-1px);
-  }
   @keyframes ct-fadeInUp {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -314,9 +298,28 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
     .ct-chat-toggle-wrapper { bottom: 16px; right: 16px; }
     .ct-chat-toggle-label { display: none; }
   }
+
+  /* Top-fixed variant (tool pages) */
+  .ct-chat-toggle-wrapper[data-position="top"] {
+    bottom: auto; top: 20px; right: 24px;
+  }
+  .ct-chat-toggle-wrapper[data-position="top"].hidden {
+    transform: translateY(-10px) scale(0.95);
+  }
+  .ct-chat-wrapper[data-position="top"] {
+    bottom: auto; top: 96px;
+    transform: translateY(-20px) scale(0.95);
+  }
+  .ct-chat-wrapper[data-position="top"].open {
+    transform: translateY(0) scale(1);
+  }
+  @media (max-width: 480px) {
+    .ct-chat-toggle-wrapper[data-position="top"] { top: 12px; right: 12px; bottom: auto; }
+    .ct-chat-wrapper[data-position="top"] { top: 84px; bottom: auto; }
+  }
 </style>
 
-<div class="ct-chat-toggle-wrapper" id="ctChatToggleWrapper">
+<div class="ct-chat-toggle-wrapper" id="ctChatToggleWrapper" data-position={position}>
   <span class="ct-chat-toggle-label">Got a question? Ask me anything</span>
   <button class="ct-chat-toggle" id="ctChatToggle" aria-label="Open chat">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -325,16 +328,18 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
   </button>
 </div>
 
-<div class="ct-chat-wrapper" id="ctChatWrapper">
+<div class="ct-chat-wrapper" id="ctChatWrapper" data-position={position}>
   <div class="ct-chat-border"></div>
   <div class="ct-chat-overlay" id="ctChatOverlay">
     <div class="ct-chat-header">
-      <div class="ct-chat-header-logo">
-        <img src="/images/logo/logo-icon.png" alt="CookTwo" width="32" height="32" />
-      </div>
+      {showLogo && (
+        <div class="ct-chat-header-logo">
+          <img src="/images/logo/logo-icon.png" alt="CookTwo" width="32" height="32" />
+        </div>
+      )}
       <div class="ct-chat-header-text">
         <h3>{chatTitle}</h3>
-        <p>{chatSubtitle}</p>
+        {chatSubtitle && <p>{chatSubtitle}</p>}
       </div>
       <div class="ct-chat-header-actions">
         <button class="ct-chat-header-btn" id="ctChatClose" aria-label="Close chat">
@@ -353,8 +358,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
         <polyline points="6 9 12 15 18 9"/>
       </svg>
     </button>
-    <div id="ctChatQuickReplies" class="ct-chat-quick-replies"></div>
-    <div class="ct-chat-input-area">
+  <div class="ct-chat-input-area">
       <div class="ct-chat-input-row">
         <textarea class="ct-chat-input" id="ctChatInput" placeholder={inputPlaceholder} autocomplete="off" rows="1"></textarea>
         <button type="button" class="ct-chat-send" id="ctChatSend" aria-label="Send message">
@@ -371,7 +375,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
   </div>
 </div>
 
-<script define:vars={{ endpoint: chatEndpoint }}>
+<script define:vars={{ endpoint: chatEndpoint, source }}>
   const chatSessionKey = 'ctSessionId';
   let chatOpen = false;
   let isSending = false;
@@ -456,33 +460,13 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
     messages.appendChild(typing);
     scrollToBottom();
     clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => { hideTyping(); }, 15000);
+    typingTimeout = setTimeout(() => { hideTyping(); }, 120000);
   }
 
   function hideTyping() {
     const typing = document.getElementById('ctChatTyping');
     if (typing) typing.remove();
     clearTimeout(typingTimeout);
-  }
-
-  function showQuickReplies() {
-    const container = document.getElementById('ctChatQuickReplies');
-    if (container.children.length > 0) return;
-    const suggestions = ['How it works', 'Pricing', 'Supported diets', 'Adaptive Cooking'];
-    suggestions.forEach(text => {
-      const btn = document.createElement('button');
-      btn.className = 'ct-chat-quick-reply';
-      btn.textContent = text;
-      btn.addEventListener('click', () => {
-        document.getElementById('ctChatInput').value = text;
-        sendMessage();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function hideQuickReplies() {
-    document.getElementById('ctChatQuickReplies').innerHTML = '';
   }
 
   function escapeHtml(str) {
@@ -524,8 +508,11 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
   async function sendMessage(retryData) {
     if (isSending) return;
     const input = document.getElementById('ctChatInput');
-    const message = (retryData && typeof retryData.message === 'string') ? retryData.message : input.value.trim();
+    const isRetry = Boolean(retryData && typeof retryData.message === 'string');
+    const message = isRetry ? retryData.message : input.value.trim();
     if (!message) return;
+
+    if (!isRetry) resetTextarea();
 
     isSending = true;
     const sendBtn = document.getElementById('ctChatSend');
@@ -543,12 +530,12 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
         body: JSON.stringify({
           chatInput: message,
           sessionId,
+          source,
+          pageUrl: location.href,
           history: chatHistory.slice(-8),
         }),
         signal: abortController.signal,
       });
-
-      hideTyping();
 
       if (!response.ok) {
         throw new Error('Response not OK');
@@ -559,7 +546,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
       let buffer = '';
       let rawText = '';
       let fullText = '';
-      let botMsgEl = addMessage('', 'bot', 'sending');
+      let botMsgEl = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -577,10 +564,11 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
           try {
             const parsed = JSON.parse(trimmed);
             if (parsed.type === 'item' && parsed.content) {
+              if (!botMsgEl) { hideTyping(); botMsgEl = addMessage('', 'bot', 'sending'); }
               fullText += parsed.content;
               botMsgEl.innerHTML = '<div class="msg-content">' + renderMarkdown(fullText) + '</div><span class="msg-time">' + formatTime() + '</span>';
               scrollToBottom();
-            } else if (parsed.type === 'end') {
+            } else if (parsed.type === 'end' && botMsgEl) {
               botMsgEl.innerHTML = '<div class="msg-content">' + renderMarkdown(fullText) + '</div><span class="msg-time">' + formatTime() + '</span><span class="msg-status sent">✓</span>';
             }
           } catch (e) {
@@ -589,6 +577,8 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
         }
       }
 
+      hideTyping();
+      if (!botMsgEl) botMsgEl = addMessage('', 'bot', 'sending');
       if (!fullText && rawText.trim()) {
         try {
           const data = JSON.parse(rawText.trim());
@@ -597,12 +587,11 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
       }
       botMsgEl.innerHTML = '<div class="msg-content">' + renderMarkdown(fullText || 'Sorry, no response received. Please try again.') + '</div><span class="msg-time">' + formatTime() + '</span><span class="msg-status sent">✓</span>';
 
+      userMsgEl.innerHTML = escapeHtml(message) + '<span class="msg-time">' + formatTime() + '</span><span class="msg-status sent">✓</span>';
+
       chatHistory.push({ role: 'user', content: message });
       if (fullText) chatHistory.push({ role: 'assistant', content: fullText });
       if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-
-      showQuickReplies();
-      if (!retryData) { resetTextarea(); }
     } catch (error) {
       hideTyping();
       if (error.name === 'AbortError') return;
@@ -624,7 +613,7 @@ const welcomeMessage = Astro.props.welcomeMessage || "Hello! 👋 I'm the CookTw
     }
   }
 
-  document.getElementById('ctChatSend')?.addEventListener('click', sendMessage);
+  document.getElementById('ctChatSend')?.addEventListener('click', () => { sendMessage(); });
   document.getElementById('ctChatSend')?.addEventListener('touchend', (e) => { e.preventDefault(); sendMessage(); });
   document.getElementById('ctChatInput')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
