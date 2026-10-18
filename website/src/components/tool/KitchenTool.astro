@@ -1,5 +1,4 @@
 ---
-import ShoppingTool from './ShoppingTool.astro';
 import PantryTool from './PantryTool.astro';
 import PlatesTool from './PlatesTool.astro';
 import DietTool from './DietTool.astro';
@@ -14,7 +13,6 @@ const { audience } = Astro.props;
 const isCouples = audience === 'couples';
 
 const tabs = [
-  { key: 'shopping', label: 'Shopping list' },
   { key: 'pantry', label: 'Pantry' },
   { key: 'plates', label: isCouples ? 'Two plates' : 'Your plate' },
   { key: 'diet', label: isCouples ? 'Diet match' : 'Your diet' },
@@ -35,9 +33,9 @@ const tabs = [
               role="tab"
               id={`kitchen-tab-${tab.key}`}
               data-tab={tab.key}
-              aria-selected={tab.key === 'shopping'}
+              aria-selected={tab.key === 'pantry'}
               aria-controls={`kitchen-panel-${tab.key}`}
-              tabindex={tab.key === 'shopping' ? 0 : -1}
+              tabindex={tab.key === 'pantry' ? 0 : -1}
               class="kitchen-tool-tab flex-shrink-0 px-4 py-2.5 md:px-5 text-sm font-medium rounded-t-xl border border-b-0 transition-colors"
             >
               {tab.label}
@@ -47,10 +45,7 @@ const tabs = [
       </div>
 
       <div class="p-4 sm:p-6 md:p-8">
-        <div data-panel="shopping" role="tabpanel" id="kitchen-panel-shopping" aria-labelledby="kitchen-tab-shopping" tabindex="0">
-          <ShoppingTool audience={audience} />
-        </div>
-        <div data-panel="pantry" role="tabpanel" id="kitchen-panel-pantry" aria-labelledby="kitchen-tab-pantry" tabindex="0" hidden>
+        <div data-panel="pantry" role="tabpanel" id="kitchen-panel-pantry" aria-labelledby="kitchen-tab-pantry" tabindex="0">
           <PantryTool audience={audience} />
         </div>
         <div data-panel="plates" role="tabpanel" id="kitchen-panel-plates" aria-labelledby="kitchen-tab-plates" tabindex="0" hidden>
@@ -136,7 +131,7 @@ const tabs = [
   document.querySelectorAll<HTMLElement>('[data-kitchen-tool]').forEach((root) => {
     const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'));
     tabs.forEach((tab) => {
-      tab.addEventListener('click', () => activateTab(root, tab.dataset.tab ?? 'shopping'));
+      tab.addEventListener('click', () => activateTab(root, tab.dataset.tab ?? 'pantry'));
     });
 
     root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
@@ -152,7 +147,7 @@ const tabs = [
       if (!next) return;
 
       event.preventDefault();
-      activateTab(root, next.dataset.tab ?? 'shopping', true);
+      activateTab(root, next.dataset.tab ?? 'pantry', true);
     });
   });
 </script>
