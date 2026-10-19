@@ -1,0 +1,16 @@
+---
+import VslPlayer from '../../components/funnel/VslPlayer.astro';
+---
+
+<!--
+  Reveal at 500.27s = 00:08:20,270 — slide #189, the opt-in box.
+  Source: script/timecodes.csv row 189 + video/vsl-solo-finale-v2.srt,
+  confirmed by extracting the frame either side of the boundary.
+-->
+<VslPlayer
+  slug="solo-finale"
+  mode="solo"
+  revealAt={500.27}
+  title="Watch — dinners on your own schedule"
+  description="What one week of dinners looks like when the kitchen is all yours."
+/>

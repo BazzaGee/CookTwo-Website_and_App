@@ -3,6 +3,7 @@ export interface Env {
   INVITE_STORE: DurableObjectNamespace;
   DB: D1Database;
   DIET_RESEARCH: R2Bucket;
+  MEDIA: R2Bucket;
   AI_PROVIDER: string;
   JWT_SECRET: string;
   DEEPSEEK_KEY: string;

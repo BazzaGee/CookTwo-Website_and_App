@@ -1,0 +1,480 @@
+---
+/**
+ * The quiz — three steps, one page, no chrome.
+ * Step 1: goal (auto-advance) · Step 2: blocker (auto-advance) ·
+ * Step 3: situation (auto-submit)
+ *
+ * No email is asked for. If the quiz link carries ?e={address} (the email
+ * campaign links do), it is attached silently and the answer set is tagged
+ * onto that Resend contact; without it the quiz still routes to the video.
+ */
+---
+
+<div class="quiz" id="funnel-quiz" data-step="1">
+  <header class="progress">
+    <div class="track" aria-hidden="true">
+      <span class="seg done"></span><span class="seg"></span><span class="seg"></span>
+    </div>
+    <button type="button" class="back" id="quiz-back" hidden>&larr; Back</button>
+  </header>
+
+  <main class="stage">
+    <!-- Step 1 — goal -->
+    <section class="step is-active" data-step="1">
+      <p class="kicker">Quick, so we keep it real</p>
+      <h1>What are you trying to do right now?</h1>
+      <div class="chips">
+        <button type="button" class="chip" data-choice="lose">Lose a bit of weight</button>
+        <button type="button" class="chip" data-choice="keep">Keep weight off and stay sane</button>
+        <button type="button" class="chip" data-choice="fitness">Get fitter overall</button>
+        <button type="button" class="chip" data-choice="not-sure">Not sure — just want better dinners</button>
+      </div>
+    </section>
+
+    <!-- Step 2 — blocker -->
+    <section class="step" data-step="2" hidden>
+      <p class="kicker">Be honest with yourself</p>
+      <h1>What makes it hardest?</h1>
+      <div class="chips">
+        <button type="button" class="chip" data-choice="time">No time in the evenings</button>
+        <button type="button" class="chip" data-choice="willpower">Willpower runs out by 6pm</button>
+        <button type="button" class="chip" data-choice="mixed-house">We&rsquo;re not dieting the same way</button>
+        <button type="button" class="chip" data-choice="takeaway">Takeaways win far too often</button>
+        <button type="button" class="chip" data-choice="no-ideas">No idea what to cook tonight</button>
+      </div>
+    </section>
+
+    <!-- Step 3 — situation (auto-submit) -->
+    <section class="step" data-step="3" hidden>
+      <p class="kicker">Last one</p>
+      <h1>Which of these sounds most like your evening?</h1>
+      <p class="micro">Either way is fine &mdash; this just tells me who I&rsquo;m talking to.</p>
+      <div class="chips">
+        <button type="button" class="chip" data-choice="solo">Me and my kitchen &mdash; dinner on my own schedule</button>
+        <button type="button" class="chip" data-choice="same-goal">We eat together &mdash; same meal, same goal</button>
+        <button type="button" class="chip" data-choice="different-goals">We eat together &mdash; but we want different things from it</button>
+      </div>
+    </section>
+
+    <!-- Thank you -->
+    <section class="step thankyou" data-step="done" hidden>
+      <h1>All set &mdash; your video is queued.</h1>
+      <p class="sub" id="thank-you-sub">You&rsquo;re about to see how dinner can work for two people with two goals &mdash; without cooking everything twice.</p>
+      <div class="countdown" aria-label="Video starting shortly">
+        <span class="countdown-bar" id="countdown-bar"></span>
+      </div>
+      <p class="meta"><span id="countdown-seconds">5</span>s &mdash; about 10 minutes total &middot; sound on</p>
+      <a class="watch-now" id="watch-now" href="/video/couples">Watch it now &rarr;</a>
+    </section>
+  </main>
+
+  <div class="toast" id="quiz-toast" hidden>
+    <p>Something didn&rsquo;t come through. <button type="button" class="toast-retry" id="quiz-retry">Try again</button></p>
+    <a id="quiz-skip" href="/video/couples">Or watch the couples video anyway</a>
+  </div>
+
+  <noscript>
+    <div class="noscript-note">This page needs JavaScript to continue &mdash; or jump straight to <a href="/video/couples">the video</a>.</div>
+  </noscript>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    var root = document.getElementById('funnel-quiz');
+    if (!root) return;
+
+    var state = {
+      step: 1,
+      goal: '',
+      blocker: '',
+      situation: '',
+      email: '',
+      utm: {},
+    };
+
+    var $ = function (sel) { return root.querySelector(sel); };
+    var backBtn = $('#quiz-back');
+    var toast = $('#quiz-toast');
+    var segments = Array.prototype.slice.call(root.querySelectorAll('.track .seg'));
+
+    // ── UTM + silent email capture (no prompt — link param only) ──────
+    try {
+      var params = new URLSearchParams(window.location.search);
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'via'].forEach(function (k) {
+        var v = params.get(k);
+        if (v) state.utm[k] = v;
+      });
+      var prefill = params.get('e');
+      if (prefill) state.email = prefill.trim();
+    } catch (e) { /* no params — fine */ }
+
+    // ── Progress ─────────────────────────────────────────────────────
+    function paintProgress(stepNum) {
+      var shown = Math.min(Math.max(stepNum, 0), 3);
+      segments.forEach(function (seg, i) {
+        seg.classList.toggle('done', i < shown);
+      });
+      var backVisible = stepNum > 1 && stepNum < 4;
+      backBtn.hidden = !backVisible;
+      backBtn.style.visibility = backVisible ? 'visible' : 'hidden';
+    }
+
+    // ── Step switching ───────────────────────────────────────────────
+    function goTo(n) {
+      state.step = n;
+      ['1', '2', '3', 'done'].forEach(function (s) {
+        var el = root.querySelector('.step[data-step="' + s + '"]');
+        if (!el) return;
+        var active = s === (n === 4 ? 'done' : String(n));
+        el.hidden = !active;
+        el.classList.toggle('is-active', active);
+      });
+      paintProgress(n === 4 ? 3 : n);
+      if (n === 4) startCountdown();
+    }
+
+    function next() { goTo(state.step + 1); }
+
+    // ── Step 1 & 2 — chips auto-advance ───────────────────────────────
+    function bindChips(selector, assign) {
+      root.querySelectorAll(selector + ' .chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          var scope = chip.closest('.step');
+          if (scope && scope.classList.contains('is-locked')) return;
+          if (scope) scope.classList.add('is-locked');
+          root.querySelectorAll('.chip.is-selected').forEach(function (n) {
+            n.classList.remove('is-selected');
+          });
+          chip.classList.add('is-selected');
+          assign(chip.getAttribute('data-choice') || '');
+          window.setTimeout(next, 350);
+        });
+      });
+    }
+
+    bindChips('.step[data-step="1"]', function (v) { state.goal = v; });
+    bindChips('.step[data-step="2"]', function (v) { state.blocker = v; });
+
+    // ── Step 3 — chips auto-submit ────────────────────────────────────
+    root.querySelectorAll('.step[data-step="3"] .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var scope = root.querySelector('.step[data-step="3"]');
+        if (!scope || scope.classList.contains('is-locked')) return;
+        scope.classList.add('is-locked');
+        root.querySelectorAll('.chip.is-selected').forEach(function (n) {
+          n.classList.remove('is-selected');
+        });
+        chip.classList.add('is-selected');
+        state.situation = chip.getAttribute('data-choice') || '';
+        chip.setAttribute('aria-busy', 'true');
+        chip.textContent = chip.textContent.replace(/—.*/, '— sending\u2026');
+        submit();
+      });
+    });
+
+    // ── Submit ───────────────────────────────────────────────────────
+    function fallbackRedirect() {
+      return state.situation === 'solo' ? '/video/solo' : '/video/couples';
+    }
+
+    function thankYouCopy(redirect) {
+      if (redirect.indexOf('solo') !== -1) {
+        return 'You\u2019re about to see what one week of dinners looks like when the kitchen is all yours \u2014 no negotiating, no second plate.';
+      }
+      return 'You\u2019re about to see how dinner can work for two people with two goals \u2014 without cooking everything twice.';
+    }
+
+    var submitting = false;
+
+    function submit() {
+      if (submitting) return;
+      submitting = true;
+      var payload = {
+        email: state.email,
+        goal: state.goal,
+        blocker: state.blocker,
+        situation: state.situation,
+        utm: state.utm,
+      };
+      fetch('/api/quiz/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          submitting = false;
+          var redirect = (data && typeof data.redirect === 'string' && data.redirect)
+            ? data.redirect
+            : fallbackRedirect();
+          prepareThankYou(redirect);
+          goTo(4);
+        })
+        .catch(function (err) {
+          submitting = false;
+          console.error('quiz submit failed:', err);
+          if (toast) toast.hidden = false;
+        });
+    }
+
+    function prepareThankYou(redirect) {
+      var sub = document.getElementById('thank-you-sub');
+      var link = document.getElementById('watch-now');
+      var skip = document.getElementById('quiz-skip');
+      if (sub) sub.textContent = thankYouCopy(redirect);
+      if (link) link.setAttribute('href', redirect);
+      if (skip) skip.setAttribute('href', redirect);
+    }
+
+    var retryBtn = document.getElementById('quiz-retry');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', function () {
+        if (toast) toast.hidden = true;
+        submitting = false;
+        submit();
+      });
+    }
+
+    // ── Thank-you countdown (5s) ──────────────────────────────────────
+    var redirectTarget = '';
+    var countdownBound = false;
+
+    function startCountdown() {
+      var target = document.getElementById('watch-now');
+      redirectTarget = target ? target.getAttribute('href') || '/video/couples' : '/video/couples';
+      if (countdownBound) return;
+      countdownBound = true;
+
+      var secondsEl = document.getElementById('countdown-seconds');
+      var bar = document.getElementById('countdown-bar');
+      var total = 5000;
+      var start = Date.now();
+      var tail = window.setInterval(function () {
+        var elapsed = Date.now() - start;
+        var left = Math.max(0, Math.ceil((total - elapsed) / 1000));
+        if (secondsEl) secondsEl.textContent = String(left);
+        if (bar) bar.style.width = Math.max(0, 100 - (elapsed / total) * 100) + '%';
+        if (elapsed >= total) {
+          window.clearInterval(tail);
+          window.location.assign(redirectTarget);
+        }
+      }, 100);
+    }
+
+    // ── Back ──────────────────────────────────────────────────────────
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        if (state.step > 1 && state.step < 4) goTo(state.step - 1);
+      });
+    }
+
+    paintProgress(1);
+  })();
+</script>
+
+<style>
+  .quiz {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: #FAF6EE;
+    color: #2C3E2D;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── progress ── */
+  .progress {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem clamp(1.25rem, 4vw, 2.5rem) 0;
+  }
+  .track {
+    flex: 1;
+    display: flex;
+    gap: 0.4rem;
+    max-width: 26rem;
+  }
+  .seg {
+    height: 0.25rem;
+    flex: 1;
+    border-radius: 999px;
+    background-color: #E5E1DA;
+    transition: background-color 0.3s ease;
+  }
+  .seg.done { background-color: #7A9E7E; }
+  .back {
+    flex: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6B7B6C;
+    cursor: pointer;
+  }
+  .back:hover { color: #2C3E2D; }
+
+  /* ── stage ── */
+  .stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem clamp(1.25rem, 4vw, 2.5rem) 1.5rem;
+    position: relative;
+  }
+  .step {
+    width: 100%;
+    max-width: 38rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .kicker {
+    font-size: clamp(0.72rem, 1.6vw, 0.8rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7A9E7E;
+    margin: 0 0 0.75rem;
+  }
+  .step h1 {
+    font-size: clamp(1.6rem, 5.2vw, 2.4rem);
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #2C3E2D;
+    margin: 0 0 1.5rem;
+  }
+  .micro {
+    font-size: clamp(0.88rem, 1.8vw, 0.97rem);
+    color: #6B7B6C;
+    margin: -0.9rem 0 1.4rem;
+  }
+
+  /* ── chips ── */
+  .chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    max-width: 30rem;
+    margin: 0 auto;
+  }
+  .chip {
+    font: inherit;
+    font-size: clamp(0.95rem, 2.2vw, 1.02rem);
+    font-weight: 500;
+    text-align: center;
+    color: #2C3E2D;
+    background-color: #FFFEFB;
+    border: 1px solid #E5E1DA;
+    border-radius: 12px;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  }
+  .chip:hover {
+    border-color: #7A9E7E;
+    transform: translateY(-1px);
+  }
+  .chip:focus-visible {
+    outline: 2px solid #7A9E7E;
+    outline-offset: 2px;
+  }
+  .chip.is-selected {
+    background-color: #EEF4EF;
+    border-color: #7A9E7E;
+  }
+
+  /* ── thank you ── */
+  .countdown {
+    max-width: 22rem;
+    height: 0.3rem;
+    margin: 0 auto 0.9rem;
+    border-radius: 999px;
+    background-color: #E5E1DA;
+    overflow: hidden;
+  }
+  .countdown-bar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background-color: #7A9E7E;
+  }
+  .meta {
+    font-size: 0.88rem;
+    color: #6B7B6C;
+    margin: 0 0 1.6rem;
+  }
+  .sub {
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    line-height: 1.55;
+    color: #6B7B6C;
+    max-width: 26rem;
+    margin: 0 auto 1.8rem;
+  }
+  .thankyou h1 { margin-bottom: 1rem; }
+  .watch-now {
+    display: inline-block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #5A7E5E;
+    text-decoration: none;
+    border-bottom: 1px solid #7A9E7E;
+    padding-bottom: 1px;
+  }
+  .watch-now:hover { color: #2C3E2D; }
+
+  /* ── toast ── */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.4rem;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    background-color: #2C3E2D;
+    color: #FAF6EE;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    padding: 0.85rem 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+    z-index: 10;
+  }
+  .toast p { margin: 0; }
+  .toast-retry {
+    font: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #9ABE9E;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .toast a {
+    color: #E8A87C;
+    text-decoration: none;
+    border-bottom: 1px solid #E8A87C;
+  }
+  .noscript-note {
+    position: fixed;
+    inset: auto 0 0 0;
+    background-color: #2C3E2D;
+    color: #FAF6EE;
+    text-align: center;
+    font-size: 0.88rem;
+    padding: 1rem;
+  }
+  .noscript-note a { color: #9ABE9E; }
+</style>

@@ -11,6 +11,7 @@ const testEnv = {
   ZAI_KEY: '',
   DB: null as unknown as D1Database,
   DIET_RESEARCH: null as unknown as R2Bucket,
+  MEDIA: null as unknown as R2Bucket,
   HOUSEHOLD_SYNC: null as unknown as DurableObjectNamespace,
   INVITE_STORE: null as unknown as DurableObjectNamespace,
   JWT_SECRET: 'test',

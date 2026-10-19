@@ -25,6 +25,10 @@ migrations_dir = "migrations"
 binding = "DIET_RESEARCH"
 bucket_name = "cupla-diet-research"
 
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "cooktwo-media"
+
 [vars]
 AI_PROVIDER = "deepseek"
 VAPID_PUBLIC_KEY = "BGvuzRtY6I_rrv2HXWdg9zFD2Tb8LlkywOScoPLlx9xb66b0wxa0YuNt1U3XaU-MrmC_4ZHWQS3Y9ye5RHsvix8"

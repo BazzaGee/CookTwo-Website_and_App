@@ -141,7 +141,10 @@ export async function handleLeadVerify(c: Context<{ Bindings: Env }>): Promise<R
     'SELECT * FROM lead_magnets WHERE verify_token = ?',
   )
     .bind(token)
-    .first<{ id: number; email: string; verified: number; targets_json: string | null; mode: string | null; via: string | null }>();
+    .first<{
+      id: number; email: string; verified: number; magnet: string | null;
+      vsl_video: string | null; targets_json: string | null; mode: string | null; via: string | null;
+    }>();
 
   if (!row) {
     return c.text('This confirmation link is invalid or has expired.', 404);
@@ -160,10 +163,29 @@ export async function handleLeadVerify(c: Context<{ Bindings: Env }>): Promise<R
       .run();
   }
 
-  // Back to the calculator, now with a confirmed address so the results
-  // screen can show the stored numbers and set the cookie.
+  // Land them back on the thing they asked for. The VSL confirmation link is
+  // also the access link, so it has to open the right tool page.
   const siteUrl = c.env.SITE_URL || 'https://cooktwo.com';
-  return Response.redirect(`${siteUrl}/portion-calculator?verified=1&m=${encodeURIComponent(row.mode ?? '')}`, 302);
+  return Response.redirect(`${siteUrl}${landingPath(row)}?verified=1&m=${encodeURIComponent(row.mode ?? '')}`, 302);
+}
+
+/**
+ * Where the confirm click lands.
+ *
+ * The VSL lead capture sends this same link as the "open my tool" link, so a
+ * kitchen-tool lead has to go to a kitchen-tool page — not the portion-split
+ * calculator that used to be hard-coded here (and 404'd, because that page
+ * does not exist).
+ */
+function landingPath(row: { magnet: string | null; vsl_video: string | null; mode: string | null }): string {
+  switch (row.magnet) {
+    case 'kitchen-tool':
+      return row.vsl_video === 'solo-finale' || row.mode === 'solo' ? '/kitchen-tool-solo' : '/kitchen-tool';
+    case 'portion-split':
+      return '/portion-calculator';
+    default:
+      return row.mode === 'solo' ? '/kitchen-tool-solo' : '/kitchen-tool';
+  }
 }
 
 /** Mark a lead as verified without a redirect — used by admin tooling. */

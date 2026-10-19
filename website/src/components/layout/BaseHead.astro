@@ -4,13 +4,14 @@ interface Props {
   description: string;
   canonicalURL?: string;
   ogImage?: string;
+  robotsMeta?: string;
   articlePublishedDate?: string;
   articleAuthor?: string;
   articleTags?: string[];
   isArticle?: boolean;
 }
 
-const { title, description, canonicalURL, ogImage, articlePublishedDate, articleAuthor, articleTags = [], isArticle = false } = Astro.props;
+const { title, description, canonicalURL, ogImage, robotsMeta, articlePublishedDate, articleAuthor, articleTags = [], isArticle = false } = Astro.props;
 const siteURL = 'https://cooktwo.com';
 const canonical = canonicalURL ? `${siteURL}${canonicalURL}` : Astro.url;
 const ogImg = ogImage || `${siteURL}/images/hero/og-homepage.webp`;
@@ -63,7 +64,7 @@ const articleSchema = isArticle && articlePublishedDate ? {
 <meta name="description" content={description} />
 <meta name="keywords" content="couples meal planning, shared grocery list, adaptive cooking, meal planning for couples, pantry AI, CookTwo, collaborative nutrition, two plates" />
 <meta name="author" content="CookTwo" />
-<meta name="robots" content="index, follow" />
+<meta name="robots" content={robotsMeta ?? "index, follow"} />
 
 <link rel="canonical" href={canonical} />
 <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -11,6 +11,9 @@ import { handleGetActivity } from './routes/activity';
 import { logToD1 } from './lib/activity';
 import { handleSubscribe, handleVerify, handleValidateAccess } from './routes/waitlist';
 import { handleLeadCapture, handleLeadVerify, handleLeadStatus } from './routes/lead';
+import { handleVslToolCapture, handleLeadUnsubscribe } from './routes/vslLead';
+import { handleQuizSubmit } from './routes/quiz';
+import { handleVslStream } from './routes/vsl';
 import {
   handleEngagementSignup,
   handleEngagementVerify,
@@ -80,6 +83,19 @@ app.post('/api/waitlist/validate-access', (c) => handleValidateAccess(c));
 app.post('/api/lead/portion-split', (c) => handleLeadCapture(c));
 app.get('/api/lead/verify', (c) => handleLeadVerify(c));
 app.get('/api/lead/status', (c) => handleLeadStatus(c));
+
+// ─── VSL lead capture (Kitchen Calculator, revealed mid-video) ─────────
+app.post('/api/lead/vsl-tool', (c) => handleVslToolCapture(c));
+// RFC 8058 one-click unsubscribe fires a POST; a human clicking the link
+// gets a GET. Both land here.
+app.get('/api/lead/unsubscribe', (c) => handleLeadUnsubscribe(c));
+app.post('/api/lead/unsubscribe', (c) => handleLeadUnsubscribe(c));
+
+// ─── Quiz funnel (Yes-response questionnaire → VSL) ────────────────
+app.post('/api/quiz/submit', (c) => handleQuizSubmit(c));
+
+// ─── VSL finale streaming (R2-backed, range-aware) ──────────────────
+app.get('/api/vsl/:slug', (c) => handleVslStream(c));
 
 // ─── Engagement email engine ──────────────────────────────────────
 app.post('/api/engagement/signup', (c) => handleEngagementSignup(c));
