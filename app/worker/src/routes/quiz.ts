@@ -1,20 +1,26 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { cleanUrl, id as funnelId, upsertFunnelSession } from './funnel';
+import { later } from '../lib/later';
 
 /**
  * Quiz funnel capture — cooktwo.com/quiz posts here.
  *
  * POST /api/quiz/submit
- *   body: { email?, goal, blocker, situation, utm: { utm_source, ... } }
+ *   body: { email?, goal, blocker, situation, utm: { utm_source, ... },
+ *           session_id?, visitor_id? }
  *
  * The quiz page no longer asks for an email. It attaches one silently when
  * the link carries ?e={address} (the email campaign links do); without it the
- * submit just routes to the right video. When an email is present:
- *   1. upserts the answer set into D1 (`quiz_responses`),
- *   2. mirrors angle/situation/goal/blocker onto the Resend contact and opts
- *      the contact into the "Diet & Weight Loss Plans" topic,
- *   and the response returns the redirect for the angle so the quiz page can
- * send the reader straight to the matching VSL finale.
+ * submit just routes to the right video. Either way:
+ *   1. the answer set is stored in `quiz_attempts` (anonymous allowed), one
+ *      row per completion, keyed to the funnel session,
+ *   2. when an email is present it is also upserted into `quiz_responses`
+ *      (the email-keyed latest record that mirrors onto Resend) and the
+ *      contact is tagged into the "Diet & Weight Loss Plans" topic,
+ *   3. the funnel session records the attempt + completion timestamps,
+ *   4. the response returns a redirect carrying fs=<session_id>,
+ *      q=<attempt_id> and the UTMs so the VSL page joins the same journey.
  *
  * No email is sent at this point — the video itself is the response. Nurturing
  * happens in the campaign sequences.
@@ -85,18 +91,54 @@ export async function handleQuizSubmit(c: Context<{ Bindings: Env }>): Promise<R
 
   const answers: QuizAnswers = { email, goal, blocker, situation, angle: angleOf(situation), utm };
   const angle = answers.angle;
-  const redirect = redirectFor(angle);
+
+  const sessionId = funnelId(body.session_id) || crypto.randomUUID();
+  const visitorId = funnelId(body.visitor_id);
+  const attemptId = crypto.randomUUID();
+
+  // Always store the attempt — this is the anonymous-path fix. Degrades to a
+  // plain redirect if the tables are missing rather than stranding the user.
+  try {
+    await storeAttempt(c.env, { attemptId, sessionId, visitorId, email, goal, blocker, situation, angle, utm });
+  } catch (err) {
+    console.error('quiz attempt store failed:', err);
+  }
+
+  try {
+    await upsertFunnelSession(c.env.DB, {
+      sessionId,
+      visitorId,
+      entry: 'quiz',
+      vslMode: null,
+      vslVideo: null,
+      quizAttemptId: attemptId,
+      sourceEmail: email || null,
+      captureEmail: null,
+      landingPath: '/quiz',
+      referrer: cleanUrl(c.req.header('referer')),
+      utm,
+      timezone: null,
+      country: s(c.req.header('x-funnel-country') || '', 8) || null,
+      device: null,
+      userAgent: s(c.req.header('user-agent') || '', 300) || null,
+      isInternal: 0,
+      lastSeenAt: Date.now(),
+    });
+  } catch (err) {
+    console.error('quiz session upsert failed:', err);
+  }
 
   if (email) {
     try {
-      await upsertResponse(c.env, answers);
+      await upsertResponse(c.env, answers, sessionId, visitorId);
     } catch (err) {
       console.error('quiz upsert failed:', err);
       return c.json({ error: 'Could not save your answers — please try again.' }, 503);
     }
 
     // Best-effort mirror onto Resend; the redirect must not wait on it.
-    c.executionCtx.waitUntil(
+    later(
+      c,
       syncResendContact(c.env, answers).then(() =>
         c.env.DB.prepare('UPDATE quiz_responses SET resend_synced = 1 WHERE email = ?')
           .bind(email)
@@ -106,17 +148,64 @@ export async function handleQuizSubmit(c: Context<{ Bindings: Env }>): Promise<R
     );
   }
 
-  return c.json({ status: 'ok', redirect });
+  const redirect = withFunnelParams(redirectFor(angle), sessionId, attemptId, utm);
+  return c.json({ status: 'ok', redirect, session_id: sessionId, attempt_id: attemptId });
 }
 
-async function upsertResponse(env: Env, answers: QuizAnswers): Promise<void> {
+/** fs=<session> & q=<attempt> + the UTMs, so the VSL page joins the journey. */
+function withFunnelParams(base: string, sessionId: string, attemptId: string, utm: Record<string, string>): string {
+  const params = new URLSearchParams();
+  params.set('fs', sessionId);
+  params.set('q', attemptId);
+  for (const k of ALLOWED_PARAMS) {
+    if (utm[k]) params.set(k, utm[k]);
+  }
+  return `${base}?${params.toString()}`;
+}
+
+async function storeAttempt(
+  env: Env,
+  a: {
+    attemptId: string;
+    sessionId: string;
+    visitorId: string | null;
+    email: string;
+    goal: string;
+    blocker: string;
+    situation: string;
+    angle: string;
+    utm: Record<string, string>;
+  },
+): Promise<void> {
+  await env.DB.prepare(
+    `INSERT INTO quiz_attempts
+       (id, session_id, visitor_id, email, goal, blocker, situation, angle,
+        utm_source, utm_medium, utm_campaign, utm_content, via)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(
+      a.attemptId, a.sessionId, a.visitorId, a.email || null,
+      a.goal, a.blocker, a.situation, a.angle,
+      a.utm.utm_source ?? null, a.utm.utm_medium ?? null,
+      a.utm.utm_campaign ?? null, a.utm.utm_content ?? null, a.utm.via ?? null,
+    )
+    .run();
+}
+
+async function upsertResponse(
+  env: Env,
+  answers: QuizAnswers,
+  sessionId: string,
+  visitorId: string | null,
+): Promise<void> {
   const { email, goal, blocker, situation, angle, utm } = answers;
   await env.DB.prepare(
     `INSERT INTO quiz_responses
        (email, goal, blocker, situation, angle,
         utm_source, utm_medium, utm_campaign, utm_content, via,
+        session_id, visitor_id,
         created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
      ON CONFLICT(email) DO UPDATE SET
        goal = excluded.goal,
        blocker = excluded.blocker,
@@ -127,6 +216,8 @@ async function upsertResponse(env: Env, answers: QuizAnswers): Promise<void> {
        utm_campaign = excluded.utm_campaign,
        utm_content = excluded.utm_content,
        via = excluded.via,
+       session_id = excluded.session_id,
+       visitor_id = excluded.visitor_id,
        resend_synced = 0,
        updated_at = datetime('now')`,
   )
@@ -134,6 +225,7 @@ async function upsertResponse(env: Env, answers: QuizAnswers): Promise<void> {
       email, goal, blocker, situation, angle,
       utm.utm_source ?? null, utm.utm_medium ?? null,
       utm.utm_campaign ?? null, utm.utm_content ?? null, utm.via ?? null,
+      sessionId, visitorId,
     )
     .run();
 }

@@ -107,6 +107,19 @@ const articleSchema = isArticle && articlePublishedDate ? {
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
+  // Campaign links carry ?e=<recipient email> — never let it reach Google.
+  // The page itself reads and strips it; page_view is reported clean.
+  function gaPageLocation() {
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.delete('e');
+      u.searchParams.delete('email');
+      return u.toString();
+    } catch (err) {
+      return window.location.href;
+    }
+  }
+
   // Internal traffic: visit any page with ?internal=1 once to set a 90-day
   // cookie. While set, events carry traffic_type=internal so the GA4
   // internal-traffic data filter excludes this browser.
@@ -116,9 +129,9 @@ const articleSchema = isArticle && articlePublishedDate ? {
       document.cookie.indexOf('ga_internal=1') !== -1;
     if (internal) {
       document.cookie = 'ga_internal=1; path=/; max-age=7776000; SameSite=Lax';
-      gtag('config', 'G-VVZFC3RYZ7', { traffic_type: 'internal' });
+      gtag('config', 'G-VVZFC3RYZ7', { traffic_type: 'internal', page_location: gaPageLocation() });
     } else {
-      gtag('config', 'G-VVZFC3RYZ7');
+      gtag('config', 'G-VVZFC3RYZ7', { page_location: gaPageLocation() });
     }
   })();
 </script>

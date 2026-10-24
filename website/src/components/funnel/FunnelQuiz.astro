@@ -59,18 +59,18 @@
     <!-- Thank you -->
     <section class="step thankyou" data-step="done" hidden>
       <h1>All set &mdash; your video is queued.</h1>
-      <p class="sub" id="thank-you-sub">You&rsquo;re about to see how dinner can work for two people with two goals &mdash; without cooking everything twice.</p>
+      <p class="sub" id="thank-you-sub">You&rsquo;re about to see how dinner can work without cooking everything twice.</p>
       <div class="countdown" aria-label="Video starting shortly">
         <span class="countdown-bar" id="countdown-bar"></span>
       </div>
-      <p class="meta"><span id="countdown-seconds">5</span>s &mdash; about 10 minutes total &middot; sound on</p>
+      <p class="meta"><span id="countdown-seconds">20</span>s &middot; sound on</p>
       <a class="watch-now" id="watch-now" href="/video/couples">Watch it now &rarr;</a>
     </section>
   </main>
 
   <div class="toast" id="quiz-toast" hidden>
     <p>Something didn&rsquo;t come through. <button type="button" class="toast-retry" id="quiz-retry">Try again</button></p>
-    <a id="quiz-skip" href="/video/couples">Or watch the couples video anyway</a>
+    <a id="quiz-skip" href="/video/couples">Or watch the video anyway</a>
   </div>
 
   <noscript>
@@ -79,6 +79,17 @@
 </div>
 
 <script>
+  import { buildThankYouCopy } from '../../lib/funnel-copy';
+  import {
+    adoptSessionId,
+    flush,
+    readAttribution,
+    setQuizAttemptId,
+    sessionId,
+    startSession,
+    track,
+    visitorId,
+  } from '../../lib/funnel-tracker';
   (function () {
     'use strict';
 
@@ -109,6 +120,11 @@
       var prefill = params.get('e');
       if (prefill) state.email = prefill.trim();
     } catch (e) { /* no params — fine */ }
+
+    // ── Funnel session: persist attribution, strip ?e= from the URL,
+    //    and open the session (session_start event) ────────────────────
+    readAttribution({ strip: true });
+    startSession({ entry: 'quiz' });
 
     // ── Progress ─────────────────────────────────────────────────────
     function paintProgress(stepNum) {
@@ -154,8 +170,14 @@
       });
     }
 
-    bindChips('.step[data-step="1"]', function (v) { state.goal = v; });
-    bindChips('.step[data-step="2"]', function (v) { state.blocker = v; });
+    bindChips('.step[data-step="1"]', function (v) {
+      state.goal = v;
+      track('quiz_answer', { value: v, meta: { question: 'goal' } });
+    });
+    bindChips('.step[data-step="2"]', function (v) {
+      state.blocker = v;
+      track('quiz_answer', { value: v, meta: { question: 'blocker' } });
+    });
 
     // ── Step 3 — chips auto-submit ────────────────────────────────────
     root.querySelectorAll('.step[data-step="3"] .chip').forEach(function (chip) {
@@ -168,6 +190,7 @@
         });
         chip.classList.add('is-selected');
         state.situation = chip.getAttribute('data-choice') || '';
+        track('quiz_answer', { value: state.situation, meta: { question: 'situation' } });
         chip.setAttribute('aria-busy', 'true');
         chip.textContent = chip.textContent.replace(/—.*/, '— sending\u2026');
         submit();
@@ -177,13 +200,6 @@
     // ── Submit ───────────────────────────────────────────────────────
     function fallbackRedirect() {
       return state.situation === 'solo' ? '/video/solo' : '/video/couples';
-    }
-
-    function thankYouCopy(redirect) {
-      if (redirect.indexOf('solo') !== -1) {
-        return 'You\u2019re about to see what one week of dinners looks like when the kitchen is all yours \u2014 no negotiating, no second plate.';
-      }
-      return 'You\u2019re about to see how dinner can work for two people with two goals \u2014 without cooking everything twice.';
     }
 
     var submitting = false;
@@ -197,6 +213,8 @@
         blocker: state.blocker,
         situation: state.situation,
         utm: state.utm,
+        session_id: sessionId(),
+        visitor_id: visitorId(),
       };
       fetch('/api/quiz/submit', {
         method: 'POST',
@@ -212,6 +230,10 @@
           var redirect = (data && typeof data.redirect === 'string' && data.redirect)
             ? data.redirect
             : fallbackRedirect();
+          if (data && typeof data.session_id === 'string') adoptSessionId(data.session_id);
+          if (data && typeof data.attempt_id === 'string') setQuizAttemptId(data.attempt_id);
+          track('quiz_submit', { value: state.situation === 'solo' ? 'solo' : 'couples' });
+          flush();
           prepareThankYou(redirect);
           goTo(4);
         })
@@ -226,7 +248,11 @@
       var sub = document.getElementById('thank-you-sub');
       var link = document.getElementById('watch-now');
       var skip = document.getElementById('quiz-skip');
-      if (sub) sub.textContent = thankYouCopy(redirect);
+      if (sub) sub.textContent = buildThankYouCopy({
+        goal: state.goal,
+        blocker: state.blocker,
+        situation: state.situation,
+      });
       if (link) link.setAttribute('href', redirect);
       if (skip) skip.setAttribute('href', redirect);
     }
@@ -240,7 +266,7 @@
       });
     }
 
-    // ── Thank-you countdown (5s) ──────────────────────────────────────
+    // ── Thank-you countdown (20s) ─────────────────────────────────────
     var redirectTarget = '';
     var countdownBound = false;
 
@@ -252,7 +278,7 @@
 
       var secondsEl = document.getElementById('countdown-seconds');
       var bar = document.getElementById('countdown-bar');
-      var total = 5000;
+      var total = 20000;
       var start = Date.now();
       var tail = window.setInterval(function () {
         var elapsed = Date.now() - start;

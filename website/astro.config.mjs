@@ -12,7 +12,7 @@ export default defineConfig({
       rehypePlugins: [[rehypeImageOptimizer, { publicDir: './public' }]]
     }),
     sitemap({
-      filter: (page) => !page.includes('/quiz') && !page.includes('/video/'),
+      filter: (page) => !page.includes('/quiz') && !page.includes('/video/') && !page.includes('/admin/'),
       serialize(item) {
         item.lastmod = today;
         item.changefreq = 'weekly';

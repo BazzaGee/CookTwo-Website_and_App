@@ -183,10 +183,118 @@ export function createTestD1(): D1Database {
       created_at INTEGER NOT NULL,
       sent_at INTEGER
     );
+    CREATE TABLE IF NOT EXISTS lead_magnets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      magnet TEXT NOT NULL DEFAULT 'portion-split',
+      mode TEXT,
+      targets_json TEXT,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      via TEXT,
+      verified INTEGER DEFAULT 0,
+      verify_token TEXT,
+      verified_at TEXT,
+      resend_contact_id TEXT,
+      vsl_video TEXT,
+      utm_content TEXT,
+      unsubscribed INTEGER NOT NULL DEFAULT 0,
+      session_id TEXT,
+      quiz_attempt_id TEXT,
+      source_email TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS quiz_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      goal TEXT,
+      blocker TEXT,
+      situation TEXT,
+      angle TEXT NOT NULL,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      utm_content TEXT,
+      via TEXT,
+      resend_synced INTEGER DEFAULT 0,
+      session_id TEXT,
+      visitor_id TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS quiz_attempts (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      visitor_id TEXT,
+      email TEXT,
+      goal TEXT,
+      blocker TEXT,
+      situation TEXT,
+      angle TEXT NOT NULL,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      utm_content TEXT,
+      via TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS funnel_sessions (
+      id TEXT PRIMARY KEY,
+      visitor_id TEXT,
+      entry TEXT NOT NULL DEFAULT 'quiz',
+      vsl_mode TEXT,
+      vsl_video TEXT,
+      quiz_attempt_id TEXT,
+      source_email TEXT,
+      capture_email TEXT,
+      landing_path TEXT,
+      referrer TEXT,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      utm_content TEXT,
+      via TEXT,
+      timezone TEXT,
+      country TEXT,
+      device TEXT,
+      user_agent TEXT,
+      is_internal INTEGER NOT NULL DEFAULT 0,
+      started_at INTEGER NOT NULL,
+      last_seen_at INTEGER NOT NULL,
+      ended_at INTEGER,
+      wall_ms INTEGER,
+      watch_ms INTEGER NOT NULL DEFAULT 0,
+      max_position_s REAL NOT NULL DEFAULT 0,
+      video_duration_s REAL,
+      played INTEGER NOT NULL DEFAULT 0,
+      completed INTEGER NOT NULL DEFAULT 0,
+      quiz_completed_at INTEGER,
+      offer_revealed_at INTEGER,
+      offer_reveal_position_s REAL,
+      cta_success_at INTEGER,
+      cta_verified_at INTEGER,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS funnel_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event TEXT NOT NULL,
+      position_s REAL,
+      watch_ms INTEGER,
+      value TEXT,
+      meta TEXT,
+      client_ts INTEGER,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_funnel_events_session ON funnel_events(session_id, created_at);
   `);
 
   const dbProxy = {
     prepare: (sql: string) => new D1Statement(db, sql),
+    // Mirrors D1Database.batch: run prepared statements as a group.
+    batch: (stmts: Array<{ run: () => Promise<D1Result> }>) => Promise.all(stmts.map((s) => s.run())),
   };
 
   return dbProxy as unknown as D1Database;

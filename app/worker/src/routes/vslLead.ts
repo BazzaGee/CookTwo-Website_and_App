@@ -1,11 +1,14 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { id as funnelId, rollupFunnelSession, upsertFunnelSession } from './funnel';
+import { later } from '../lib/later';
 
 /**
  * VSL lead capture — the box that appears under the video at revealAt.
  *
  * POST /api/lead/vsl-tool
- *   body: { email, mode: 'couples' | 'solo', utm: { utm_source, ... } }
+ *   body: { email, mode: 'couples' | 'solo', utm: { utm_source, ... },
+ *           session_id?, quiz_attempt_id?, visitor_id?, source_email? }
  *
  * GET+POST /api/lead/unsubscribe?token=<verify_token>
  *
@@ -17,6 +20,12 @@ import type { Env } from '../env';
  *      "which video brought them in" even if they later watch the other one.
  *   2. The Resend contact carries `angle` + `magnet`, which is how the
  *      Audience view gets filtered down to couples-tool vs solo-tool leads.
+ *
+ * Funnel linkage (see routes/funnel.ts): the captured address is written back
+ * onto the session as `capture_email` + `cta_success_at`, the lead row carries
+ * `session_id` / `quiz_attempt_id` / `source_email`, and the confirmation
+ * link appends `s=<session_id>` so /api/lead/verify can stamp
+ * `cta_verified_at` server-side even though the click lands on cooktwo.app.
  *
  * Double opt-in, same shape as the Portion Split flow: the confirm link IS
  * the access link, so one click both verifies the address and opens the tool.
@@ -80,6 +89,12 @@ export async function handleVslToolCapture(c: Context<{ Bindings: Env }>): Promi
     if (v) utm[k] = v;
   }
 
+  const sessionId = funnelId(body.session_id);
+  const quizAttemptId = funnelId(body.quiz_attempt_id);
+  const visitorId = funnelId(body.visitor_id);
+  const rawSource = s(body.source_email, 320).toLowerCase();
+  const sourceEmail = rawSource && EMAIL_RE.test(rawSource) ? rawSource : null;
+
   let existing: LeadRow | null = null;
   try {
     existing = await c.env.DB.prepare(
@@ -96,12 +111,17 @@ export async function handleVslToolCapture(c: Context<{ Bindings: Env }>): Promi
 
   if (existing && existing.verified && !existing.unsubscribed) {
     // Already confirmed and still opted in — don't burn a fresh token or
-    // resend. Tell the page so it can show the link right away.
+    // resend. Tell the page so it can show the link right away. The capture
+    // still counts: stamp the session and link the lead row to this visit.
+    await recordCtaCapture(c.env, {
+      sessionId, quizAttemptId, visitorId, sourceEmail,
+      email, mode, vslVideo, utm, leadId: existing.id,
+    });
     return c.json({
       status: 'verified',
       message: 'You have already confirmed that address.',
       verified: true,
-      toolUrl: toolPath(existing.vsl_video || vslVideo),
+      toolUrl: withSession(toolPath(existing.vsl_video || vslVideo), sessionId),
     });
   }
 
@@ -115,40 +135,55 @@ export async function handleVslToolCapture(c: Context<{ Bindings: Env }>): Promi
       `UPDATE lead_magnets
           SET magnet = ?, vsl_video = ?, via = ?,
               utm_source = ?, utm_medium = ?, utm_campaign = ?, utm_content = ?,
+              session_id = COALESCE(lead_magnets.session_id, ?),
+              quiz_attempt_id = COALESCE(lead_magnets.quiz_attempt_id, ?),
+              source_email = COALESCE(lead_magnets.source_email, ?),
               unsubscribed = 0, verify_token = ?
         WHERE id = ?`,
     )
       .bind(MAGNET, keepVsl, keepVia,
             utm.utm_source ?? null, utm.utm_medium ?? null, utm.utm_campaign ?? null,
-            utm.utm_content ?? null, verifyToken, existing.id)
+            utm.utm_content ?? null,
+            sessionId, quizAttemptId, sourceEmail,
+            verifyToken, existing.id)
       .run();
   } else {
     await c.env.DB.prepare(
       `INSERT INTO lead_magnets
          (email, magnet, vsl_video, via,
-          utm_source, utm_medium, utm_campaign, utm_content, unsubscribed, verify_token)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+          utm_source, utm_medium, utm_campaign, utm_content,
+          session_id, quiz_attempt_id, source_email,
+          unsubscribed, verify_token)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
     )
       .bind(email, MAGNET, keepVsl, keepVia,
             utm.utm_source ?? null, utm.utm_medium ?? null, utm.utm_campaign ?? null,
-            utm.utm_content ?? null, verifyToken)
+            utm.utm_content ?? null,
+            sessionId, quizAttemptId, sourceEmail,
+            verifyToken)
       .run();
   }
 
-  const siteUrl = c.env.SITE_URL || 'https://cooktwo.com';
-  const verifyUrl = `${siteUrl}/api/lead/verify?token=${verifyToken}&email=${encodeURIComponent(email)}`;
+  const siteUrl = c.env.WEBSITE_URL || 'https://cooktwo.com';
+  const verifyUrl = `${siteUrl}/api/lead/verify?token=${verifyToken}&email=${encodeURIComponent(email)}${sessionId ? `&s=${encodeURIComponent(sessionId)}` : ''}`;
   const unsubUrl = `${siteUrl}/api/lead/unsubscribe?token=${verifyToken}`;
 
   try {
-    await sendVslConfirmation(c.env, email, verifyUrl, unsubUrl, keepVsl);
+    await sendVslConfirmation(c.env, email, verifyUrl, unsubUrl, keepVsl, sessionId);
   } catch (err) {
     console.error('vsl confirmation send failed:', err);
     return c.json({ error: 'Could not send the confirmation email. Please try again later.' }, 500);
   }
 
+  await recordCtaCapture(c.env, {
+    sessionId, quizAttemptId, visitorId, sourceEmail,
+    email, mode, vslVideo, utm, leadId: existing ? existing.id : null,
+  });
+
   // Best-effort: put the attribution onto the Resend contact so it shows in
   // the Audience view. The capture itself stands even if this fails.
-  c.executionCtx.waitUntil(
+  later(
+    c,
     tagVslContact(c.env, email, { mode, utm, via: keepVia }).catch((err) =>
       console.error('resend contact upsert failed:', err)),
   );
@@ -156,8 +191,74 @@ export async function handleVslToolCapture(c: Context<{ Bindings: Env }>): Promi
   return c.json({
     status: 'success',
     message: `Check your inbox — the ${TOOL_NAME} link is on its way.`,
-    toolUrl: toolPath(keepVsl),
+    toolUrl: withSession(toolPath(keepVsl), sessionId),
   });
+}
+
+function withSession(path: string, sessionId: string | null): string {
+  return sessionId ? `${path}?s=${encodeURIComponent(sessionId)}` : path;
+}
+
+interface CtaCapture {
+  sessionId: string | null;
+  quizAttemptId: string | null;
+  visitorId: string | null;
+  sourceEmail: string | null;
+  email: string;
+  mode: string;
+  vslVideo: string;
+  utm: Record<string, string>;
+  leadId: number | null;
+}
+
+/**
+ * Stamp the funnel spine for a capture: capture_email + cta_success_at on
+ * the session (COALESCE so retries never move the timestamp backwards), and
+ * a first-touch link on the lead row for the early-verified path where the
+ * UPDATE branch above didn't run. Best-effort — the capture stands alone.
+ */
+async function recordCtaCapture(env: Env, x: CtaCapture): Promise<void> {
+  const now = Date.now();
+  try {
+    if (x.sessionId) {
+      await upsertFunnelSession(env.DB, {
+        sessionId: x.sessionId,
+        visitorId: x.visitorId,
+        entry: 'vsl',
+        vslMode: x.mode === 'solo' ? 'solo' : 'couples',
+        vslVideo: x.vslVideo,
+        quizAttemptId: x.quizAttemptId,
+        sourceEmail: x.sourceEmail,
+        captureEmail: x.email,
+        landingPath: null,
+        referrer: null,
+        utm: x.utm,
+        timezone: null,
+        country: null,
+        device: null,
+        userAgent: null,
+        isInternal: 0,
+        lastSeenAt: now,
+      });
+      await rollupFunnelSession(env.DB, x.sessionId, {
+        ctaSuccessAt: now,
+        lastSeenAt: now,
+      });
+    }
+    if (x.leadId !== null) {
+      await env.DB.prepare(
+        `UPDATE lead_magnets
+            SET session_id = COALESCE(session_id, ?),
+                quiz_attempt_id = COALESCE(quiz_attempt_id, ?),
+                source_email = COALESCE(source_email, ?)
+          WHERE id = ?`,
+      )
+        .bind(x.sessionId, x.quizAttemptId, x.sourceEmail, x.leadId)
+        .run();
+    }
+  } catch (err) {
+    console.error('funnel capture stamp failed:', err);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -170,10 +271,11 @@ async function sendVslConfirmation(
   verifyUrl: string,
   unsubUrl: string,
   vslVideo: string,
+  sessionId: string | null,
 ): Promise<void> {
   const from = env.RESEND_FROM || 'CookTwo <team@cooktwo.com>';
-  const siteUrl = env.SITE_URL || 'https://cooktwo.com';
-  const toolUrl = `${siteUrl}${toolPath(vslVideo)}`;
+  const siteUrl = env.WEBSITE_URL || 'https://cooktwo.com';
+  const toolUrl = `${siteUrl}${withSession(toolPath(vslVideo), sessionId)}`;
 
   const html = `<!doctype html>
 <html><body style="margin:0;padding:0;background:#FAF6EE;font-family:Inter,system-ui,-apple-system,sans-serif;">

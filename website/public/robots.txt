@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 
 Disallow: /PWA/
+Disallow: /admin/
 
 Sitemap: https://cooktwo.com/sitemap-index.xml

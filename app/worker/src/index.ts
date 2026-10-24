@@ -13,7 +13,16 @@ import { handleSubscribe, handleVerify, handleValidateAccess } from './routes/wa
 import { handleLeadCapture, handleLeadVerify, handleLeadStatus } from './routes/lead';
 import { handleVslToolCapture, handleLeadUnsubscribe } from './routes/vslLead';
 import { handleQuizSubmit } from './routes/quiz';
+import { handleResendReplyWebhook } from './routes/emailReply';
 import { handleVslStream } from './routes/vsl';
+import {
+  handleFunnelTrack,
+  handleFunnelSummary,
+  handleFunnelSessions,
+  handleFunnelSessionDetail,
+  handleFunnelExport,
+  pruneFunnelEvents,
+} from './routes/funnel';
 import {
   handleEngagementSignup,
   handleEngagementVerify,
@@ -93,6 +102,16 @@ app.post('/api/lead/unsubscribe', (c) => handleLeadUnsubscribe(c));
 
 // ─── Quiz funnel (Yes-response questionnaire → VSL) ────────────────
 app.post('/api/quiz/submit', (c) => handleQuizSubmit(c));
+
+// ─── Inbound reply handling (Resend email.received → reply.affirmative) ──
+app.post('/api/email/reply-webhook', (c) => handleResendReplyWebhook(c));
+
+// ─── Funnel tracking (sessions + events, quiz→VSL→CTA→verify) ──────
+app.post('/api/funnel/track', (c) => handleFunnelTrack(c));
+app.get('/api/admin/funnel/summary', (c) => handleFunnelSummary(c));
+app.get('/api/admin/funnel/sessions', (c) => handleFunnelSessions(c));
+app.get('/api/admin/funnel/sessions/:id', (c) => handleFunnelSessionDetail(c));
+app.get('/api/admin/funnel/export.csv', (c) => handleFunnelExport(c));
 
 // ─── VSL finale streaming (R2-backed, range-aware) ──────────────────
 app.get('/api/vsl/:slug', (c) => handleVslStream(c));
@@ -929,9 +948,16 @@ app.get('/api/household/:id/ws', async (c) => {
 
 export default app;
 
-// ─── Cron: daily engagement email cycle ───────────────────────────
+// ─── Cron: daily engagement email cycle + funnel retention ────────
 export async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
   console.log(`[cron] Engagement cycle at ${new Date(event.scheduledTime).toISOString()}`);
+  // Funnel raw-event retention (12 months, chunked) — best-effort, first so
+  // a prune failure never delays the email cycle.
+  try {
+    await pruneFunnelEvents(env.DB);
+  } catch (err) {
+    console.error('[cron] funnel prune failed:', err);
+  }
   const engine = buildEngineEnv(env);
   const result = await processAllUsers(engine);
   console.log(`[cron] Done: scanned=${result.scanned}, sent=${result.sent}, skipped=${result.skipped}, errors=${result.errors.length}`);

@@ -1,0 +1,441 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+---
+
+<FunnelLayout
+  title="Funnel — CookTwo"
+  description="Internal. Quiz → VSL → CTA → verify, per session."
+>
+  <main class="dash" id="dash">
+    <!-- ── gate ─────────────────────────────────────────────────────── -->
+    <section class="gate" id="gate">
+      <div class="gate-card">
+        <h1>Funnel dashboard</h1>
+        <p>Paste the admin secret to load the connected funnel data.</p>
+        <input
+          type="password"
+          id="secret-input"
+          autocomplete="off"
+          placeholder="Admin secret"
+          aria-label="Admin secret"
+        />
+        <button type="button" id="secret-go">Load</button>
+        <p class="err" id="gate-err" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- ── dashboard ───────────────────────────────────────────────── -->
+    <section class="panel" id="panel" hidden>
+      <header class="bar">
+        <div class="brand">
+          <h1>Funnel</h1>
+          <span class="stamp" id="stamp"></span>
+        </div>
+        <div class="acts">
+          <button type="button" id="refresh">Refresh</button>
+          <button type="button" id="csv">CSV</button>
+          <button type="button" id="logout" class="ghost">Log out</button>
+        </div>
+      </header>
+
+      <!-- filters -->
+      <div class="filters">
+        <label>From <input type="date" id="f-from" /></label>
+        <label>To <input type="date" id="f-to" /></label>
+        <label>Campaign <input type="text" id="f-campaign" placeholder="winback-2026-q4" /></label>
+        <label>Email <input type="text" id="f-content" placeholder="email-3" /></label>
+        <label>Mode
+          <select id="f-mode">
+            <option value="">all</option>
+            <option value="couples">couples</option>
+            <option value="solo">solo</option>
+          </select>
+        </label>
+        <label>Search <input type="text" id="f-q" placeholder="email or session id" /></label>
+        <label class="chk"><input type="checkbox" id="f-internal" /> internal</label>
+      </div>
+
+      <!-- stage bars -->
+      <div class="stages" id="stages"></div>
+
+      <!-- breakdown tables -->
+      <div class="breakdowns">
+        <div class="bd">
+          <h2>By campaign</h2>
+          <table id="t-campaign"><thead><tr><th>Key</th><th>Sessions</th><th>Quiz</th><th>Played</th><th>CTA</th><th>Verified</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="bd">
+          <h2>By email</h2>
+          <table id="t-content"><thead><tr><th>Key</th><th>Sessions</th><th>Quiz</th><th>Played</th><th>CTA</th><th>Verified</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="bd">
+          <h2>By mode</h2>
+          <table id="t-mode"><thead><tr><th>Key</th><th>Sessions</th><th>Quiz</th><th>Played</th><th>CTA</th><th>Verified</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <!-- sessions -->
+      <div class="sessions">
+        <h2>Sessions <span id="s-count"></span></h2>
+        <div class="scroll">
+          <table id="t-sessions">
+            <thead>
+              <tr>
+                <th>Started</th>
+                <th>Source</th>
+                <th>Capture</th>
+                <th>Campaign</th>
+                <th>Answers</th>
+                <th>Watch</th>
+                <th>Wall</th>
+                <th>Progress</th>
+                <th>Offer</th>
+                <th>CTA</th>
+                <th>CTA at</th>
+                <th>Verified</th>
+                <th>Signup</th>
+                <th>Bounce</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── session drawer ──────────────────────────────────────────── -->
+    <div class="drawer" id="drawer" hidden>
+      <div class="drawer-card">
+        <header class="bar">
+          <h2 id="d-title">Session</h2>
+          <button type="button" id="d-close" class="ghost">Close</button>
+        </header>
+        <div id="d-body"></div>
+      </div>
+    </div>
+  </main>
+</FunnelLayout>
+
+<style>
+  .dash { min-height: 100dvh; background-color: #f5f0e6; color: #2c3e2d; font-family: 'Inter', system-ui, sans-serif; }
+  .gate { display: flex; align-items: center; justify-content: center; min-height: 100dvh; }
+  .gate-card { background: #fff; border: 1px solid #e5e1da; border-radius: 16px; padding: 2.5rem 2rem; width: min(90vw, 24rem); text-align: center; }
+  .gate-card h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+  .gate-card p { color: #6b7b6c; font-size: .95rem; margin: 0 0 1.25rem; }
+  .gate-card input { width: 100%; box-sizing: border-box; border: 1.5px solid #d8d3c8; border-radius: 10px; padding: .7rem .9rem; font: inherit; font-size: .95rem; margin-bottom: .8rem; }
+  .gate-card button { width: 100%; border: 0; border-radius: 10px; background: #7a9e7e; color: #fff; font: inherit; font-weight: 600; padding: .7rem; cursor: pointer; }
+  .gate-card button:hover { background: #5a7e5e; }
+  .err { color: #e07a5f; font-size: .85rem; margin-top: .6rem; }
+
+  .panel { padding: 1.25rem clamp(1rem, 3vw, 2rem) 3rem; max-width: 90rem; margin: 0 auto; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: .75rem; }
+  .brand h1 { font-size: 1.4rem; margin: 0; }
+  .stamp { color: #6b7b6c; font-size: .8rem; }
+  .acts { display: flex; gap: .5rem; }
+  .acts button { border: 1px solid #d8d3c8; background: #fff; border-radius: 9px; padding: .45rem .9rem; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+  .acts button:hover { border-color: #7a9e7e; }
+  .acts .ghost { background: transparent; border-color: transparent; color: #6b7b6c; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; background: #fff; border: 1px solid #e5e1da; border-radius: 12px; padding: .8rem 1rem; margin-bottom: 1.25rem; }
+  .filters label { display: flex; flex-direction: column; gap: .25rem; font-size: .75rem; font-weight: 600; color: #6b7b6c; }
+  .filters input, .filters select { border: 1.5px solid #d8d3c8; border-radius: 8px; padding: .4rem .55rem; font: inherit; font-size: .85rem; font-weight: 400; color: #2c3e2d; }
+  .filters .chk { flex-direction: row; align-items: center; gap: .4rem; padding-bottom: .35rem; }
+
+  .stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; margin-bottom: 1.25rem; }
+  .stage { background: #fff; border: 1px solid #e5e1da; border-radius: 12px; padding: .7rem .9rem; }
+  .stage .k { font-size: .72rem; font-weight: 600; color: #6b7b6c; text-transform: uppercase; letter-spacing: .04em; }
+  .stage .v { font-size: 1.5rem; font-weight: 700; margin: .15rem 0 .3rem; font-variant-numeric: tabular-nums; }
+  .stage .bar { height: 5px; border-radius: 99px; background: #e5e1da; overflow: hidden; }
+  .stage .bar i { display: block; height: 100%; background: #7a9e7e; border-radius: 99px; }
+
+  .breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .9rem; margin-bottom: 1.5rem; }
+  .bd { background: #fff; border: 1px solid #e5e1da; border-radius: 12px; padding: .8rem 1rem; }
+  .bd h2, .sessions h2 { font-size: .95rem; margin: 0 0 .6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: #6b7b6c; font-weight: 600; border-bottom: 1px solid #e5e1da; padding: .35rem .4rem; white-space: nowrap; }
+  td { padding: .35rem .4rem; border-bottom: 1px solid #f2eee6; vertical-align: top; }
+
+  .sessions { background: #fff; border: 1px solid #e5e1da; border-radius: 12px; padding: .9rem 1rem; }
+  .scroll { overflow-x: auto; }
+  #t-sessions tbody tr { cursor: pointer; }
+  #t-sessions tbody tr:hover { background: #faf8f3; }
+  .email { font-size: .78rem; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
+  .muted { color: #9a9a90; }
+  .yes { color: #5a7e5e; font-weight: 600; }
+  .no { color: #c07a5f; }
+  .pill { display: inline-block; background: #eef4ef; border-radius: 99px; padding: .05rem .45rem; font-size: .72rem; margin-right: .25rem; }
+
+  .drawer { position: fixed; inset: 0; background: rgba(44, 62, 45, .45); display: flex; justify-content: flex-end; z-index: 20; }
+  .drawer-card { background: #faf8f3; width: min(92vw, 34rem); height: 100dvh; overflow-y: auto; padding: 1.1rem 1.25rem 2rem; box-shadow: -8px 0 30px rgba(0, 0, 0, .18); }
+  #d-body { font-size: .85rem; line-height: 1.55; }
+  #d-body h3 { font-size: .9rem; margin: 1rem 0 .4rem; }
+  #d-body dl { display: grid; grid-template-columns: 8.5rem 1fr; gap: .15rem .5rem; margin: 0; }
+  #d-body dt { color: #6b7b6c; font-weight: 600; font-size: .78rem; }
+  #d-body dd { margin: 0; word-break: break-word; }
+  .tl { list-style: none; margin: .5rem 0 0; padding: 0; }
+  .tl li { display: flex; gap: .6rem; padding: .22rem 0; border-bottom: 1px solid #efe9dd; font-size: .8rem; }
+  .tl .t { color: #9a9a90; min-width: 5.2rem; font-variant-numeric: tabular-nums; }
+  .tl .n { font-weight: 600; min-width: 8rem; }
+</style>
+
+<script>
+  (function () {
+    'use strict';
+    var KEY = 'ct-admin-secret';
+    var BASE = '/api/admin/funnel';
+
+    var gate = document.getElementById('gate');
+    var panel = document.getElementById('panel');
+    var input = document.getElementById('secret-input');
+    var gateErr = document.getElementById('gate-err');
+    var drawer = document.getElementById('drawer');
+
+    var secret = '';
+    try { secret = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+
+    function headers() {
+      return { 'X-Admin-Secret': secret };
+    }
+
+    function qs(extra) {
+      var p = new URLSearchParams();
+      ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-q'].forEach(function (id) {
+        var el = document.getElementById(id);
+        var v = el && el.value ? el.value.trim() : '';
+        if (!v) return;
+        p.set(id.replace('f-', '').replace('-q', 'q'), v === 'all' ? '' : v);
+      });
+      if (!p.get('mode')) p.delete('mode');
+      var qEl = document.getElementById('f-q');
+      if (qEl && qEl.value.trim()) p.set('q', qEl.value.trim());
+      if (document.getElementById('f-internal').checked) p.set('internal', '1');
+      if (extra) Object.keys(extra).forEach(function (k) { p.set(k, extra[k]); });
+      var s = p.toString();
+      return s ? '?' + s : '';
+    }
+
+    function api(path) {
+      return fetch(BASE + path, { headers: headers() }).then(function (res) {
+        if (res.status === 401) throw new Error('unauthorized');
+        return res.json();
+      });
+    }
+
+    function fmtMs(ms) {
+      if (!ms && ms !== 0) return '—';
+      var s = Math.round(ms / 1000);
+      if (s < 60) return s + 's';
+      return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+    }
+
+    function fmtTime(ms) {
+      if (!ms) return '—';
+      return new Date(ms).toLocaleString();
+    }
+
+    function fmtPos(s) {
+      if (s == null) return '—';
+      var t = Math.max(0, Math.round(s));
+      return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+    }
+
+    function pct(num, den) {
+      if (!den) return '0%';
+      return Math.round((num / den) * 100) + '%';
+    }
+
+    // ── summary + sessions ────────────────────────────────────────────
+    function load() {
+      Promise.all([api('/summary' + qs()), api('/sessions' + qs())]).then(function (r) {
+        renderSummary(r[0]);
+        renderSessions(r[1]);
+        if (gate) gate.hidden = true;
+        if (panel) panel.hidden = false;
+        var stamp = document.getElementById('stamp');
+        if (stamp) stamp.textContent = 'loaded ' + new Date().toLocaleTimeString();
+        if (gateErr) gateErr.hidden = true;
+      }).catch(function (err) {
+        if (err.message === 'unauthorized') {
+          if (gateErr) { gateErr.textContent = 'Invalid secret.'; gateErr.hidden = false; }
+          if (panel) panel.hidden = true;
+          if (gate) gate.hidden = false;
+        } else {
+          if (gateErr) { gateErr.textContent = 'Load failed — ' + err.message; gateErr.hidden = false; }
+        }
+      });
+    }
+
+    var STAGES = [
+      ['sessions', 'Quiz landed'],
+      ['quiz_completed', 'Quiz completed'],
+      ['vsl_started', 'VSL started'],
+      ['vsl_played', 'Played'],
+      ['offer_revealed', 'Offer shown'],
+      ['cta_submitted', 'CTA submitted'],
+      ['cta_success', 'Email captured'],
+      ['cta_verified', 'Verified'],
+      ['app_signup', 'App signup'],
+    ];
+
+    function renderSummary(data) {
+      var t = data.totals || {};
+      var el = document.getElementById('stages');
+      var top = t.sessions || 0;
+      el.innerHTML = STAGES.map(function (s) {
+        var v = t[s[0]] || 0;
+        return '<div class="stage"><div class="k">' + s[1] + '</div><div class="v">' + v +
+          '</div><div class="bar"><i style="width:' + (top ? Math.round((v / top) * 100) : 0) + '%"></i></div></div>';
+      }).join('');
+      fillTable('t-campaign', data.by_campaign || []);
+      fillTable('t-content', data.by_content || []);
+      fillTable('t-mode', data.by_mode || []);
+    }
+
+    function fillTable(id, rows) {
+      var body = document.querySelector('#' + id + ' tbody');
+      body.innerHTML = rows.map(function (r) {
+        return '<tr><td>' + esc(r.key) + '</td><td>' + r.sessions + '</td><td>' + r.quiz_completed +
+          '</td><td>' + r.vsl_played + '</td><td>' + r.cta_success + '</td><td>' + r.cta_verified + '</td></tr>';
+      }).join('') || '<tr><td colspan="6" class="muted">no data</td></tr>';
+    }
+
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+
+    function answers(s) {
+      if (!s.goal) return '<span class="muted">—</span>';
+      return '<span class="pill">' + esc(s.goal) + '</span><span class="pill">' + esc(s.blocker) +
+        '</span><span class="pill">' + esc(s.situation) + '</span>';
+    }
+
+    function renderSessions(data) {
+      var sessions = data.sessions || [];
+      var count = document.getElementById('s-count');
+      if (count) count.textContent = '(' + sessions.length + ')';
+      var body = document.querySelector('#t-sessions tbody');
+      body.innerHTML = sessions.map(function (s) {
+        var progress = s.video_duration_s ? Math.round((s.max_position_s / s.video_duration_s) * 100) : null;
+        return '<tr data-id="' + esc(s.id) + '">' +
+          '<td>' + fmtTime(s.started_at) + '</td>' +
+          '<td class="email' + (s.source_email ? '' : ' muted') + '">' + esc(s.source_email || '—') + '</td>' +
+          '<td class="email' + (s.capture_email ? '' : ' muted') + '">' + esc(s.capture_email || '—') + '</td>' +
+          '<td>' + esc(s.utm_campaign || '—') + '</td>' +
+          '<td>' + answers(s) + '</td>' +
+          '<td>' + fmtMs(s.watch_ms) + '</td>' +
+          '<td>' + fmtMs(s.wall_ms) + '</td>' +
+          '<td>' + (progress == null ? '—' : progress + '%') + '</td>' +
+          '<td>' + (s.offer_revealed_at ? '✓' : '—') + '</td>' +
+          '<td>' + (s.cta_success_at ? '<span class="yes">✓</span>' : (s.cta_submit_count ? 'fail' : '—')) + '</td>' +
+          '<td>' + (s.cta_submit_position_s != null ? fmtPos(s.cta_submit_position_s) : '—') + '</td>' +
+          '<td>' + (s.cta_verified_at ? '<span class="yes">✓</span>' : '—') + '</td>' +
+          '<td>' + (s.app_signup ? '<span class="yes">✓</span>' : '—') + '</td>' +
+          '<td>' + (s.bounced ? '<span class="no">bounced</span>' : '') + '</td>' +
+          '</tr>';
+      }).join('') || '<tr><td colspan="14" class="muted">no sessions yet</td></tr>';
+
+      body.querySelectorAll('tr[data-id]').forEach(function (tr) {
+        tr.addEventListener('click', function () {
+          openDrawer(tr.getAttribute('data-id'));
+        });
+      });
+    }
+
+    // ── drawer ────────────────────────────────────────────────────────
+    function openDrawer(id) {
+      api('/sessions/' + encodeURIComponent(id)).then(function (data) {
+        var s = data.session || {};
+        var d = document.getElementById('d-title');
+        if (d) d.textContent = 'Session ' + id.slice(0, 8) + '…';
+        var body = document.getElementById('d-body');
+        var rows = [
+          ['Source email', s.source_email],
+          ['Capture email', s.capture_email],
+          ['Visitor', s.visitor_id],
+          ['Entry', s.entry],
+          ['Mode', s.vsl_mode],
+          ['Video', s.vsl_video],
+          ['Campaign', s.utm_campaign],
+          ['Content', s.utm_content],
+          ['Via', s.via],
+          ['Started', fmtTime(s.started_at)],
+          ['Watch', fmtMs(s.watch_ms)],
+          ['Wall', fmtMs(s.wall_ms)],
+          ['Max position', s.max_position_s ? Math.round(s.max_position_s) + 's' : null],
+          ['Email entered (video)', s.cta_submit_position_s != null ? fmtPos(s.cta_submit_position_s) + ' (' + Math.round(s.cta_submit_position_s) + 's)' : null],
+          ['Email sent (video)', s.cta_success_position_s != null ? fmtPos(s.cta_success_position_s) + ' (' + Math.round(s.cta_success_position_s) + 's)' : null],
+          ['Answers', s.goal ? s.goal + ' / ' + s.blocker + ' / ' + s.situation : null],
+          ['Country', s.country],
+          ['Device', s.device],
+        ];
+        body.innerHTML = '<dl>' + rows.map(function (r) {
+          return '<dt>' + r[0] + '</dt><dd>' + (r[1] == null || r[1] === '' ? '<span class="muted">—</span>' : esc(r[1])) + '</dd>';
+        }).join('') + '</dl>' +
+          (data.lead ? '<h3>Lead</h3><dl><dt>Email</dt><dd>' + esc(data.lead.email) + '</dd><dt>Verified</dt><dd>' +
+            (data.lead.verified ? 'yes' : 'no') + '</dd><dt>Unsub</dt><dd>' + (data.lead.unsubscribed ? 'yes' : 'no') + '</dd></dl>' : '') +
+          '<h3>Timeline</h3><ul class="tl">' + (data.events || []).map(function (e) {
+            return '<li><span class="t">' + fmtTime(e.client_ts).split(', ')[1] + '</span><span class="n">' + esc(e.event) +
+              '</span><span>' + (e.position_s != null ? '@' + Math.round(e.position_s) + 's ' : '') +
+              (e.watch_ms != null ? '· ' + fmtMs(e.watch_ms) : '') + '</span></li>';
+          }).join('') + '</ul>';
+        if (drawer) drawer.hidden = false;
+      }).catch(function (err) {
+        alert('Could not load session: ' + err.message);
+      });
+    }
+
+    var dClose = document.getElementById('d-close');
+    if (dClose) dClose.addEventListener('click', function () { if (drawer) drawer.hidden = true; });
+    if (drawer) drawer.addEventListener('click', function (e) { if (e.target === drawer) drawer.hidden = true; });
+
+    // ── wire up ───────────────────────────────────────────────────────
+    var go = document.getElementById('secret-go');
+    if (go) go.addEventListener('click', function () {
+      secret = input.value.trim();
+      if (!secret) return;
+      try { sessionStorage.setItem(KEY, secret); } catch (e) {}
+      load();
+    });
+    if (input) input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go.click(); });
+
+    var refresh = document.getElementById('refresh');
+    if (refresh) refresh.addEventListener('click', load);
+
+    var csv = document.getElementById('csv');
+    if (csv) csv.addEventListener('click', function () {
+      fetch(BASE + '/export.csv' + qs(), { headers: headers() })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+        .then(function (blob) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'funnel.csv';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        })
+        .catch(function (err) { alert('CSV failed: ' + err); });
+    });
+
+    var logout = document.getElementById('logout');
+    if (logout) logout.addEventListener('click', function () {
+      secret = '';
+      try { sessionStorage.removeItem(KEY); } catch (e) {}
+      if (panel) panel.hidden = true;
+      if (gate) gate.hidden = false;
+    });
+
+    ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-q', 'f-internal'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('change', load);
+      if (el.tagName === 'INPUT' && el.type === 'text') {
+        el.addEventListener('keydown', function (e) { if (e.key === 'Enter') load(); });
+      }
+    });
+
+    // auto-load from stored secret
+    if (secret) load();
+  })();
+</script>

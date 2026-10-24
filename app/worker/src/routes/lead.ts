@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
+import { rollupFunnelSession } from './funnel';
 
 /**
  * Lead-magnet capture — the funnel's front door.
@@ -101,7 +102,7 @@ export async function handleLeadCapture(c: Context<{ Bindings: Env }>): Promise<
       .run();
   }
 
-  const siteUrl = c.env.SITE_URL || 'https://cooktwo.com';
+  const siteUrl = c.env.WEBSITE_URL || 'https://cooktwo.com';
   const verifyUrl = `${siteUrl}/api/lead/verify?token=${verifyToken}&email=${encodeURIComponent(email)}`;
 
   try {
@@ -163,9 +164,21 @@ export async function handleLeadVerify(c: Context<{ Bindings: Env }>): Promise<R
       .run();
   }
 
+  // Funnel stamp: the VSL confirmation link carries ?s=<session_id> so the
+  // click — even though it lands on cooktwo.app — records cta_verified_at on
+  // the originating session. Best-effort; verification itself never fails.
+  const sessionId = s(c.req.query('s'), 64);
+  if (sessionId && /^[A-Za-z0-9_-]{8,64}$/.test(sessionId)) {
+    // One small UPDATE before the redirect — it must land, so it's awaited
+    // rather than waitUntil'd.
+    await rollupFunnelSession(c.env.DB, sessionId, { ctaVerifiedAt: Date.now(), lastSeenAt: Date.now() }).catch(
+      () => {},
+    );
+  }
+
   // Land them back on the thing they asked for. The VSL confirmation link is
   // also the access link, so it has to open the right tool page.
-  const siteUrl = c.env.SITE_URL || 'https://cooktwo.com';
+  const siteUrl = c.env.WEBSITE_URL || 'https://cooktwo.com';
   return Response.redirect(`${siteUrl}${landingPath(row)}?verified=1&m=${encodeURIComponent(row.mode ?? '')}`, 302);
 }
 

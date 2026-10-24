@@ -6,10 +6,13 @@
  * (no rewind, no fast-forward) · timed offer reveal that shrinks the frame and
  * surfaces the capture box for the rest of the video.
  *
- * Reveal times come from each video's own timecodes.csv and were confirmed by
- * extracting the frame either side of the boundary:
- *   couples  revealAt 420.57  slide #167  00:07:00,570
- *   solo     revealAt 500.27  slide #189  00:08:20,270
+ * Reveal times come from each video's own timecodes.csv and were re-confirmed
+ * by extracting the frames either side of the boundary in the rendered MP4
+ * (2026-10-23). They live in ONE place — src/data/vsl-reveal.json — because
+ * three copies of the number is what let this comment drift to 420.57/500.27
+ * while the pages shipped 420.5/500.03. Never restate them here.
+ *   couples  slide #167  opt-in box
+ *   solo     slide #189  opt-in box
  */
 import FunnelLayout from '../../layouts/FunnelLayout.astro';
 
@@ -30,7 +33,38 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
 
 <FunnelLayout title={title} description={description}>
   <main class="watch">
-    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-tool={toolHref}>
+    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref}>
+      <!-- 1 · speaker banner — sits above the frame so it never covers the video -->
+      <div class="banner" role="note">
+        <span class="spk spk-left">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a.9.9 0 0 1-.9-.9v-3.2a.9.9 0 0 1 .9-.9Z"
+              fill="currentColor"></path>
+            <path class="ct-wave" d="M15.2 9.4a4.2 4.2 0 0 1 0 5.2" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+            <path class="ct-wave" d="M18 7.6a7.6 7.6 0 0 1 0 8.8" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+            <path class="ct-wave" d="M20.8 5.8a11 11 0 0 1 0 12.4" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span class="banner-text">Turn Your Sound On</span>
+        <span class="spk spk-right">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a.9.9 0 0 1-.9-.9v-3.2a.9.9 0 0 1 .9-.9Z"
+              fill="currentColor"></path>
+            <path class="ct-wave" d="M15.2 9.4a4.2 4.2 0 0 1 0 5.2" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+            <path class="ct-wave" d="M18 7.6a7.6 7.6 0 0 1 0 8.8" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+            <path class="ct-wave" d="M20.8 5.8a11 11 0 0 1 0 12.4" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round"></path>
+          </svg>
+        </span>
+      </div>
+
       <div class="frame" id="frame">
         <video
           id="vsl"
@@ -41,37 +75,6 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
           controlslist="nodownload noremoteplayback noplaybackrate"
           src={`/api/vsl/${slug}`}
         ></video>
-
-        <!-- 1 · speaker banner — always on top -->
-        <div class="banner" role="note">
-          <span class="spk spk-left">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a.9.9 0 0 1-.9-.9v-3.2a.9.9 0 0 1 .9-.9Z"
-                fill="currentColor"></path>
-              <path class="ct-wave w1" d="M15.2 9.4a4.2 4.2 0 0 1 0 5.2" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-              <path class="ct-wave w2" d="M18 7.6a7.6 7.6 0 0 1 0 8.8" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-              <path class="ct-wave w3" d="M20.8 5.8a11 11 0 0 1 0 12.4" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-            </svg>
-          </span>
-          <span class="banner-text">Make sure your speakers are turned on</span>
-          <span class="spk spk-right">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a.9.9 0 0 1-.9-.9v-3.2a.9.9 0 0 1 .9-.9Z"
-                fill="currentColor"></path>
-              <path class="ct-wave w1" d="M15.2 9.4a4.2 4.2 0 0 1 0 5.2" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-              <path class="ct-wave w2" d="M18 7.6a7.6 7.6 0 0 1 0 8.8" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-              <path class="ct-wave w3" d="M20.8 5.8a11 11 0 0 1 0 12.4" stroke="currentColor"
-                stroke-width="1.9" stroke-linecap="round"></path>
-            </svg>
-          </span>
-        </div>
 
         <!-- 2 · 5 second countdown -->
         <div class="countdown" id="countdown" role="status" aria-label="Video starting shortly">
@@ -138,6 +141,18 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
 </FunnelLayout>
 
 <script>
+  import {
+    flush as flushFunnel,
+    quizAttemptId,
+    readAttribution,
+    setCaptureEmail,
+    sessionId,
+    sourceEmail,
+    startSession,
+    track as trackFunnel,
+    visitorId,
+  } from '../../lib/funnel-tracker';
+
   (function () {
     'use strict';
 
@@ -147,6 +162,12 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
 
     var revealAt = parseFloat(stage.getAttribute('data-reveal') || '0') || 0;
     var mode = stage.getAttribute('data-mode') || 'couples';
+    var videoSlug = stage.getAttribute('data-slug') || (mode === 'solo' ? 'solo-finale' : 'couples-finale');
+
+    // Adopt the quiz journey (?fs= / ?q= / ?e=), strip them from the address
+    // bar, then open the VSL session — same row the quiz started.
+    readAttribution({ strip: true });
+    startSession({ entry: 'vsl', vsl_mode: mode === 'solo' ? 'solo' : 'couples', vsl_video: videoSlug });
 
     var countdown = document.getElementById('countdown');
     var cdNum = document.getElementById('cd-num');
@@ -188,6 +209,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
       }).catch(function () {
         if (tap) tap.hidden = false;
         track('vsl_autoplay_blocked', { video: mode });
+        trackFunnel('vsl_autoplay_blocked');
       });
     }
 
@@ -206,6 +228,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
       // animation and the number can never drift apart.
       if (countdown) countdown.classList.add('is-run');
       track('vsl_countdown_start', { video: mode });
+      trackFunnel('vsl_countdown_start');
 
       var left = COUNTDOWN_SECONDS;
       var id = window.setInterval(function () {
@@ -247,9 +270,43 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     // ── pause only: no rewind, no fast-forward ───────────────────────
     var maxTime = 0;
 
+    // Watch time accrues from playhead advance while actually playing; a
+    // heartbeat every 15s carries the running total + position so an
+    // abandoned tab still leaves a usable trail.
+    var watchSeconds = 0;
+    var playhead = 0;
+    var heartbeatId = 0;
+
+    function accumulateWatch() {
+      if (video.paused || video.seeking) return;
+      var delta = video.currentTime - playhead;
+      if (delta > 0 && delta <= 2.5) watchSeconds += delta;
+      playhead = video.currentTime;
+    }
+
+    function startHeartbeat() {
+      if (heartbeatId) return;
+      heartbeatId = window.setInterval(function () {
+        if (video.paused || video.ended) return;
+        trackFunnel('vsl_heartbeat', {
+          watch_ms: Math.round(watchSeconds * 1000),
+          position_s: video.currentTime,
+        });
+      }, 15000);
+    }
+
     video.addEventListener('timeupdate', function () {
       if (video.currentTime > maxTime) maxTime = video.currentTime;
+      accumulateWatch();
       maybeReveal();
+    });
+
+    video.addEventListener('seeked', function () {
+      playhead = video.currentTime;
+    });
+
+    video.addEventListener('loadedmetadata', function () {
+      trackFunnel('vsl_loaded', { value: String(video.duration || 0) });
     });
 
     video.addEventListener('seeking', function () {
@@ -257,6 +314,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
       // the furthest point actually watched. No flag needed: once clamped,
       // currentTime === maxTime and the tolerance below swallows the second pass.
       if (video.currentTime < maxTime - 0.05 || video.currentTime > maxTime + 0.6) {
+        trackFunnel('vsl_seek_blocked', { position_s: video.currentTime });
         video.currentTime = maxTime;
       }
     });
@@ -308,6 +366,9 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     }
 
     video.addEventListener('playing', function () {
+      playhead = video.currentTime;
+      trackFunnel('vsl_play', { position_s: video.currentTime });
+      startHeartbeat();
       if (!pauseBtn) return;
       pauseBtn.hidden = false;
       pauseBtn.classList.remove('is-paused');
@@ -321,11 +382,16 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
       pauseBtn.classList.add('is-paused');
       pauseBtn.setAttribute('aria-label', 'Resume video');
       track('vsl_pause', { video: mode, at: Math.round(video.currentTime) });
+      trackFunnel('vsl_pause', { position_s: video.currentTime });
     });
 
     video.addEventListener('ended', function () {
       if (pauseBtn) pauseBtn.hidden = true;
       track('vsl_complete', { video: mode, duration: Math.round(video.duration || 0) });
+      trackFunnel('vsl_complete', {
+        position_s: video.duration || null,
+        watch_ms: Math.round(watchSeconds * 1000),
+      });
     });
 
     if (pauseBtn) {
@@ -354,10 +420,20 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
         if (window.sessionStorage.getItem(STORE_KEY)) showDone();
       } catch (err) { /* storage blocked */ }
       track('vsl_offer_shown', { video: mode, at: revealAt });
+      trackFunnel('vsl_offer_shown', { position_s: video.currentTime, meta: { at: revealAt } });
     }
 
     video.addEventListener('loadedmetadata', maybeReveal);
     video.addEventListener('canplay', maybeReveal);
+
+    if (emailIn) {
+      var ctaFocused = false;
+      emailIn.addEventListener('focus', function () {
+        if (ctaFocused) return;
+        ctaFocused = true;
+        trackFunnel('vsl_cta_focus');
+      });
+    }
 
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -378,6 +454,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending…';
         track('vsl_offer_submit', { video: mode, magnet: 'kitchen-tool' });
+        trackFunnel('vsl_cta_submit', { position_s: video.currentTime });
 
         var utm = {};
         try {
@@ -391,7 +468,15 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
         fetch('/api/lead/vsl-tool', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, mode: mode, utm: utm }),
+          body: JSON.stringify({
+            email: email,
+            mode: mode,
+            utm: utm,
+            session_id: sessionId(),
+            quiz_attempt_id: quizAttemptId(),
+            visitor_id: visitorId(),
+            source_email: sourceEmail(),
+          }),
         })
           .then(function (res) {
             return res.json().then(function (data) {
@@ -402,18 +487,23 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
             submitBtn.disabled = false;
             submitBtn.textContent = label;
             if (!res.ok) {
+              trackFunnel('vsl_cta_error', { meta: { status: res.data && res.data.error ? 'api' : 'unknown' } });
               showErr((res.data && res.data.error) || 'Something went wrong — please try again.');
               return;
             }
             try {
               window.sessionStorage.setItem(STORE_KEY, email);
             } catch (err) { /* storage blocked */ }
+            setCaptureEmail(email);
             showDone();
             track('sign_up', { method: 'email', video: mode, magnet: 'kitchen-tool' });
+            trackFunnel('vsl_cta_success', { position_s: video.currentTime });
+            flushFunnel();
           })
           .catch(function () {
             submitBtn.disabled = false;
             submitBtn.textContent = label;
+            trackFunnel('vsl_cta_error', { meta: { status: 'network' } });
             showErr('Network problem — please try again.');
           });
       });
@@ -458,7 +548,9 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     position: relative;
     container-type: inline-size;
     width: 100%;
-    max-width: calc(78dvh * 16 / 9);
+    /* Shorter than it was before the banner moved out here: the pill above
+       the frame now claims its own vertical space in the stage column. */
+    max-width: calc(75dvh * 16 / 9);
     aspect-ratio: 16 / 9;
     margin-inline: auto;
     border-radius: 14px;
@@ -467,15 +559,16 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     box-shadow: 0 10px 40px rgba(44, 62, 45, 0.18);
     transition: max-width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* Reserve covers banner + gap + the offer block, so nothing scrolls. */
   .stage.is-offer .frame {
-    max-width: calc((100dvh - 17.5rem) * 16 / 9);
+    max-width: calc((100dvh - 21rem) * 16 / 9);
   }
   /* Rotated phones and short laptop windows: the offer still has to sit above
      the fold, so the frame gives up more of the height budget and the copy
      tightens rather than the page scrolling. */
   @media (max-height: 560px) {
     .stage.is-offer .frame {
-      max-width: calc((100dvh - 12rem) * 16 / 9);
+      max-width: calc((100dvh - 15.5rem) * 16 / 9);
     }
     .offer {
       gap: 0.25rem;
@@ -501,29 +594,26 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     background-color: #1c271d;
   }
 
-  /* ── speaker banner ─────────────────────────────────────────────── */
+  /* ── speaker banner — a static pill above the frame ─────────────── */
   .banner {
-    position: absolute;
-    top: 3cqw;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
     display: flex;
     align-items: center;
-    gap: 2.6cqw;
-    padding: 2.2cqw 4.4cqw;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.5rem 1rem;
     border-radius: 999px;
     background-color: rgba(28, 39, 29, 0.74);
     border: 1px solid rgba(250, 246, 238, 0.17);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-    max-width: calc(100% - 5cqw);
+    max-width: 100%;
+    flex: none;
     line-height: 1;
   }
   .banner-text {
     color: #faf6ee;
-    font-size: clamp(0.48rem, 3.8cqw, 0.86rem);
+    font-size: clamp(0.72rem, 3.2vw, 0.9rem);
     font-weight: 600;
     letter-spacing: 0.012em;
     white-space: nowrap;
@@ -531,49 +621,22 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
   .spk {
     display: block;
     flex: none;
-    width: clamp(0.7rem, 6.4cqw, 1.15rem);
-    height: clamp(0.7rem, 6.4cqw, 1.15rem);
+    width: clamp(0.95rem, 3vw, 1.15rem);
+    height: clamp(0.95rem, 3vw, 1.15rem);
     color: #9abe9e;
   }
   .spk svg {
     display: block;
     width: 100%;
     height: 100%;
-    animation: ct-spk 1.5s ease-in-out infinite;
   }
   .spk-left {
     transform: scaleX(-1);
   }
+  /* Drawn, not animated — nothing in the banner is allowed to pull the eye
+     away from the VSL itself. */
   .ct-wave {
-    opacity: 0;
-    animation: ct-wave 1.5s ease-out infinite;
-  }
-  .w2 {
-    animation-delay: 0.22s;
-  }
-  .w3 {
-    animation-delay: 0.44s;
-  }
-
-  @keyframes ct-spk {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    45% {
-      transform: scale(1.1);
-    }
-  }
-  @keyframes ct-wave {
-    0% {
-      opacity: 0;
-    }
-    22% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
+    opacity: 1;
   }
 
   /* ── countdown ──────────────────────────────────────────────────── */
@@ -871,30 +934,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     font-weight: 600;
   }
 
-  @supports not (container-type: inline-size) {
-    .banner {
-      gap: 0.55rem;
-      padding: 0.42rem 0.9rem;
-      top: clamp(0.5rem, 2%, 1rem);
-      max-width: calc(100% - 1rem);
-    }
-    .banner-text {
-      font-size: clamp(0.55rem, 2.4vw, 0.86rem);
-    }
-    .spk {
-      width: clamp(0.8rem, 2vw, 1.15rem);
-      height: clamp(0.8rem, 2vw, 1.15rem);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .spk svg,
-    .ct-wave {
-      animation: none;
-    }
-    .ct-wave {
-      opacity: 0.85;
-    }
   .cd-prog,
   .countdown.is-run .cd-prog {
     animation: none;

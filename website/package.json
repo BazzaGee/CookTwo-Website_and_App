@@ -6,10 +6,12 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "node scripts/extract-content.js && astro build && node scripts/image-sitemap.mjs",
-    "preview": "astro preview",
-    "astro": "astro",
+    "dev": "node ./node_modules/astro/bin/astro.mjs dev",
+    "build": "node scripts/extract-content.js && node ./node_modules/astro/bin/astro.mjs build && node scripts/image-sitemap.mjs && node scripts/build-info.mjs",
+    "deploy": "npm run build && node ./node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name=couples-food-system-v3 --branch=main && node scripts/verify-live.mjs",
+    "verify:live": "node scripts/verify-live.mjs",
+    "preview": "node ./node_modules/astro/bin/astro.mjs preview",
+    "astro": "node ./node_modules/astro/bin/astro.mjs",
     "index:pinecone": "node scripts/extract-content.js && node scripts/index-to-pinecone.mjs"
   },
   "dependencies": {

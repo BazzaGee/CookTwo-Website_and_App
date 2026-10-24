@@ -1,16 +1,20 @@
 ---
 import VslPlayer from '../../components/funnel/VslPlayer.astro';
+import { revealFor } from '../../lib/reveal-at';
+
+// Single source: src/data/vsl-reveal.json. Do not paste the number here.
+const reveal = revealFor('couples');
 ---
 
 <!--
-  Reveal at 417.00s — slide #168, the opt-in box.
-  Source: script/timecodes.csv row 168 (t_in 417.00) + video/vsl-couples-finale-v2.srt,
-  confirmed by extracting the frame either side of the boundary.
+  Reveal at 420.50s — slide #167, the opt-in box.
+  The value lives in src/data/vsl-reveal.json (source: timecodes.csv row 167),
+  verified 2026-10-23 against the rendered frames either side of the boundary.
 -->
 <VslPlayer
   slug="couples-finale"
   mode="couples"
-  revealAt={417.0}
+  revealAt={reveal.revealAt}
   title="Watch — one week of dinners, two goals"
   description="How dinner can work when two people want different things from it."
 />

@@ -1,0 +1,16 @@
+{
+  "couples": {
+    "revealAt": 420.5,
+    "slide": 167,
+    "source": "script/timecodes.csv row 167 (t_in 420.50)",
+    "verified": "2026-10-23",
+    "verifiedBy": "30fps frame extraction on the rendered MP4 — first frame carrying the opt-in slide is 12614 = 420.467s, one frame before this value"
+  },
+  "solo": {
+    "revealAt": 500.03,
+    "slide": 189,
+    "source": "script/timecodes.csv row 189 (t_in 500.03)",
+    "verified": "2026-10-23",
+    "verifiedBy": "30fps frame extraction on the rendered MP4 — first frame carrying the opt-in slide is 15001 = 500.033s, one frame after this value"
+  }
+}

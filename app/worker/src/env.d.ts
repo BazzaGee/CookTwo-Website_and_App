@@ -13,7 +13,10 @@ export interface Env {
   VAPID_PRIVATE_KEY: string;
   RESEND_API_KEY: string;
   RESEND_FROM: string;
+  RESEND_WEBHOOK_SECRET?: string;
+  AI: Ai;
   SITE_URL: string;
+  WEBSITE_URL?: string;
   PWA_URL: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
