@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 /**
  * Parses all 05_App_Encoding_Spec.md (and 12_App_Encoding_Spec.md for healthy-eating)
- * and generates a seed SQL file for the diet_catalog table.
+ * and generates seed SQL for the diet_catalog / diet_articles tables.
  *
  * Usage:
  *   node scripts/seed-diet-catalog.mjs > migrations/0010_diet_catalog_seed.sql
+ *   node scripts/seed-diet-catalog.mjs --delta gluten-free,low-sodium > migrations/0023_condition_diets_seed.sql
+ *
+ * NOTE: Full mode targets the post-0022 schema and includes is_condition +
+ * macro_targets. The historical migration 0010 was generated before those
+ * columns existed and is frozen — do not overwrite it. Use --delta for new rows.
  */
 
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const RESEARCH_DIR = 'C:\\Users\\barry\\OneDrive\\Desktop\\Cupla\\Diet Research';
+const RESEARCH_DIR = join(__dirname, '..', '..', '..', 'research', 'diet-research');
 
 const DIET_FOLDERS = {
   '01_Mediterranean': { slug: 'mediterranean', articlePrefix: 'diets/mediterranean' },
@@ -34,6 +39,15 @@ const DIET_FOLDERS = {
   '15_Macrobiotic': { slug: 'macrobiotic', articlePrefix: 'diets/macrobiotic' },
   '16_Volumetrics': { slug: 'volumetrics', articlePrefix: 'diets/volumetrics' },
   '17_HCLF_80_10_10': { slug: 'hclf-811', articlePrefix: 'diets/hclf-811' },
+};
+
+// Health-condition diets live in a separate research folder and are flagged
+// is_condition = 1 in the catalog. They are stackable per partner.
+const CONDITION_FOLDERS = {
+  '01_Gluten_Free': { slug: 'gluten-free', articlePrefix: 'conditions/gluten-free' },
+  '02_Low_Sodium_Cardiac': { slug: 'low-sodium', articlePrefix: 'conditions/low-sodium' },
+  '03_Diabetes_Friendly': { slug: 'diabetes-friendly', articlePrefix: 'conditions/diabetes-friendly' },
+  '04_Bone_Health': { slug: 'bone-health', articlePrefix: 'conditions/bone-health' },
 };
 
 // ─── YAML / Markdown extraction helpers ──────────────────────────────────────
@@ -110,6 +124,34 @@ function parseClassifierMappings(yaml) {
     const m = line.match(/^\s*"([^"]+)":\s*"([^"]+)"/);
     if (m) {
       result[m[1].toLowerCase()] = m[2];
+    }
+  }
+  return result;
+}
+
+/** Parse macro target YAML: key: number | [min, max]. */
+function parseMacroTargets(yaml) {
+  const result = {};
+  for (const line of yaml.split('\n')) {
+    const m = line.match(/^\s*([a-z0-9_]+):\s*(.+?)\s*$/i);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    if (key === 'macro_targets' || key === 'macro_targets_json') continue;
+    const raw = m[2].replace(/\s*#.*$/, '').trim();
+    if (!raw) continue;
+    if (raw.startsWith('[') && raw.endsWith(']')) {
+      result[key] = raw
+        .slice(1, -1)
+        .split(',')
+        .map((v) => {
+          const cleaned = v.trim().replace(/['"]/g, '');
+          const n = Number(cleaned);
+          return Number.isNaN(n) ? cleaned : n;
+        });
+    } else {
+      const cleaned = raw.replace(/['"]/g, '');
+      const n = Number(cleaned);
+      result[key] = Number.isNaN(n) ? cleaned : n;
     }
   }
   return result;
@@ -222,6 +264,10 @@ async function parseEncodingSpec(filePath) {
   const compatYaml = extractCodeBlock(md, /^##\s*Couple\s*Compatibility/im) || '';
   const compat = parseCompatibility(compatYaml);
 
+  // Extract macro/nutrient targets (used by the numeric meal guard)
+  const macroYaml = extractCodeBlock(md, /^##\s*Macronutrient\s*Targets/im) || '';
+  const macroTargets = parseMacroTargets(macroYaml);
+
   return {
     dietKey: meta.diet_key || '',
     displayLabel: meta.display_label || meta.diet_key || '',
@@ -231,10 +277,12 @@ async function parseEncodingSpec(filePath) {
     evidenceGrade: meta.evidence_grade || 'B',
     restrictiveness: parseInt(meta.restrictiveness) || 3,
     isTimingPattern: meta.is_timing_pattern === 'true' ? 1 : 0,
+    isCondition: meta.is_condition === 'true' ? 1 : 0,
     aiRules,
     allowedGroups,
     restrictedGroups,
     classifierTerms,
+    macroTargets,
     easyMatches: compat.easy,
     adaptableMatches: compat.adaptable,
     hardConflicts: compat.hardConflict,
@@ -387,13 +435,13 @@ function generateDietInsert(d) {
   return `INSERT INTO diet_catalog (
     diet_key, display_label, category, emoji, short_desc,
     evidence_grade, restrictiveness, is_timing_pattern, is_default,
-    ai_rules, allowed_groups, restricted_groups, classifier_terms,
-    easy_matches, adaptable_matches, hard_conflicts
+    ai_rules, allowed_groups, restricted_groups, classifier_terms, macro_targets,
+    easy_matches, adaptable_matches, hard_conflicts, is_condition
   ) VALUES (
     ${sqlStr(d.dietKey)}, ${sqlStr(d.displayLabel)}, ${sqlStr(d.category)}, ${sqlStr(d.emoji)}, ${sqlStr(d.shortDesc)},
     ${sqlStr(d.evidenceGrade)}, ${d.restrictiveness}, ${d.isTimingPattern}, ${isDefault},
-    ${sqlStr(d.aiRules)}, ${sqlJson(d.allowedGroups)}, ${sqlJson(d.restrictedGroups)}, ${sqlJson(d.classifierTerms)},
-    ${sqlJson(d.easyMatches)}, ${sqlJson(d.adaptableMatches)}, ${sqlJson(d.hardConflicts)}
+    ${sqlStr(d.aiRules)}, ${sqlJson(d.allowedGroups)}, ${sqlJson(d.restrictedGroups)}, ${sqlJson(d.classifierTerms)}, ${sqlJson(d.macroTargets || {})},
+    ${sqlJson(d.easyMatches)}, ${sqlJson(d.adaptableMatches)}, ${sqlJson(d.hardConflicts)}, ${d.isCondition || 0}
   );`;
 }
 
@@ -412,6 +460,19 @@ async function main() {
   const diets = [];
   const errors = [];
 
+  // --delta key1,key2  (or --delta=key1,key2) emits only the selected rows.
+  const argv = process.argv.slice(2);
+  const deltaArg = argv.find((a) => a.startsWith('--delta'));
+  let deltaKeys = null;
+  if (deltaArg) {
+    const inline = deltaArg.includes('=') ? deltaArg.split('=')[1] : '';
+    const next = argv[argv.indexOf(deltaArg) + 1] || '';
+    deltaKeys = (inline || next)
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean);
+  }
+
   // Parse all diet encoding specs
   for (const [folder, info] of Object.entries(DIET_FOLDERS)) {
     const specPath = join(RESEARCH_DIR, 'diets', folder, '05_App_Encoding_Spec.md');
@@ -423,6 +484,24 @@ async function main() {
       }
       diets.push(parsed);
       console.error(`  ✓ ${folder} → ${parsed.dietKey} (${parsed.displayLabel})`);
+    } catch (err) {
+      errors.push(`${folder}: ${err.message}`);
+      console.error(`  ✗ ${folder}: ${err.message}`);
+    }
+  }
+
+  // Parse health-condition encoding specs
+  for (const [folder, info] of Object.entries(CONDITION_FOLDERS)) {
+    const specPath = join(RESEARCH_DIR, 'conditions', folder, '05_App_Encoding_Spec.md');
+    try {
+      const parsed = await parseEncodingSpec(specPath);
+      if (!parsed.dietKey) {
+        errors.push(`${folder}: no diet_key found`);
+        continue;
+      }
+      parsed.isCondition = 1;
+      diets.push(parsed);
+      console.error(`  ✓ ${folder} → ${parsed.dietKey} (condition)`);
     } catch (err) {
       errors.push(`${folder}: ${err.message}`);
       console.error(`  ✗ ${folder}: ${err.message}`);
@@ -447,7 +526,15 @@ async function main() {
     console.error(`  ✓ legacy → ${d.dietKey}`);
   }
 
-  console.error(`\n  Parsed ${diets.length} diets, ${errors.length} errors.\n`);
+  const selected = deltaKeys ? diets.filter((d) => deltaKeys.includes(d.dietKey)) : diets;
+  if (deltaKeys && selected.length !== deltaKeys.length) {
+    const found = new Set(selected.map((d) => d.dietKey));
+    for (const key of deltaKeys) {
+      if (!found.has(key)) errors.push(`delta: unknown diet_key "${key}"`);
+    }
+  }
+
+  console.error(`\n  Parsed ${diets.length} diets, ${selected.length} selected, ${errors.length} errors.\n`);
 
   // Generate article file slug lists
   const dietArticleSlugs = ['01_overview', '02_science_and_evidence', '03_food_framework', '04_health_outcomes', '05_app_encoding_spec'];
@@ -466,7 +553,7 @@ async function main() {
   lines.push('-- ═══ Diet Catalog ═══════════════════════════════════════════════');
   lines.push('');
 
-  for (const d of diets) {
+  for (const d of selected) {
     lines.push(generateDietInsert(d));
   }
 
@@ -474,16 +561,30 @@ async function main() {
   lines.push('-- ═══ Diet Articles Index ═════════════════════════════════════════');
   lines.push('');
 
+  const wanted = new Set(selected.map((d) => d.dietKey));
+
   for (const [folder, info] of Object.entries(DIET_FOLDERS)) {
+    if (deltaKeys && !wanted.has(info.slug)) continue;
     lines.push(generateArticleInserts(info.slug, info.articlePrefix, dietArticleSlugs));
     lines.push('');
   }
 
-  // Healthy-eating articles
-  lines.push(generateArticleInserts('healthy-eating', 'healthy-eating', healthyArticleSlugs));
-  lines.push('');
+  for (const [folder, info] of Object.entries(CONDITION_FOLDERS)) {
+    if (deltaKeys && !wanted.has(info.slug)) continue;
+    lines.push(generateArticleInserts(info.slug, info.articlePrefix, dietArticleSlugs));
+    lines.push('');
+  }
+
+  if (!deltaKeys || wanted.has('healthy-eating')) {
+    lines.push(generateArticleInserts('healthy-eating', 'healthy-eating', healthyArticleSlugs));
+    lines.push('');
+  }
 
   console.log(lines.join('\n'));
+
+  if (errors.length > 0) {
+    console.error(`\n  Warnings:\n${errors.map((e) => `   - ${e}`).join('\n')}`);
+  }
 }
 
 main().catch((err) => {

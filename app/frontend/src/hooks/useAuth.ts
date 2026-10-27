@@ -4,6 +4,7 @@ import { useAuthStore, type AuthSession } from '../stores/authStore';
 export interface CreateHouseholdInput {
   displayName: string;
   diet?: string;
+  conditions?: string[];
   allergies?: string;
   allergens?: string[];
   goal?: string;
@@ -18,6 +19,7 @@ export interface JoinHouseholdInput {
   inviteCode: string;
   displayName: string;
   diet?: string;
+  conditions?: string[];
   allergies?: string;
   allergens?: string[];
   goal?: string;

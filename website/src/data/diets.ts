@@ -1,5 +1,5 @@
 // Auto-generated from app/worker/migrations/0010_diet_catalog_seed.sql — do not edit by hand.
-// 22 diets: key, label, category, description, evidence grade, restrictiveness,
+// 26 diets: key, label, category, description, evidence grade, restrictiveness,
 // food groups, and couple-compatibility maps (easy / adaptable / hard conflict).
 
 export interface DietEntry {
@@ -28,6 +28,7 @@ export const DIET_CATEGORIES: Record<string, string> = {
   lifestyle: 'Lifestyle',
   elimination: 'Elimination',
   timing: 'Timing Pattern',
+  condition: 'Health Condition',
 };
 
 export const DIETS: DietEntry[] = [
@@ -593,6 +594,119 @@ export const DIETS: DietEntry[] = [
     },
     hardConflicts: {
       "carnivore": "Fundamental conflict"
+    },
+  },
+  {
+    dietKey: "gluten-free",
+    displayLabel: "Gluten-Free",
+    category: "condition",
+    emoji: "🌾",
+    shortDesc: "Strict gluten-free for coeliac disease and gluten sensitivity — no wheat, barley or rye",
+    evidenceGrade: "A",
+    restrictiveness: 4,
+    isTimingPattern: false,
+    isDefault: false,
+    allowedGroups: ["vegetables","leafy-greens","fruit","legumes","potatoes","rice","corn","quinoa","buckwheat","millet","sorghum","teff","amaranth","certified-gf-oats","meat","poultry","fish","seafood","eggs","plain-dairy","nuts","seeds","olive-oil","herbs-spices","gluten-free-flours","tamari","gluten-free-pasta","gluten-free-bread","vinegar-not-malt"],
+    restrictedGroups: ["wheat","barley","rye","triticale","gluten-containing-grains","wheat-flour","malt","seitan","regular-soy-sauce","regular-pasta","regular-bread","breadcrumbs","couscous","bulgur","semolina","durum","spelt","kamut","farro","beer","wheat-based-bouillon","processed-meat-with-fillers","battered-fried-foods","wheat-based-snacks"],
+    easyMatches: ["mediterranean","dash","mind","plant-based","vegan","vegetarian","pescatarian","flexitarian","volumetrics","high-protein","low-sodium","diabetes-friendly","bone-health"],
+    adaptableMatches: {
+      "keto": "Rice/potatoes can be swapped for extra vegetables; keep the shared protein and fat sources gluten-free",
+      "paleo": "Almost fully compatible — paleo already excludes grains; confirm no wheat-based condiments",
+      "low-fodmap": "Use GF grains and low-FODMAP vegetables; watch garlic/onion content",
+      "intermittent-fasting": "Timing pattern is orthogonal — follow the GF rules inside the eating window",
+      "whole30": "Whole30 is naturally GF if no wheat-based additives are used",
+      "macrobiotic": "Use rice, millet and buckwheat; avoid wheat-based soy sauce",
+      "hclf-811": "Fruit and vegetables are naturally GF; ensure no wheat-based supplements",
+      "mcdougall": "Rice and potatoes are GF; avoid wheat-based bread and pasta"
+    },
+    hardConflicts: {
+      "carnivore": "No shared carbohydrate base, but all meat/fish is GF — meals can still be shared"
+    },
+  },
+  {
+    dietKey: "low-sodium",
+    displayLabel: "Low-Sodium / Heart",
+    category: "condition",
+    emoji: "❤️",
+    shortDesc: "Cardiac-friendly eating — sodium ≤1,500-2,300mg, low saturated fat, high fibre",
+    evidenceGrade: "A",
+    restrictiveness: 3,
+    isTimingPattern: false,
+    isDefault: false,
+    allowedGroups: ["vegetables","leafy-greens","fruit","whole-grains","oats","barley","brown-rice","quinoa","legumes","no-salt-added-canned-goods","fresh-fish","oily-fish","poultry","lean-meat","eggs","tofu","plain-low-fat-dairy","unsalted-nuts","unsalted-seeds","olive-oil","avocado","herbs-spices","citrus","vinegar","garlic","onion","potatoes","sweet-potatoes"],
+    restrictedGroups: ["salt","high-sodium-condiments","soy-sauce","bouillon-broth","pickled-foods","cured-meat","processed-meat","salty-snacks","canned-high-sodium","high-sodium-cheese","trans-fat","saturated-fat-heavy","fried-food","sugary-drinks","alcohol"],
+    easyMatches: ["dash","mediterranean","mind","flexitarian","volumetrics","high-protein","plant-based","vegan","vegetarian","pescatarian","diabetes-friendly","bone-health","gluten-free"],
+    adaptableMatches: {
+      "keto": "Focus on fish, eggs, vegetables and olive oil; keep keto partners salt additions off the shared dish. Keto processed meats are excluded.",
+      "paleo": "Lean meat, fish, vegetables, nuts and olive oil work well; avoid paleo-friendly cured meats and added salt",
+      "low-fodmap": "Use low-FODMAP vegetables; keep sodium low; rinse canned legumes",
+      "intermittent-fasting": "Timing pattern is orthogonal — follow sodium rules inside the eating window",
+      "whole30": "Whole30 is naturally low in processed food; avoid added salt and cured meats",
+      "macrobiotic": "Use low-sodium soy alternatives sparingly; avoid pickled and salted traditional foods",
+      "pritikin": "Highly compatible — both low-fat, low-sodium patterns",
+      "mcdougall": "Plant-based and low-sodium; avoid salty condiments",
+      "hclf-811": "Fruit and vegetables are naturally low in sodium; avoid salted nuts and condiments"
+    },
+    hardConflicts: {
+      "carnivore": "Processed and cured meats dominate; shared meals are difficult — use fresh unseasoned meat and separate condiments"
+    },
+  },
+  {
+    dietKey: "diabetes-friendly",
+    displayLabel: "Diabetes-Friendly",
+    category: "condition",
+    emoji: "🩸",
+    shortDesc: "Blood-sugar friendly eating — low-GI carbs, high fibre, no added sugar",
+    evidenceGrade: "A",
+    restrictiveness: 3,
+    isTimingPattern: false,
+    isDefault: false,
+    allowedGroups: ["non-starchy-vegetables","leafy-greens","whole-fruit","legumes","lentils","chickpeas","beans","whole-grains","brown-rice","quinoa","barley","oats","whole-grain-bread","whole-wheat-pasta","sweet-potatoes","fish","oily-fish","poultry","eggs","tofu","tempeh","plain-yogurt","nuts","seeds","olive-oil","avocado","herbs-spices","vinegar","unsweetened-tea-coffee"],
+    restrictedGroups: ["added-sugar","sugary-drinks","fruit-juice","refined-grains","sweets-desserts","sweetened-dairy","high-sugar-condiments","processed-snacks","fried-food"],
+    easyMatches: ["mediterranean","dash","mind","flexitarian","volumetrics","high-protein","plant-based","vegan","vegetarian","pescatarian","low-sodium","bone-health","gluten-free"],
+    adaptableMatches: {
+      "keto": "Keto is more restrictive on carbohydrate; follow ketos ceiling and keep the diabetic partners protein and non-starchy vegetables high. Monitor for hypoglycaemia risk if on medication.",
+      "paleo": "Paleo already excludes refined grains and sugar; add legumes or whole grains only for the non-paleo partner",
+      "low-fodmap": "Use low-FODMAP vegetables and grains; watch fruit portions and polyols",
+      "intermittent-fasting": "Timing pattern is orthogonal, but fasting plus diabetes medication carries hypoglycaemia risk — medical guidance required",
+      "whole30": "Whole30 is naturally sugar-free and refined-grain-free; compatible",
+      "macrobiotic": "Use brown rice and whole grains in measured portions; avoid sweetened condiments",
+      "pritikin": "Very compatible — both emphasise fibre-rich whole foods and low fat",
+      "mcdougall": "Starch-based; keep portions of rice/potatoes within the carbohydrate ceiling",
+      "hclf-811": "Fruit-heavy and high-carbohydrate — generally incompatible with the diabetes carbohydrate ceiling",
+      "carnivore": "No carbohydrate, but high saturated fat and no fibre — shared meals are difficult"
+    },
+    hardConflicts: {
+      "hclf-811": "Very high fruit and carbohydrate intake conflicts with the per-meal carbohydrate ceiling"
+    },
+  },
+  {
+    dietKey: "bone-health",
+    displayLabel: "Bone Health",
+    category: "condition",
+    emoji: "🦴",
+    shortDesc: "Osteoporosis-friendly eating — calcium, vitamin D, protein and vitamin K",
+    evidenceGrade: "B",
+    restrictiveness: 2,
+    isTimingPattern: false,
+    isDefault: false,
+    allowedGroups: ["dairy","plain-yogurt","milk","fortified-plant-milk","calcium-set-tofu","sardines-with-bones","canned-salmon-with-bones","oily-fish","fish","poultry","eggs","legumes","lentils","chickpeas","beans","low-oxalate-greens","kale","collard-greens","bok-choy","broccoli","vegetables","fruit","prunes","figs","whole-grains","oats","brown-rice","quinoa","barley","almonds","sesame","tahini","chia-seeds","flaxseed","olive-oil","herbs-spices"],
+    restrictedGroups: ["salt","high-sodium-condiments","soy-sauce","bouillon-broth","pickled-foods","cured-meat","processed-meat","liver","cod-liver-oil","high-retinol-supplements","cola-drinks","energy-drinks","alcohol","excess-caffeine"],
+    easyMatches: ["mediterranean","dash","mind","flexitarian","volumetrics","high-protein","plant-based","vegan","vegetarian","pescatarian","low-sodium","diabetes-friendly","gluten-free"],
+    adaptableMatches: {
+      "keto": "Use dairy, sardines, salmon, eggs and low-oxalate greens; add calcium-set tofu for the bone partner",
+      "paleo": "Paleo excludes dairy and legumes; use sardines with bones, kale, almonds, tahini and calcium-set tofu if allowed",
+      "low-fodmap": "Use low-FODMAP greens and fortified plant milk; limit legumes to tolerated portions",
+      "intermittent-fasting": "Timing pattern is orthogonal — include calcium-rich foods inside the eating window",
+      "whole30": "Whole30 excludes dairy and legumes; rely on sardines, salmon, kale, almonds and tahini",
+      "macrobiotic": "Include calcium-set tofu, leafy greens, sesame and tahini; avoid high-salt condiments",
+      "pritikin": "Compatible — both emphasise vegetables and whole grains; ensure adequate calcium without excessive sodium",
+      "mcdougall": "Plant-based calcium from tofu, greens, tahini and fortified plant milk; watch sodium",
+      "hclf-811": "Fruit-heavy; add calcium-set tofu, greens and fortified plant milk to meet calcium needs",
+      "carnivore": "Dairy and fish can cover calcium; no greens or legumes — check vitamin K and fibre"
+    },
+    hardConflicts: {
+      "carnivore": "Limited plant sources of vitamin K, magnesium and fibre — supplement and medical guidance may be needed"
     },
   },
 ];

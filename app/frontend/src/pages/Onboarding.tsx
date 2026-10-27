@@ -6,6 +6,8 @@ import { useBilling } from '../hooks/useBilling';
 import { useUsage } from '../hooks/useUsage';
 import { apiFetch } from '../lib/api';
 import BodyMetricsFields from '../components/BodyMetricsFields';
+import { useDietList } from '../hooks/useDietInfo';
+import type { DietCatalogEntry } from '../types/diet';
 import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
 type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'plan' | 'created' | 'join-code' | 'partner-check' | 'ready';
@@ -46,6 +48,7 @@ export default function Onboarding() {
   const [inviteCodeDigits, setInviteCodeDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [createdInviteCode, setCreatedInviteCode] = useState<string | null>(null);
   const [diet, setDiet] = useState<Diet>('omnivore');
+  const [conditions, setConditions] = useState<string[]>([]);
   const [allergies, setAllergies] = useState('');
   const [goal, setGoal] = useState<Goal>('none');
   const [weightKg, setWeightKg] = useState('');
@@ -58,6 +61,9 @@ export default function Onboarding() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [searchParams] = useSearchParams();
+  const { data: dietList = [] } = useDietList();
+  const dietOptions = dietList.filter((d) => !d.isCondition);
+  const conditionOptions = dietList.filter((d) => d.isCondition);
 
   useEffect(() => {
     const joinParam = searchParams.get('join');
@@ -86,6 +92,7 @@ export default function Onboarding() {
         inviteCode: code,
         displayName: name,
         diet: diet === 'omnivore' ? undefined : diet,
+        conditions: conditions.length > 0 ? conditions : undefined,
         allergies: allergies.trim() || undefined,
         allergens: allergensArray.length > 0 ? allergensArray : undefined,
         goal: goal === 'none' ? undefined : goal,
@@ -131,6 +138,7 @@ export default function Onboarding() {
       const result = await createHousehold({
         displayName: name,
         diet: diet === 'omnivore' ? undefined : diet,
+        conditions: conditions.length > 0 ? conditions : undefined,
         allergies: allergies.trim() || undefined,
         allergens: allergensArray.length > 0 ? allergensArray : undefined,
         goal: goal === 'none' ? undefined : goal,
@@ -183,6 +191,7 @@ export default function Onboarding() {
       const result = await createHousehold({
         displayName: name,
         diet: diet === 'omnivore' ? undefined : diet,
+        conditions: conditions.length > 0 ? conditions : undefined,
         allergies: allergies.trim() || undefined,
         allergens: allergensArray.length > 0 ? allergensArray : undefined,
         goal: goal === 'none' ? undefined : goal,
@@ -255,8 +264,12 @@ export default function Onboarding() {
           {step === 'preferences' && (
             <PreferencesStep
               diet={diet}
+              conditions={conditions}
               allergies={allergies}
+              dietOptions={dietOptions}
+              conditionOptions={conditionOptions}
               onDietChange={setDiet}
+              onConditionsChange={setConditions}
               onAllergiesChange={setAllergies}
               onNext={() => setStep('goals')}
               onBack={() => setStep('name')}
@@ -511,15 +524,23 @@ function NameStep({
 
 function PreferencesStep({
   diet,
+  conditions,
   allergies,
+  dietOptions,
+  conditionOptions,
   onDietChange,
+  onConditionsChange,
   onAllergiesChange,
   onNext,
   onBack,
 }: {
   diet: Diet;
+  conditions: string[];
   allergies: string;
+  dietOptions: DietCatalogEntry[];
+  conditionOptions: DietCatalogEntry[];
   onDietChange: (v: Diet) => void;
+  onConditionsChange: (v: string[]) => void;
   onAllergiesChange: (v: string) => void;
   onNext: () => void;
   onBack: () => void;
@@ -548,13 +569,56 @@ function PreferencesStep({
             onChange={(e) => onDietChange(e.target.value as Diet)}
             className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
           >
-            {DIETS.map((d) => (
-              <option key={d} value={d}>
-                {DIET_LABELS[d]}
-              </option>
-            ))}
+            {dietOptions.length > 0
+              ? dietOptions.map((d) => (
+                  <option key={d.dietKey} value={d.dietKey}>
+                    {d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}
+                  </option>
+                ))
+              : DIETS.map((d) => (
+                  <option key={d} value={d}>
+                    {DIET_LABELS[d]}
+                  </option>
+                ))}
           </select>
         </div>
+
+        {conditionOptions.length > 0 && (
+          <div>
+            <label className="text-text-secondary text-xs font-medium tracking-wide block mb-1">
+              Health conditions (optional)
+            </label>
+            <p className="text-text-secondary text-xs mb-2">
+              Select any that apply — you can add or remove these later.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {conditionOptions.map((condition) => {
+                const selected = conditions.includes(condition.dietKey);
+                return (
+                  <button
+                    key={condition.dietKey}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() =>
+                      onConditionsChange(
+                        selected
+                          ? conditions.filter((key) => key !== condition.dietKey)
+                          : [...conditions, condition.dietKey],
+                      )
+                    }
+                    className={`text-xs font-medium px-3 py-2 rounded-xl border transition-colors ${
+                      selected
+                        ? 'bg-sage text-white border-sage'
+                        : 'bg-white text-text-secondary border-border hover:border-sage/50'
+                    }`}
+                  >
+                    {condition.emoji ? `${condition.emoji} ` : ''}{condition.displayLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <label htmlFor="allergies" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">

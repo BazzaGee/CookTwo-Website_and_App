@@ -20,7 +20,8 @@ import { dirname } from 'node:path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const WORKER_DIR = join(__dirname, '..');
-const RESEARCH_DIR = 'C:\\Users\\barry\\OneDrive\\Desktop\\Cupla\\Diet Research';
+const RESEARCH_DIR = join(__dirname, '..', '..', '..', 'research', 'diet-research');
+const WRANGLER_BIN = join(WORKER_DIR, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
 const DO_UPLOAD = process.argv.includes('--upload');
 
 // ─── Folder-name → slug mapping ──────────────────────────────────────────────
@@ -43,6 +44,13 @@ const DIET_SLUGS = {
   '15_Macrobiotic': 'macrobiotic',
   '16_Volumetrics': 'volumetrics',
   '17_HCLF_80_10_10': 'hclf-811',
+};
+
+const CONDITION_SLUGS = {
+  '01_Gluten_Free': 'gluten-free',
+  '02_Low_Sodium_Cardiac': 'low-sodium',
+  '03_Diabetes_Friendly': 'diabetes-friendly',
+  '04_Bone_Health': 'bone-health',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -104,6 +112,12 @@ function mapToR2Key(relPath) {
     return `diets/${slug}/${cleanFileName(parts[2])}`;
   }
 
+  // Condition folders: "conditions/01_Gluten_Free/01_Overview.md" → "conditions/gluten-free/01_overview.md"
+  if (parts[0] === 'conditions' && parts.length === 3) {
+    const slug = CONDITION_SLUGS[parts[1]] || parts[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return `conditions/${slug}/${cleanFileName(parts[2])}`;
+  }
+
   // Fallback
   return parts.map(cleanFileName).join('/');
 }
@@ -158,7 +172,7 @@ async function main() {
     const padded = `[${String(i + 1).padStart(3)}/${uploads.length}]`;
     try {
       execSync(
-        `npx wrangler r2 object put cupla-diet-research/${u.r2Key} --file="${u.absPath}"`,
+        `node "${WRANGLER_BIN}" r2 object put cupla-diet-research/${u.r2Key} --file="${u.absPath}"`,
         { cwd: WORKER_DIR, stdio: ['pipe', 'pipe', 'pipe'] },
       );
       console.log(`  ${padded} ✓ ${u.r2Key}`);

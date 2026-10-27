@@ -74,7 +74,9 @@ export async function handleMealChat(c: Context<{ Bindings: Env }>): Promise<Res
   const p2Diet = profiles.find((p) => p.slot === 2)?.diet ?? 'omnivore';
   const p1Fasting = profiles.find((p) => p.slot === 1)?.fastingMode ?? null;
   const p2Fasting = profiles.find((p) => p.slot === 2)?.fastingMode ?? null;
-  const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting);
+  const p1Conditions = profiles.find((p) => p.slot === 1)?.conditions ?? [];
+  const p2Conditions = profiles.find((p) => p.slot === 2)?.conditions ?? [];
+  const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting, p1Conditions, p2Conditions);
 
   const allAllergens = Array.from(new Set(
     profiles.flatMap((p) => p.allergens).map((a) => a.trim().toLowerCase()).filter(Boolean),
@@ -139,7 +141,7 @@ export async function handleMealChat(c: Context<{ Bindings: Env }>): Promise<Res
     }
   }
 
-  let response = await chatWithAI(c.env, pantryItems, partnerContext, history, userMessage, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, mode);
+  let response = await chatWithAI(c.env, pantryItems, partnerContext, history, userMessage, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, mode, dietRules.combinedMacroTargets);
 
   if (mode === 'cook_from_pantry' && response.meal) {
     const validation = validateMealAgainstPantry(response.meal, pantryItems);
@@ -151,7 +153,7 @@ export async function handleMealChat(c: Context<{ Bindings: Env }>): Promise<Res
         { role: 'assistant' as const, content: response.message },
         { role: 'user' as const, content: retryMessage },
       ];
-      const retryResponse = await chatWithAI(c.env, pantryItems, partnerContext, retryHistory, retryMessage, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, mode);
+      const retryResponse = await chatWithAI(c.env, pantryItems, partnerContext, retryHistory, retryMessage, dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, mode, dietRules.combinedMacroTargets);
 
       if (retryResponse.meal) {
         const retryValidation = validateMealAgainstPantry(retryResponse.meal, pantryItems);

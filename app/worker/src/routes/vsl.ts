@@ -2,11 +2,13 @@ import type { Context } from 'hono';
 import type { Env } from '../env';
 
 /**
- * VSL finale streaming — serves the two quiz-end videos out of R2.
+ * VSL streaming — serves the finale, app-offer and factor videos out of R2.
  *
  * GET/HEAD /api/vsl/:slug
- *   couples-finale -> vsl/vsl-couples-finale-1080p.mp4
- *   solo-finale    -> vsl/vsl-solo-finale-1080p.mp4
+ *   couples-finale     -> vsl/vsl-couples-finale-1080p.mp4
+ *   solo-finale        -> vsl/vsl-solo-finale-1080p.mp4
+ *   app-offer          -> vsl/vsl-09-app-offer-1080p.mp4
+ *   cardiac-low-sodium -> vsl/vsl-17-cardiac-low-sodium-1080p.mp4
  *
  * Single-range support so the browser can seek and resume. Invalid or
  * multi-range headers are ignored and the full body is served — RFC 7233.
@@ -15,6 +17,8 @@ import type { Env } from '../env';
 const VIDEOS: Record<string, string> = {
   'couples-finale': 'vsl/vsl-couples-finale-1080p.mp4',
   'solo-finale': 'vsl/vsl-solo-finale-1080p.mp4',
+  'app-offer': 'vsl/vsl-09-app-offer-1080p.mp4',
+  'cardiac-low-sodium': 'vsl/vsl-17-cardiac-low-sodium-1080p.mp4',
 };
 
 function parseRangeHeader(header: string, size: number): R2Range | null {

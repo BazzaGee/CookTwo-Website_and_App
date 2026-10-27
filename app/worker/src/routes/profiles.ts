@@ -15,6 +15,7 @@ export interface PartnerProfile {
   slot: 1 | 2;
   name: string;
   diet: Diet;
+  conditions: string[];
   fastingMode: string | null;
   allergies: string;
   allergens: string[];
@@ -58,6 +59,41 @@ async function getPartnerAllergens(db: D1Database, partnerId: string): Promise<s
   return (results ?? []).map((r) => r.allergen);
 }
 
+async function getPartnerConditions(db: D1Database, partnerId: string): Promise<string[]> {
+  const { results } = await db.prepare(
+    'SELECT condition_key FROM partner_conditions WHERE partner_id = ? ORDER BY condition_key ASC',
+  )
+    .bind(partnerId)
+    .all<{ condition_key: string }>();
+  return (results ?? []).map((r) => r.condition_key);
+}
+
+async function replacePartnerConditions(db: D1Database, partnerId: string, conditionKeys: string[]): Promise<string[]> {
+  await db.prepare('DELETE FROM partner_conditions WHERE partner_id = ?').bind(partnerId).run();
+
+  const unique = [...new Set(conditionKeys.map((k) => k.trim().toLowerCase()).filter(Boolean))];
+  if (unique.length === 0) return [];
+
+  const { results } = await db.prepare(
+    `SELECT diet_key FROM diet_catalog WHERE is_condition = 1 AND diet_key IN (${unique.map(() => '?').join(',')})`,
+  )
+    .bind(...unique)
+    .all<{ diet_key: string }>();
+
+  const valid = (results ?? []).map((r) => r.diet_key);
+  if (valid.length === 0) return [];
+
+  const now = Date.now();
+  const insert = db.prepare(
+    'INSERT OR IGNORE INTO partner_conditions (id, partner_id, condition_key, created_at) VALUES (?, ?, ?, ?)',
+  );
+  for (let i = 0; i < valid.length; i++) {
+    await insert.bind(`${partnerId}:${valid[i]}`, partnerId, valid[i], now).run();
+  }
+
+  return valid;
+}
+
 function rowToProfile(row: PartnerRow): PartnerProfile {
   const profile: PartnerProfile = {
     id: row.id,
@@ -65,6 +101,7 @@ function rowToProfile(row: PartnerRow): PartnerProfile {
     slot: row.slot as 1 | 2,
     name: row.name,
     diet: row.diet as Diet,
+    conditions: [],
     fastingMode: row.fasting_mode ?? null,
     allergies: row.allergies,
     allergens: [],
@@ -128,6 +165,7 @@ export async function createPartner(
     slot,
     name,
     diet: 'omnivore',
+    conditions: [],
     fastingMode: null,
     allergies: (allergens ?? []).join(', '),
     allergens: allergens ?? [],
@@ -157,6 +195,7 @@ export async function getPartners(
 
   for (const profile of profiles) {
     profile.allergens = await getPartnerAllergens(db, profile.id);
+    profile.conditions = await getPartnerConditions(db, profile.id);
   }
 
   return profiles;
@@ -181,7 +220,7 @@ export async function updatePartner(
   db: D1Database,
   partnerId: string,
   updates: {
-    name?: string; diet?: string; fastingMode?: string | null; allergies?: string; allergens?: string[];
+    name?: string; diet?: string; conditions?: string[]; fastingMode?: string | null; allergies?: string; allergens?: string[];
     weightKg?: number | null; heightCm?: number | null; age?: number | null;
     gender?: string | null; activityLevel?: string | null; goal?: string | null;
     bodyProfileVisible?: boolean;
@@ -197,7 +236,21 @@ export async function updatePartner(
   if (!existing) return null;
 
   const name = updates.name ?? existing.name;
-  const diet = updates.diet ?? existing.diet;
+  let diet = updates.diet ?? existing.diet;
+  let conditionKeys = updates.conditions
+    ? [...new Set(updates.conditions.map((k) => k.trim().toLowerCase()).filter(Boolean))]
+    : undefined;
+
+  // Backwards compatibility: "gluten-free" used to be a primary diet. Treat it
+  // as a stackable health condition instead.
+  if (diet === 'gluten-free') {
+    if (conditionKeys === undefined) {
+      conditionKeys = await getPartnerConditions(db, partnerId);
+    }
+    if (!conditionKeys.includes('gluten-free')) conditionKeys.push('gluten-free');
+    diet = 'omnivore';
+  }
+
   const fastingMode = updates.fastingMode !== undefined ? updates.fastingMode : existing.fasting_mode;
   const allergies = updates.allergies ?? existing.allergies;
   const weightKg = updates.weightKg !== undefined ? updates.weightKg : existing.weight_kg;
@@ -214,31 +267,36 @@ export async function updatePartner(
     .bind(name, diet, fastingMode, allergies, weightKg, heightCm, age, gender, activityLevel, goal, bodyProfileVisible, now, partnerId)
     .run();
 
+  let currentAllergens: string[] | undefined;
+  let textAllergies = allergies;
+
   if (updates.allergens !== undefined) {
     const cleaned = updates.allergens.map((a) => a.trim().toLowerCase()).filter(Boolean);
-    const deduped = [...new Set(cleaned)];
-    const textAllergies = deduped.join(', ');
-    await replacePartnerAllergens(db, partnerId, deduped);
+    currentAllergens = [...new Set(cleaned)];
+    textAllergies = currentAllergens.join(', ');
+    await replacePartnerAllergens(db, partnerId, currentAllergens);
     await db.prepare('UPDATE partners SET allergies = ? WHERE id = ?').bind(textAllergies, partnerId).run();
-    const currentAllergens = deduped;
-    const rowToReturn: PartnerRow = {
-      ...existing,
-      name, diet, allergies: textAllergies,
-      weight_kg: weightKg, height_cm: heightCm, age, gender, activity_level: activityLevel, goal,
-      body_profile_visible: bodyProfileVisible,
-      updated_at: now,
-    };
-    const profile = rowToProfile(rowToReturn);
-    profile.allergens = currentAllergens;
-    return profile;
   }
 
-  return rowToProfile({
+  let currentConditions: string[] | undefined;
+  if (conditionKeys !== undefined) {
+    currentConditions = await replacePartnerConditions(db, partnerId, conditionKeys);
+  }
+
+  const profile = rowToProfile({
     ...existing,
-    name, diet, allergies, weight_kg: weightKg, height_cm: heightCm, age, gender, activity_level: activityLevel, goal,
+    name, diet, allergies: textAllergies, weight_kg: weightKg, height_cm: heightCm, age, gender, activity_level: activityLevel, goal,
     body_profile_visible: bodyProfileVisible,
     updated_at: now,
   });
+
+  if (currentAllergens !== undefined) profile.allergens = currentAllergens;
+  else profile.allergens = await getPartnerAllergens(db, partnerId);
+
+  if (currentConditions !== undefined) profile.conditions = currentConditions;
+  else profile.conditions = await getPartnerConditions(db, partnerId);
+
+  return profile;
 }
 
 export async function handleGetProfiles(c: Context<{ Bindings: Env }>) {
@@ -272,6 +330,7 @@ export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
   const body = (await c.req.json().catch(() => ({}))) as {
     name?: string;
     diet?: string;
+    conditions?: string[];
     fastingMode?: string | null;
     allergies?: string;
     allergens?: string[];
@@ -287,6 +346,7 @@ export async function handleUpdateProfile(c: Context<{ Bindings: Env }>) {
   const profile = await updatePartner(c.env.DB, partnerId, {
     name: body.name?.trim(),
     diet: body.diet,
+    conditions: body.conditions,
     fastingMode: body.fastingMode,
     allergies: body.allergies,
     allergens: body.allergens,

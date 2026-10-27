@@ -1,4 +1,4 @@
-import { CROSS_REACTIVE_MAP, tokenMatchesAllergen } from './ai';
+import { CROSS_REACTIVE_MAP, tokenMatchesAllergen, dietTokenMatchesTerm, isExemptByDietMarker } from './ai';
 
 export interface PantryItemInput {
   name: string;
@@ -45,7 +45,11 @@ function classifyItemAgainstDiet(
   if (restrictedGroups.size === 0 || Object.keys(classifierTerms).length === 0) return false;
   const lower = itemName.toLowerCase();
   for (const [ingredient, foodGroup] of Object.entries(classifierTerms)) {
-    if (restrictedGroups.has(foodGroup) && tokenMatchesAllergen(lower, ingredient.toLowerCase())) {
+    if (
+      restrictedGroups.has(foodGroup)
+      && dietTokenMatchesTerm(lower, ingredient.toLowerCase())
+      && !isExemptByDietMarker(lower, foodGroup)
+    ) {
       return true;
     }
   }

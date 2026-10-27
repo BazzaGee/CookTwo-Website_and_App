@@ -94,6 +94,33 @@ export function createTestD1(): D1Database {
       added_at INTEGER NOT NULL,
       PRIMARY KEY (partner_id, allergen)
     );
+    CREATE TABLE IF NOT EXISTS diet_catalog (
+      id TEXT PRIMARY KEY,
+      diet_key TEXT UNIQUE NOT NULL,
+      display_label TEXT NOT NULL,
+      category TEXT NOT NULL,
+      ai_rules TEXT NOT NULL DEFAULT '',
+      restricted_groups TEXT NOT NULL DEFAULT '[]',
+      classifier_terms TEXT NOT NULL DEFAULT '{}',
+      macro_targets TEXT NOT NULL DEFAULT '{}',
+      easy_matches TEXT NOT NULL DEFAULT '[]',
+      adaptable_matches TEXT NOT NULL DEFAULT '{}',
+      hard_conflicts TEXT NOT NULL DEFAULT '{}',
+      is_condition INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS partner_conditions (
+      id TEXT PRIMARY KEY,
+      partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+      condition_key TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      UNIQUE(partner_id, condition_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_partner_conditions_partner ON partner_conditions(partner_id);
+    INSERT OR IGNORE INTO diet_catalog (id, diet_key, display_label, category, is_condition) VALUES
+      ('diet-gluten-free', 'gluten-free', 'Gluten-Free', 'condition', 1),
+      ('diet-low-sodium', 'low-sodium', 'Low-Sodium / Heart', 'condition', 1),
+      ('diet-diabetes-friendly', 'diabetes-friendly', 'Diabetes-Friendly', 'condition', 1),
+      ('diet-bone-health', 'bone-health', 'Bone Health', 'condition', 1);
     CREATE TABLE IF NOT EXISTS recipes (
       id TEXT PRIMARY KEY,
       household_id TEXT NOT NULL REFERENCES households(id),

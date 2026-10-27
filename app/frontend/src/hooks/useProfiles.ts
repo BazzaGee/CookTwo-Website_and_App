@@ -20,6 +20,7 @@ export interface PartnerProfile {
   slot: 1 | 2;
   name: string;
   diet: Diet;
+  conditions: string[];
   fastingMode: string | null;
   allergies: string;
   allergens: string[];
@@ -59,7 +60,7 @@ export function useProfiles() {
   });
 
   const updateProfile = useCallback(
-    async (partnerId: string, updates: { name?: string; diet?: string; fastingMode?: string | null; allergies?: string; allergens?: string[]; weightKg?: number | null; heightCm?: number | null; age?: number | null; gender?: string | null; activityLevel?: string | null; goal?: string | null; bodyProfileVisible?: boolean }) => {
+    async (partnerId: string, updates: { name?: string; diet?: string; conditions?: string[]; fastingMode?: string | null; allergies?: string; allergens?: string[]; weightKg?: number | null; heightCm?: number | null; age?: number | null; gender?: string | null; activityLevel?: string | null; goal?: string | null; bodyProfileVisible?: boolean }) => {
       const result = await apiFetch<PartnerProfile>(
         `/api/household/${householdId}/profiles/${partnerId}`,
         {

@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const BASE = (process.argv[2] || 'https://cooktwo.com').replace(/\/$/, '');
-const PAGES = ['/video/couples/', '/video/solo/', '/'];
+const PAGES = ['/video/couples/', '/video/solo/', '/video/app/', '/video/cardiac/', '/'];
 
 const distDir = resolve('./dist');
 

@@ -8,10 +8,12 @@ export interface DietCatalogEntry {
   restrictiveness: number;
   isTimingPattern: boolean;
   isDefault: boolean;
+  isCondition: boolean;
   aiRules: string;
   allowedGroups: string[];
   restrictedGroups: string[];
   classifierTerms: Record<string, string>;
+  macroTargets: Record<string, number | string | Array<number | string>>;
   easyMatches: string[];
   adaptableMatches: Record<string, string>;
   hardConflicts: Record<string, string>;
@@ -41,4 +43,5 @@ export const DIET_CATEGORIES: Record<string, string> = {
   lifestyle: 'Lifestyle',
   elimination: 'Elimination',
   timing: 'Timing Pattern',
+  condition: 'Health Condition',
 };

@@ -1,6 +1,7 @@
 import type { Env } from '../env';
 import type { Diet, Goal, ActivityLevel } from '../routes/profiles';
 import type { TDEEResult } from '../lib/tdee';
+import type { MacroTargets } from './diet-rules';
 
 const GOAL_LABELS: Record<Goal, string> = { lose: 'lose weight', maintain: 'maintain weight', gain: 'build muscle' };
 
@@ -28,6 +29,7 @@ export interface GeneratedMeal {
   protein: number;
   carbs: number;
   fat: number;
+  sodiumMg?: number;
   ingredients: MealIngredient[];
   steps: string[];
   plating?: PlatingInstruction[];
@@ -121,6 +123,7 @@ JSON format:
   "protein": 35,
   "carbs": 45,
   "fat": 15,
+  "sodium_mg": 480,
   "ingredients": [
     {"name": "ingredient", "have": true, "quantity": "1 cup"},
     {"name": "missing", "have": false, "quantity": "2 tbsp"}
@@ -155,6 +158,7 @@ JSON format:
   "protein": 35,
   "carbs": 45,
   "fat": 15,
+  "sodium_mg": 480,
   "ingredients": [
     {"name": "ingredient name", "have": true, "quantity": "1 cup"},
     {"name": "missing ingredient", "have": false, "quantity": "2 tbsp"}
@@ -202,7 +206,7 @@ async function callProvider(
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as GeneratedMeal;
+      return normalizeMeal(JSON.parse(jsonMatch[0]) as GeneratedMeal);
     }
   } catch {
     console.error(`Failed to parse AI response from model ${model}`);
@@ -220,6 +224,35 @@ function getMealTextTokens(meal: GeneratedMeal): string[] {
     ...(meal.plating?.map((p) => p.plate) ?? []),
   ];
   return texts.map((t) => t.toLowerCase().trim());
+}
+
+function normalizeMeal(meal: GeneratedMeal): GeneratedMeal {
+  const raw = meal as GeneratedMeal & { sodium_mg?: number | string; sodiumMg?: number | string };
+  const sodium = raw.sodiumMg ?? raw.sodium_mg;
+  delete raw.sodium_mg;
+  if (sodium !== undefined && sodium !== null && sodium !== '') {
+    const n = Number(sodium);
+    if (Number.isFinite(n)) raw.sodiumMg = n;
+  }
+  return raw;
+}
+
+/**
+ * Diet classifier matcher. Unlike tokenMatchesAllergen, this matches
+ * whole phrases / whole words only, so "soy sauce" does not match any dish
+ * containing the word "sauce" and "rice" does not match "rice flour".
+ */
+export function dietTokenMatchesTerm(token: string, term: string): boolean {
+  const normalize = (s: string) =>
+    s.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const normalizedToken = normalize(token.toLowerCase());
+  const normalizedTerm = normalize(term.toLowerCase());
+  if (!normalizedToken || !normalizedTerm) return false;
+
+  if (normalizedTerm.includes(' ')) {
+    return normalizedToken.includes(normalizedTerm);
+  }
+  return normalizedToken.split(' ').includes(normalizedTerm);
 }
 
 export function assertMealIsSafe(meal: GeneratedMeal, profiles: PartnerContext[]): boolean {
@@ -264,28 +297,93 @@ export function assertMealCompliesWithDiet(
   classifierTerms: Record<string, string>,
   restrictedGroups: Set<string>,
 ): boolean {
-  if (restrictedGroups.size === 0 || Object.keys(classifierTerms).length === 0) return true;
+  return getDietViolations(meal, classifierTerms, restrictedGroups).length === 0;
+}
+
+export function getDietViolations(
+  meal: GeneratedMeal,
+  classifierTerms: Record<string, string>,
+  restrictedGroups: Set<string>,
+): string[] {
+  if (restrictedGroups.size === 0 || Object.keys(classifierTerms).length === 0) return [];
 
   const tokens = getMealTextTokens(meal);
   const violations: string[] = [];
 
   for (const token of tokens) {
     for (const [ingredient, foodGroup] of Object.entries(classifierTerms)) {
-      if (tokenMatchesAllergen(token, ingredient)) {
-        if (restrictedGroups.has(foodGroup)) {
-          violations.push(`${ingredient} → ${foodGroup}`);
-          break;
-        }
-      }
+      if (!dietTokenMatchesTerm(token, ingredient) || !restrictedGroups.has(foodGroup)) continue;
+      if (isExemptByDietMarker(token, foodGroup)) continue;
+      const violation = `${ingredient} → ${foodGroup}`;
+      if (!violations.includes(violation)) violations.push(violation);
     }
   }
 
-  if (violations.length > 0) {
-    console.error(`Diet compliance guard blocked: ${violations.join(', ')} in meal "${meal.name}"`);
-    return false;
+  return violations;
+}
+
+/**
+ * Explicit "free-from" labels should not be flagged as violations of the
+ * restriction they are free from: "gluten-free bread" is not regular bread,
+ * "low-sodium soy sauce" is not a high-sodium condiment. The marker must be
+ * relevant to the matched restricted group.
+ */
+const DIET_MARKERS: Array<{ label: RegExp; group: RegExp }> = [
+  { label: /\b(gluten|wheat)[\s-]?free\b/, group: /(wheat|barley|rye|gluten|malt|bread|pasta|noodle|couscous|bulgur|semolina|durum|spelt|kamut|farro|seitan|breadcrumb|batter|snack|bouillon|soy-sauce)/ },
+  { label: /\bunsalted\b|\bsalt[\s-]?free\b|\bno (added )?salt\b/, group: /(salt|sodium)/ },
+  { label: /\bsugar[\s-]?free\b|\bunsweetened\b|\bno added sugar\b/, group: /sugar/ },
+  { label: /\blow[\s-]?sodium\b/, group: /sodium/ },
+];
+
+export function isExemptByDietMarker(token: string, foodGroup: string): boolean {
+  const normalized = token.toLowerCase();
+  return DIET_MARKERS.some(
+    (marker) => marker.label.test(normalized) && marker.group.test(foodGroup.toLowerCase()),
+  );
+}
+
+/**
+ * Numeric adherence guard for stacked health conditions. Only ceilings are
+ * enforced (sodium, carbohydrate, etc.) because floors such as calcium or
+ * protein are aspirational per meal and are not reliably reported by the model.
+ * Sodium is only checked when the model reported a value.
+ */
+export function assertMealMeetsTargets(
+  meal: GeneratedMeal,
+  macroTargets?: Record<string, number | string | Array<number | string>>,
+): boolean {
+  return getTargetViolations(meal, macroTargets).length === 0;
+}
+
+export function getTargetViolations(
+  meal: GeneratedMeal,
+  macroTargets?: Record<string, number | string | Array<number | string>>,
+): string[] {
+  if (!macroTargets) return [];
+
+  const violations: string[] = [];
+  const num = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  };
+
+  const carbsMax = num(macroTargets.carbs_g_meal_max);
+  const mealCarbs = num(meal.carbs);
+  if (carbsMax !== null && mealCarbs !== null && mealCarbs > carbsMax) {
+    violations.push(`carbs ${mealCarbs}g > ${carbsMax}g per meal`);
   }
 
-  return true;
+  const sodiumMax = num(macroTargets.sodium_mg_meal_max);
+  const mealSodium = num(meal.sodiumMg);
+  if (sodiumMax !== null && mealSodium !== null && mealSodium > sodiumMax) {
+    violations.push(`sodium ${mealSodium}mg > ${sodiumMax}mg per meal`);
+  }
+
+  return violations;
 }
 
 export async function generateMeal(
@@ -303,6 +401,7 @@ export async function generateMeal(
   dietRulesPrompt?: string,
   dietClassifierTerms?: Record<string, string>,
   dietRestrictedGroups?: Set<string>,
+  dietMacroTargets?: MacroTargets,
   mealType?: string,
 ): Promise<GeneratedMeal | null> {
   const provider = (env.AI_PROVIDER || 'deepseek') as keyof typeof MODEL_CHAINS;
@@ -311,7 +410,19 @@ export async function generateMeal(
 
   for (const model of models) {
     try {
-      const meal = await callProvider(env, provider as 'alibaba' | 'zai' | 'deepseek', model, prompt);
+      let attemptPrompt = prompt;
+      let meal = await callProvider(env, provider as 'alibaba' | 'zai' | 'deepseek', model, attemptPrompt);
+
+      if (meal && dietMacroTargets) {
+        const targetViolations = getTargetViolations(meal, dietMacroTargets);
+        if (targetViolations.length > 0) {
+          console.log(`Meal exceeded numeric targets (${targetViolations.join(', ')}); retrying once with feedback`);
+          const feedback = `\n\nIMPORTANT: Your previous meal "${meal.name}" did not meet the household's health-condition targets: ${targetViolations.join('; ')}. Regenerate the meal so it adheres strictly. Replace high-sodium or high-carbohydrate ingredients (e.g. soy sauce, cured meats, white rice, sugary sauces) with compliant alternatives, and report sodium_mg.`;
+          attemptPrompt = prompt + feedback;
+          meal = await callProvider(env, provider as 'alibaba' | 'zai' | 'deepseek', model, attemptPrompt);
+        }
+      }
+
       if (meal) {
         console.log(`AI meal generated using model: ${model} (provider: ${provider})`);
         if (partner1Body && partner2Body && !meal.plating) {
@@ -345,6 +456,11 @@ export async function generateMeal(
           if (!assertMealCompliesWithDiet(meal, dietClassifierTerms, dietRestrictedGroups)) {
             return null;
           }
+        }
+
+        if (dietMacroTargets && !assertMealMeetsTargets(meal, dietMacroTargets)) {
+          console.log(`Meal "${meal.name}" still exceeded numeric targets after retry; refusing unsafe meal`);
+          return null;
         }
 
         return meal;
@@ -502,6 +618,7 @@ Response format — you MUST respond with valid JSON only, no markdown:
     "protein": 35,
     "carbs": 45,
     "fat": 15,
+    "sodium_mg": 480,
     "ingredients": [
       {"name": "ingredient name", "have": true, "quantity": "1 cup"},
       {"name": "missing ingredient", "have": false, "quantity": "2 tbsp"}
@@ -588,6 +705,7 @@ export async function chatWithAI(
   dietClassifierTerms?: Record<string, string>,
   dietRestrictedGroups?: Set<string>,
   mode?: MealGenerationMode,
+  dietMacroTargets?: MacroTargets,
 ): Promise<ChatResponse> {
   const systemPrompt = buildChatSystemPrompt(pantryItems, profiles, dietRulesPrompt, mode);
   const raw = await callDeepSeekChat(env, systemPrompt, history, userMessage);
@@ -600,6 +718,7 @@ export async function chatWithAI(
 
   function handleParsedResponse(parsed: ChatResponse): ChatResponse | null {
     if (!parsed.message || typeof parsed.message !== 'string') return null;
+    if (parsed.meal) parsed.meal = normalizeMeal(parsed.meal);
     if (parsed.meal && profiles.length > 0) {
       if (!assertMealIsSafe(parsed.meal, profiles)) {
         console.log('Meal blocked by safety guard (allergen violation)');
@@ -610,6 +729,10 @@ export async function chatWithAI(
           console.log('Meal blocked by diet compliance guard');
           return { message: 'The generated meal contains ingredients that conflict with the selected dietary preferences. Please try a different request.' };
         }
+      }
+      if (dietMacroTargets && !assertMealMeetsTargets(parsed.meal, dietMacroTargets)) {
+        console.log('Meal blocked by health-condition numeric target guard');
+        return { message: 'The generated meal exceeds one or more health-condition limits (sodium or carbohydrates). Please ask for a lower-sodium or lower-carb option.' };
       }
     }
     return parsed;

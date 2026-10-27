@@ -18,22 +18,52 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
 
 interface Props {
   slug: string;
-  mode: 'couples' | 'solo';
+  mode: 'couples' | 'solo' | 'app';
   revealAt: number;
   title: string;
   description: string;
+  offerHead?: string;
+  buttonLabel?: string;
+  microcopy?: string;
+  doneHead?: string;
+  doneSub?: string;
+  leadEndpoint?: string;
+  openAppHref?: string;
+  countdownTo?: string;
 }
 
-const { slug, mode, revealAt, title, description } = Astro.props;
+const {
+  slug,
+  mode,
+  revealAt,
+  title,
+  description,
+  offerHead = 'Put your address in the box under this video&hellip;',
+  buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator',
+  microcopy = 'Opens in your browser. No install, no account, no card. Yours to keep.',
+  doneHead = 'Thanks &mdash; your Kitchen Calculator is on its way.',
+  doneSub = 'Check your inbox and click the link to open the tool. It takes about a minute.',
+  leadEndpoint = mode === 'app' ? '/api/waitlist/subscribe' : '/api/lead/vsl-tool',
+  openAppHref = 'https://cooktwo.app',
+  countdownTo = '',
+} = Astro.props;
 
-const toolHref = mode === 'solo' ? '/kitchen-tool-solo' : '/kitchen-tool';
-const videoLabel = mode === 'solo' ? 'solo' : 'couples';
-const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
+const toolHref = mode === 'solo' ? '/kitchen-tool-solo' : mode === 'app' ? openAppHref : '/kitchen-tool';
+const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples';
 ---
 
 <FunnelLayout title={title} description={description}>
   <main class="watch">
-    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref}>
+    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref} data-endpoint={leadEndpoint} data-redirect={mode === 'app' ? openAppHref : ''}>
+      <!-- 0 · founding-window countdown (app mode only — one ISO date, the
+           label is derived from it so copy and clock can never disagree) -->
+      {countdownTo && (
+        <div class="deadline" id="deadline" role="status" data-at={countdownTo}>
+          <span class="deadline-label" id="deadline-label">Founding window closes</span>
+          <span class="deadline-clock" id="deadline-clock">&mdash;</span>
+        </div>
+      )}
+
       <!-- 1 · speaker banner — sits above the frame so it never covers the video -->
       <div class="banner" role="note">
         <span class="spk spk-left">
@@ -109,7 +139,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
       <!-- 5 · the capture box, revealed at revealAt and held for the rest -->
       <div class="offer" id="offer">
         <form class="offer-form" id="offer-form" novalidate>
-          <p class="offer-head">Put your address in the box under this video&hellip;</p>
+          <p class="offer-head" set:html={offerHead}></p>
           <div class="offer-row">
             <input
               class="offer-input"
@@ -123,17 +153,18 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
             />
             <button class="offer-btn" type="submit" id="offer-btn">{buttonLabel}</button>
           </div>
-          <p class="offer-micro">
-            Opens in your browser. No install, no account, no card. Yours to keep.
-          </p>
+          <p class="offer-micro" set:html={microcopy}></p>
           <p class="offer-err" id="offer-err" role="alert" hidden></p>
         </form>
 
         <div class="offer-done" id="offer-done" hidden>
-          <p class="offer-head">Thanks &mdash; your Kitchen Calculator is on its way.</p>
-          <p class="offer-sub">
-            Check your inbox and click the link to open the tool. It takes about a minute.
-          </p>
+          <p class="offer-head" set:html={doneHead}></p>
+          <p class="offer-sub" set:html={doneSub}></p>
+          {mode === 'app' && (
+            <a class="offer-btn offer-open" id="offer-open" href={openAppHref}>
+              Open CookTwo
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -162,6 +193,44 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
 
     var revealAt = parseFloat(stage.getAttribute('data-reveal') || '0') || 0;
     var mode = stage.getAttribute('data-mode') || 'couples';
+    var leadEndpoint = stage.getAttribute('data-endpoint') || '/api/lead/vsl-tool';
+    var successRedirect = stage.getAttribute('data-redirect') || '';
+    var magnetName = mode === 'app' ? 'cooktwo-app' : 'kitchen-tool';
+
+    // ── founding-window countdown ────────────────────────────────────
+    // Label is derived from the same ISO date the clock counts to, so the
+    // two can never disagree. After expiry the strip says so honestly.
+    var deadlineEl = document.getElementById('deadline');
+    if (deadlineEl) {
+      var atMs = new Date(deadlineEl.getAttribute('data-at') || '').getTime();
+      var dLabel = document.getElementById('deadline-label');
+      var dClock = document.getElementById('deadline-clock');
+      if (dLabel && !isNaN(atMs)) {
+        try {
+          dLabel.textContent =
+            'Founding window closes ' +
+            new Date(atMs).toLocaleDateString('en-GB', {
+              day: 'numeric', month: 'long', timeZone: 'UTC',
+            });
+        } catch (e) { /* keep the static label */ }
+      }
+      var tickDeadline = function () {
+        if (!dClock) return;
+        var d = atMs - Date.now();
+        if (isNaN(atMs) || d <= 0) {
+          deadlineEl.classList.add('is-closed');
+          dClock.textContent = 'closed — new kitchens start at 5 credits a day';
+          return;
+        }
+        var days = Math.floor(d / 864e5);
+        var hrs = Math.floor(d / 36e5) % 24;
+        var mins = Math.floor(d / 6e4) % 60;
+        var secs = Math.floor(d / 1e3) % 60;
+        dClock.textContent = days + 'd ' + hrs + 'h ' + mins + 'm ' + secs + 's';
+        setTimeout(tickDeadline, 1000);
+      };
+      tickDeadline();
+    }
     var videoSlug = stage.getAttribute('data-slug') || (mode === 'solo' ? 'solo-finale' : 'couples-finale');
 
     // Adopt the quiz journey (?fs= / ?q= / ?e=), strip them from the address
@@ -453,7 +522,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
         var label = submitBtn.textContent || '';
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending…';
-        track('vsl_offer_submit', { video: mode, magnet: 'kitchen-tool' });
+        track('vsl_offer_submit', { video: mode, magnet: magnetName });
         trackFunnel('vsl_cta_submit', { position_s: video.currentTime });
 
         var utm = {};
@@ -465,7 +534,7 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
           });
         } catch (err) { /* no params */ }
 
-        fetch('/api/lead/vsl-tool', {
+        fetch(leadEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -496,9 +565,18 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
             } catch (err) { /* storage blocked */ }
             setCaptureEmail(email);
             showDone();
-            track('sign_up', { method: 'email', video: mode, magnet: 'kitchen-tool' });
+            track('sign_up', { method: 'email', video: mode, magnet: magnetName });
             trackFunnel('vsl_cta_success', { position_s: video.currentTime });
             flushFunnel();
+            if (successRedirect) {
+              // App mode: the capture is the consent record and the access
+              // email is on its way; take them straight into setup. The done
+              // box (with its Open CookTwo button) is on screen for a beat
+              // first so a tap can beat the redirect.
+              setTimeout(function () {
+                window.location.assign(successRedirect);
+              }, 1600);
+            }
           })
           .catch(function () {
             submitBtn.disabled = false;
@@ -610,6 +688,41 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
     max-width: 100%;
     flex: none;
     line-height: 1;
+  }
+  /* founding-window countdown pill — terracotta tint, sits above the banner */
+  .deadline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    background-color: #f6e7d8;
+    border: 1px solid #c88a5c;
+    max-width: 100%;
+    flex: none;
+    line-height: 1;
+  }
+  .deadline-label {
+    color: #2c3e2d;
+    font-size: clamp(0.72rem, 3.2vw, 0.88rem);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .deadline-clock {
+    color: #c88a5c;
+    font-size: clamp(0.74rem, 3.2vw, 0.9rem);
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .deadline.is-closed {
+    background-color: #efece4;
+    border-color: #b9b3a4;
+  }
+  .deadline.is-closed .deadline-clock {
+    color: #6b7b6c;
+    font-weight: 600;
   }
   .banner-text {
     color: #faf6ee;
@@ -919,6 +1032,12 @@ const buttonLabel = 'Send me my kitchen tool - The Kitchen Calculator';
   .offer-btn:disabled {
     opacity: 0.7;
     cursor: default;
+  }
+  .offer-open {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 0.35rem;
   }
   .offer-micro {
     margin: 0;

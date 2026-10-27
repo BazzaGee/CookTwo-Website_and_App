@@ -280,6 +280,7 @@ app.post('/api/household/create', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as {
     displayName?: string;
     diet?: string;
+    conditions?: string[];
     allergies?: string;
     allergens?: string[];
     goal?: string;
@@ -308,9 +309,10 @@ app.post('/api/household/create', async (c) => {
 
     await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
 
-    if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
+    if (body.diet || body.conditions || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
       await updatePartner(c.env.DB, partnerId, {
         diet: body.diet,
+        conditions: body.conditions,
         allergies: body.allergies,
         goal: body.goal,
         weightKg: body.weightKg,
@@ -378,6 +380,7 @@ app.post('/api/household/join', async (c) => {
     inviteCode?: string;
     displayName?: string;
     diet?: string;
+    conditions?: string[];
     allergies?: string;
     allergens?: string[];
     goal?: string;
@@ -406,9 +409,10 @@ app.post('/api/household/join', async (c) => {
 
     await createPartner(c.env.DB, householdId, partnerId, slot, displayName, body.allergens);
 
-    if (body.diet || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
+    if (body.diet || body.conditions || body.allergies || body.allergens || body.goal || body.weightKg || body.heightCm || body.age || body.gender || body.activityLevel) {
       await updatePartner(c.env.DB, partnerId, {
         diet: body.diet,
+        conditions: body.conditions,
         allergies: body.allergies,
         goal: body.goal,
         weightKg: body.weightKg,
@@ -862,9 +866,11 @@ app.post('/api/household/:id/meal-plan/generate', async (c) => {
 
     const p1Fasting = p1?.fastingMode ?? null;
     const p2Fasting = p2?.fastingMode ?? null;
-    const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting);
+    const p1Conditions = p1?.conditions ?? [];
+    const p2Conditions = p2?.conditions ?? [];
+    const dietRules = await getCoupleDietRules(c.env.DB, p1Diet, p2Diet, p1Fasting, p2Fasting, p1Conditions, p2Conditions);
 
-    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, profiles.map((p) => ({ name: p.name, diet: p.diet as Diet, allergens: p.allergens, tdee: p.tdee, goal: p.goal, activityLevel: p.activityLevel, slot: p.slot as 1 | 2 })), dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups);
+    const meal = await generateMeal(c.env, pantryItems, p1Diet, p2Diet, p1Allergens, p2Allergens, p1Goal, p2Goal, p1Body, p2Body, profiles.map((p) => ({ name: p.name, diet: p.diet as Diet, allergens: p.allergens, tdee: p.tdee, goal: p.goal, activityLevel: p.activityLevel, slot: p.slot as 1 | 2 })), dietRules.promptBlock, dietRules.combinedClassifierTerms, dietRules.combinedRestrictedGroups, dietRules.combinedMacroTargets);
     if (!meal) {
       await refundAI(c.env.DB, householdId, 1);
       return c.json({ error: 'AI meal generation failed. Please try again later.' }, 503);

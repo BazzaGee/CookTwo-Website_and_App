@@ -14,10 +14,11 @@ const CAT_LABELS: Record<string, string> = {
   'macronutrient-focused': 'Macronutrient-focused',
   'plant-based': 'Plant-based',
   ancestral: 'Ancestral / Whole-food',
+  condition: 'Health conditions',
   timing: 'Timing patterns',
 };
 
-const CAT_ORDER = ['balanced', 'therapeutic', 'lowCarb', 'macronutrient-focused', 'plant-based', 'ancestral', 'timing'];
+const CAT_ORDER = ['balanced', 'therapeutic', 'condition', 'lowCarb', 'macronutrient-focused', 'plant-based', 'ancestral', 'timing'];
 
 const grouped = new Map<string, typeof DIETS>();
 for (const diet of DIETS) {

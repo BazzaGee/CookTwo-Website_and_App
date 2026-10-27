@@ -1,0 +1,35 @@
+---
+import VslPlayer from '../../components/funnel/VslPlayer.astro';
+import { revealFor } from '../../lib/reveal-at';
+
+// Single source: src/data/vsl-reveal.json. Do not paste the number here.
+const reveal = revealFor('cardiac');
+
+// The founding-window cutoff, one ISO instant. The VSL's spoken deadline
+// (OFFER["DEADLINE"] in the VSL folder's slides.py) must name the same date:
+// "before 7 November" = this instant. If the date moves, change it in BOTH
+// places — the claim is only honest if the tiers actually change then
+// (04_STRATEGY/CLAIMS_NOTES.md §6).
+const FOUNDING_DEADLINE = '2026-11-07T00:00:00Z';
+---
+
+<!--
+  Reveal at 523.97s = 00:08:43,970 — slide #165, the opt-in box.
+  The value lives in src/data/vsl-reveal.json (source: timecodes.csv row 165),
+  measured from the rebuilt 2026-10-27 master's slides_timing.json.
+-->
+<VslPlayer
+  slug="cardiac-low-sodium"
+  mode="app"
+  revealAt={reveal.revealAt}
+  title="Watch — the salt you can see"
+  description="Barry shows how a shared dinner starts from a low-sodium profile, and why the salt you control is the one that matters."
+  offerHead="Put your email in the box under this video&hellip;"
+  buttonLabel="Start cooking with CookTwo"
+  microcopy="Opens in your browser. Installable on your phone. Free to start — no card."
+  doneHead="Welcome to your kitchen."
+  doneSub="Your access link is on its way to your inbox — and CookTwo is opening now. Set-up takes about five minutes."
+  leadEndpoint="/api/waitlist/subscribe"
+  openAppHref="https://cooktwo.app"
+  countdownTo={FOUNDING_DEADLINE}
+/>

@@ -12,5 +12,19 @@
     "source": "script/timecodes.csv row 189 (t_in 500.03)",
     "verified": "2026-10-23",
     "verifiedBy": "30fps frame extraction on the rendered MP4 — first frame carrying the opt-in slide is 15001 = 500.033s, one frame after this value"
+  },
+  "app": {
+    "revealAt": 485.63,
+    "slide": 154,
+    "source": "script/timecodes.csv row 154 (t_in 485.63) — vsl-09_app-offer-couples",
+    "verified": "2026-10-26",
+    "verifiedBy": "30fps frame extraction on the rendered MP4 (vsl-09-app-offer-1080p.mp4, free-only fix pass, SAPI draft) — frame at 485.57s still shows slide 153 (rather than just agree with me), frame at 485.70s shows the opt-in box slide up; build/verify/v2_reveal_before.png + v2_reveal_after.png. Re-measure after the ElevenLabs re-voice — durations will shift."
+  },
+  "cardiac": {
+    "revealAt": 523.97,
+    "slide": 165,
+    "source": "script/timecodes.csv row 165 (t_in 523.97) — vsl-17_cardiac-low-sodium, rebuilt 2026-10-27",
+    "verified": "2026-10-27",
+    "verifiedBy": "slides_timing.json: slide index 164 (1-based 165) t0=523.97s, the opt-in slide 'Put your email in the box under this video...'; locked by construction (per-slide SAPI audio -> segment lengths)."
   }
 }

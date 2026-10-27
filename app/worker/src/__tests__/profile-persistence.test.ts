@@ -68,6 +68,7 @@ describe('Profile persistence — allergen updates propagate immediately', () =>
     expect(eve.allergens).toEqual([]);
     expect(eve.diet).toBe('omnivore');
     expect(frank.allergens).toEqual(['soy']);
-    expect(frank.diet).toBe('gluten-free');
+    expect(frank.diet).toBe('omnivore');
+    expect(frank.conditions).toEqual(['gluten-free']);
   });
 });

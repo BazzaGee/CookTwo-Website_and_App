@@ -45,6 +45,7 @@ export default function ProfilesTab() {
   const [editingBody, setEditingBody] = useState(false);
   const [formName, setFormName] = useState('');
   const [formDiet, setFormDiet] = useState<string>('omnivore');
+  const [formConditions, setFormConditions] = useState<string[]>([]);
   const [formWeight, setFormWeight] = useState('');
   const [formHeight, setFormHeight] = useState('');
   const [formAge, setFormAge] = useState('');
@@ -69,12 +70,15 @@ export default function ProfilesTab() {
   const dietsByCategory = useMemo(() => {
     const groups: Record<string, DietCatalogEntry[]> = {};
     for (const d of dietList) {
+      if (d.isCondition) continue;
       const cat = d.category;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(d);
     }
     return groups;
   }, [dietList]);
+
+  const conditionList = useMemo(() => dietList.filter((d) => d.isCondition), [dietList]);
 
   function getDietLabel(key: string): string {
     return dietLabelMap[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
@@ -133,6 +137,7 @@ export default function ProfilesTab() {
   function startEdit(profile: PartnerProfile) {
     setFormName(profile.name);
     setFormDiet(profile.diet);
+    setFormConditions(profile.conditions ?? []);
     setAllergenChips(profile.allergens ?? []);
     setNewAllergen('');
     setFormWeight(profile.weightKg?.toString() ?? '');
@@ -154,6 +159,7 @@ export default function ProfilesTab() {
       await updateProfile(myProfile.id, {
         name: formName.trim() || myProfile.name,
         diet: formDiet,
+        conditions: formConditions,
         fastingMode: formFasting,
         allergies: dedupedAllergens.join(', '),
         allergens: dedupedAllergens,
@@ -209,6 +215,7 @@ export default function ProfilesTab() {
         saving={saving}
         formName={formName}
         formDiet={formDiet}
+        formConditions={formConditions}
         formAllergens={allergenChips}
         formWeight={formWeight}
         formHeight={formHeight}
@@ -218,10 +225,12 @@ export default function ProfilesTab() {
         formGoal={formGoal}
         formFasting={formFasting}
         dietsByCategory={dietsByCategory}
+        conditionList={conditionList}
         getDietLabel={getDietLabel}
         onBrowseDiet={setBrowsingDiet}
         onFormNameChange={setFormName}
         onFormDietChange={setFormDiet}
+        onFormConditionsChange={setFormConditions}
         onFormAllergensChange={setAllergenChips}
         onFormWeightChange={setFormWeight}
         onFormHeightChange={setFormHeight}
@@ -239,7 +248,7 @@ export default function ProfilesTab() {
       />
 
       {otherProfile && (
-        <ProfileCard profile={otherProfile} isYou={false} />
+        <ProfileCard profile={otherProfile} isYou={false} getDietLabel={getDietLabel} conditionList={conditionList} />
       )}
 
       {!otherProfile && (
@@ -313,6 +322,7 @@ function ProfileCard({
   saving,
   formName,
   formDiet,
+  formConditions,
   formAllergens,
   formWeight,
   formHeight,
@@ -322,10 +332,12 @@ function ProfileCard({
   formGoal,
   formFasting,
   dietsByCategory,
+  conditionList,
   getDietLabel,
   onBrowseDiet,
   onFormNameChange,
   onFormDietChange,
+  onFormConditionsChange,
   onFormAllergensChange,
   onFormWeightChange,
   onFormHeightChange,
@@ -349,6 +361,7 @@ function ProfileCard({
   saving?: boolean;
   formName?: string;
   formDiet?: string;
+  formConditions?: string[];
   formAllergens?: string[];
   formWeight?: string;
   formHeight?: string;
@@ -358,10 +371,12 @@ function ProfileCard({
   formGoal?: Goal;
   formFasting?: string | null;
   dietsByCategory?: Record<string, DietCatalogEntry[]>;
+  conditionList?: DietCatalogEntry[];
   getDietLabel?: (key: string) => string;
   onBrowseDiet?: (dietKey: string) => void;
   onFormNameChange?: (v: string) => void;
   onFormDietChange?: (v: string) => void;
+  onFormConditionsChange?: (v: string[]) => void;
   onFormAllergensChange?: (v: string[]) => void;
   onFormWeightChange?: (v: string) => void;
   onFormHeightChange?: (v: string) => void;
@@ -448,6 +463,44 @@ function ProfileCard({
               </button>
             )}
           </div>
+
+          {conditionList && conditionList.length > 0 && (
+            <div>
+              <label className="text-text-secondary text-xs font-medium tracking-wide block mb-1">
+                Health conditions
+              </label>
+              <p className="text-text-secondary text-xs mb-2">
+                Select any that apply — we apply every rule together.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {conditionList.map((condition) => {
+                  const selected = (formConditions ?? []).includes(condition.dietKey);
+                  return (
+                    <button
+                      key={condition.dietKey}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => {
+                        const current = formConditions ?? [];
+                        onFormConditionsChange?.(
+                          selected
+                            ? current.filter((key) => key !== condition.dietKey)
+                            : [...current, condition.dietKey],
+                        );
+                      }}
+                      className={`text-xs font-medium px-3 py-2 rounded-xl border transition-colors ${
+                        selected
+                          ? 'bg-sage text-white border-sage'
+                          : 'bg-cream text-text-secondary border-border hover:border-sage/50'
+                      }`}
+                    >
+                      {condition.emoji ? `${condition.emoji} ` : ''}{condition.displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="profile-fasting" className="text-text-secondary text-xs font-medium tracking-wide block mb-2">
@@ -632,6 +685,15 @@ function ProfileCard({
             <p className="text-text-primary text-base font-medium">
               {getDietLabel?.(profile.diet) || profile.diet}
             </p>
+            {profile.conditions && profile.conditions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {profile.conditions.map((condition) => (
+                  <span key={condition} className="inline-flex items-center bg-sage/10 text-sage-dark text-xs font-medium px-2 py-0.5 rounded-lg">
+                    {getDietLabel?.(condition) || condition}
+                  </span>
+                ))}
+              </div>
+            )}
             {profile.fastingMode && (
               <p className="text-text-secondary text-sm mt-0.5">
                 ⏰ {FASTING_LABELS[profile.fastingMode] || profile.fastingMode}

@@ -11,6 +11,7 @@ export interface DietCatalogEntry {
   restrictiveness: number;
   isTimingPattern: boolean;
   isDefault: boolean;
+  isCondition: boolean;
   aiRules: string;
   allowedGroups: string[];
   restrictedGroups: string[];
@@ -31,6 +32,7 @@ interface DietCatalogRow {
   restrictiveness: number;
   is_timing_pattern: number;
   is_default: number;
+  is_condition: number;
   ai_rules: string;
   allowed_groups: string;
   restricted_groups: string;
@@ -60,6 +62,7 @@ function rowToEntry(row: DietCatalogRow): DietCatalogEntry {
     restrictiveness: row.restrictiveness,
     isTimingPattern: row.is_timing_pattern === 1,
     isDefault: row.is_default === 1,
+    isCondition: row.is_condition === 1,
     aiRules: row.ai_rules,
     allowedGroups: safeJsonArray(row.allowed_groups),
     restrictedGroups: safeJsonArray(row.restricted_groups),
@@ -91,7 +94,7 @@ function safeJsonObject(s: string): Record<string, string> {
 
 const SELECT_COLS = `diet_key, display_label, category, emoji, short_desc,
   evidence_grade, restrictiveness, is_timing_pattern, is_default,
-  ai_rules, allowed_groups, restricted_groups, classifier_terms,
+  is_condition, ai_rules, allowed_groups, restricted_groups, classifier_terms,
   macro_targets, easy_matches, adaptable_matches, hard_conflicts`;
 
 export async function handleListDiets(c: Context<{ Bindings: Env }>) {

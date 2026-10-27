@@ -13,7 +13,8 @@
  */
 import revealData from '../data/vsl-reveal.json';
 
-export type VslMode = 'couples' | 'solo';
+export type VslMode = 'couples' | 'solo' | 'app';
+export type VslRevealKey = VslMode | 'cardiac';
 
 export interface RevealTiming {
   revealAt: number;
@@ -23,16 +24,16 @@ export interface RevealTiming {
   verifiedBy: string;
 }
 
-const REVEALS = revealData as unknown as Record<VslMode, RevealTiming>;
+const REVEALS = revealData as unknown as Record<VslRevealKey, RevealTiming>;
 
-export function revealFor(mode: VslMode): RevealTiming {
-  return REVEALS[mode];
+export function revealFor(key: VslRevealKey): RevealTiming {
+  return REVEALS[key];
 }
 
-export function revealAtFor(mode: VslMode): number {
-  return REVEALS[mode].revealAt;
+export function revealAtFor(key: VslRevealKey): number {
+  return REVEALS[key].revealAt;
 }
 
-export function revealModes(): VslMode[] {
-  return Object.keys(REVEALS) as VslMode[];
+export function revealModes(): VslRevealKey[] {
+  return Object.keys(REVEALS) as VslRevealKey[];
 }
