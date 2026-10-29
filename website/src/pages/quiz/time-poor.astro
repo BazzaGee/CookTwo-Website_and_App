@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "When does dinner usually get decided?",
+    choices: [
+      { id: "drive", label: "On the drive home" },
+      { id: "six", label: "At 6pm, staring into the fridge" },
+      { id: "takeaway", label: "Whenever someone says “takeaway?”" },
+      { id: "prep", label: "Sunday meal prep that dies by Tuesday" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What would you change first?",
+    choices: [
+      { id: "one-shop", label: "One shop instead of two" },
+      { id: "decided", label: "A decision made before we're tired" },
+      { id: "pantry", label: "Cooking from what we already have" },
+      { id: "takeaways", label: "Fewer weeknight takeaways" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "Who ends up deciding?",
+    choices: [
+      { id: "both", label: "Both of us, every night" },
+      { id: "one", label: "Usually one of us" },
+      { id: "solo", label: "Mostly just me" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The 6pm quiz"
+  description="Three questions about how dinner gets decided — then the video for your evenings."
+>
+  <FactorQuiz
+    factor="time-poor"
+    steps={steps}
+    videoPath="/video/time-poor"
+    thankyouSub="You told me when dinner gets decided — and what you'd change first. Here's how one list, one shop and one plan take 6pm off the table."
+  />
+</FunnelLayout>

@@ -67,6 +67,16 @@ export async function handleQuizSubmit(c: Context<{ Bindings: Env }>): Promise<R
   const blocker = s(body.blocker, 20) as QuizAnswers['blocker'];
   const situation = s(body.situation, 20) as QuizAnswers['situation'];
 
+  // ── factor quiz variant ────────────────────────────────────────────
+  // The nine factor quizzes (/quiz/weight, /quiz/keto, …) send
+  // { factor, answers: [{ q, a }] } instead of the legacy vocabulary. Same
+  // store, same funnel session, same redirect-with-session contract; the
+  // answers are kept as a JSON array next to the factor id.
+  const factor = s(body.factor, 32);
+  if (factor) {
+    return handleFactorQuiz(c, body, factor, email);
+  }
+
   // Email is optional (query/link-append-only). Validated when present so a
   // mangled ?e= never poisons D1 or the Resend mirror.
   if (email && !EMAIL_RE.test(email)) {
@@ -279,6 +289,180 @@ async function syncResendContact(env: Env, answers: QuizAnswers): Promise<void> 
   // Quiz completion is explicit re-engagement on "still interested in weight
   // loss?" — that is consent for the diet-content topic. NOTE: the topics
   // endpoint takes a raw array body — {"topics":[...]} comes back as 422.
+  const topicsRes = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}/topics`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify([{ id: DIET_TOPIC_ID, subscription: 'opt_in' }]),
+  });
+  if (!topicsRes.ok) throw new Error(`topics update ${topicsRes.status}: ${await topicsRes.text()}`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Factor quiz funnels
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Each factor quiz feeds exactly one VSL. The client is told the same path. */
+const FACTOR_VIDEOS: Record<string, string> = {
+  weight: '/video/weight',
+  'time-poor': '/video/time-poor',
+  'family-picky': '/video/family-picky',
+  'gluten-free': '/video/gluten-free',
+  'plant-based': '/video/plant-based',
+  keto: '/video/keto',
+  multi: '/video/multi',
+  cardiac: '/video/cardiac',
+  app: '/video/app',
+};
+
+/** Step count per factor (multi-restriction carries one extra question). */
+const FACTOR_STEPS: Record<string, number> = { multi: 4 };
+
+const ANSWER_RE = /^[a-z0-9-]{1,40}$/;
+
+interface FactorAnswer {
+  q: number;
+  a: string;
+}
+
+async function handleFactorQuiz(
+  c: Context<{ Bindings: Env }>,
+  body: Record<string, unknown>,
+  factor: string,
+  email: string,
+): Promise<Response> {
+  const video = FACTOR_VIDEOS[factor];
+  if (!video) {
+    return c.json({ error: 'Unknown quiz.' }, 400);
+  }
+  if (email && !EMAIL_RE.test(email)) {
+    return c.json({ error: 'Please enter a valid email address.' }, 400);
+  }
+
+  const expected = FACTOR_STEPS[factor] ?? 3;
+  const raw = Array.isArray(body.answers) ? body.answers : [];
+  if (raw.length !== expected) {
+    return c.json({ error: 'Missing quiz answers.' }, 400);
+  }
+  const answers: FactorAnswer[] = [];
+  for (let i = 0; i < expected; i++) {
+    const item = (raw[i] && typeof raw[i] === 'object' ? raw[i] : {}) as Record<string, unknown>;
+    const q = Number(item.q);
+    const a = s(item.a, 40);
+    if (q !== i + 1 || !ANSWER_RE.test(a)) {
+      return c.json({ error: 'Invalid quiz answer.' }, 400);
+    }
+    answers.push({ q, a });
+  }
+
+  const incoming = (body.utm && typeof body.utm === 'object' ? body.utm : {}) as Record<string, unknown>;
+  const utm: Record<string, string> = {};
+  for (const k of ALLOWED_PARAMS) {
+    const v = s(incoming[k]);
+    if (v) utm[k] = v;
+  }
+
+  const sessionId = funnelId(body.session_id) || crypto.randomUUID();
+  const visitorId = funnelId(body.visitor_id);
+  const attemptId = crypto.randomUUID();
+
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO quiz_attempts
+         (id, session_id, visitor_id, email, angle, factor, answers,
+          utm_source, utm_medium, utm_campaign, utm_content, via)
+       VALUES (?, ?, ?, ?, 'couples', ?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        attemptId, sessionId, visitorId, email || null, factor,
+        JSON.stringify(answers),
+        utm.utm_source ?? null, utm.utm_medium ?? null,
+        utm.utm_campaign ?? null, utm.utm_content ?? null, utm.via ?? null,
+      )
+      .run();
+  } catch (err) {
+    console.error('factor quiz attempt store failed:', err);
+  }
+
+  try {
+    await upsertFunnelSession(c.env.DB, {
+      sessionId,
+      visitorId,
+      entry: 'quiz',
+      vslMode: null,
+      vslVideo: null,
+      quizAttemptId: attemptId,
+      sourceEmail: email || null,
+      captureEmail: null,
+      landingPath: '/quiz/' + factor,
+      referrer: cleanUrl(c.req.header('referer')),
+      utm,
+      timezone: null,
+      country: s(c.req.header('x-funnel-country') || '', 8) || null,
+      device: null,
+      userAgent: s(c.req.header('user-agent') || '', 300) || null,
+      isInternal: 0,
+      lastSeenAt: Date.now(),
+    });
+  } catch (err) {
+    console.error('factor quiz session upsert failed:', err);
+  }
+
+  // Best-effort contact tag; the redirect must never wait on Resend.
+  if (email && c.env.RESEND_API_KEY) {
+    later(c, syncFactorContact(c.env, email, factor, answers, utm)
+      .catch((err) => console.error('resend factor quiz sync failed:', err)));
+  }
+
+  const redirect = withFunnelParams(video, sessionId, attemptId, utm);
+  return c.json({ status: 'ok', redirect, session_id: sessionId, attempt_id: attemptId });
+}
+
+/** Tag the contact with the factor they self-identified into. */
+async function syncFactorContact(
+  env: Env,
+  email: string,
+  factor: string,
+  answers: FactorAnswer[],
+  utm: Record<string, string>,
+): Promise<void> {
+  if (!env.RESEND_API_KEY) return;
+
+  const headers = {
+    Authorization: `Bearer ${env.RESEND_API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+  const properties: Record<string, string> = {
+    quiz_factor: factor,
+    quiz_answers: answers.map((a) => a.a).join(','),
+    quiz_completed_at: new Date().toISOString().slice(0, 10),
+  };
+  for (const k of ['utm_source', 'utm_medium', 'utm_content', 'via']) {
+    if (utm[k]) properties[k] = utm[k];
+  }
+  if (utm.utm_campaign) properties.campaign = utm.utm_campaign;
+
+  const existing = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, { headers })
+    .then((r) => (r.status === 404 ? null : r))
+    .catch(() => null);
+
+  if (existing && existing.ok) {
+    const patch = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ properties }),
+    });
+    if (!patch.ok) throw new Error(`contact patch ${patch.status}: ${await patch.text()}`);
+  } else {
+    const create = await fetch('https://api.resend.com/contacts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email, unsubscribed: false, properties }),
+    });
+    if (!create.ok && create.status !== 409) {
+      throw new Error(`contact create ${create.status}: ${await create.text()}`);
+    }
+  }
+
   const topicsRes = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}/topics`, {
     method: 'PATCH',
     headers,

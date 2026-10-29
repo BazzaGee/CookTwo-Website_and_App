@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Who's the picky one?",
+    choices: [
+      { id: "partner", label: "My partner" },
+      { id: "me", label: "Me, honestly" },
+      { id: "both", label: "Both of us — different lists" },
+      { id: "one-meal", label: "We just want one meal that works" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What does it cost you?",
+    choices: [
+      { id: "second", label: "A second dinner most nights" },
+      { id: "repeat", label: "The same three meals on repeat" },
+      { id: "dont-want", label: "Cooking something I don't want" },
+      { id: "evening", label: "The evening gone" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different appetites" },
+      { id: "same", label: "Together — the same plate" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The picky-eater quiz"
+  description="Three questions about the dinner that keeps getting refused — then the video that fixes it."
+>
+  <FactorQuiz
+    factor="family-picky"
+    steps={steps}
+    videoPath="/video/family-picky"
+    thankyouSub="You told me what dinner costs you now. Here's how one recipe can plate two appetites — without a second dinner."
+  />
+</FunnelLayout>

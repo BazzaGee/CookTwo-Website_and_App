@@ -19,7 +19,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const BASE = (process.argv[2] || 'https://cooktwo.com').replace(/\/$/, '');
-const PAGES = ['/video/couples/', '/video/solo/', '/video/app/', '/video/cardiac/', '/'];
+const PAGES = ['/video/couples/', '/video/solo/', '/video/app/', '/video/cardiac/',
+  '/video/weight/', '/video/time-poor/', '/video/family-picky/',
+  '/video/gluten-free/', '/video/plant-based/', '/video/keto/', '/video/multi/',
+  '/quiz/weight/', '/quiz/time-poor/', '/quiz/family-picky/', '/quiz/gluten-free/',
+  '/quiz/plant-based/', '/quiz/keto/', '/quiz/multi/', '/quiz/cardiac/', '/quiz/app/', '/'];
 
 const distDir = resolve('./dist');
 

@@ -1,0 +1,37 @@
+---
+import VslPlayer from '../../components/funnel/VslPlayer.astro';
+import { revealFor } from '../../lib/reveal-at';
+
+// Single source: src/data/vsl-reveal.json. Do not paste the number here.
+const reveal = revealFor('gluten-free');
+
+// The founding-window cutoff, one ISO instant. The VSL's spoken deadline
+// (OFFER["DEADLINE"] in the VSL folder's slides.py) names the same date:
+// "before 7 November" = this instant. If the date moves, change it in BOTH
+// places — the claim is only honest if the tiers actually change then
+// (04_STRATEGY/CLAIMS_NOTES.md §6).
+const FOUNDING_DEADLINE = '2026-11-07T00:00:00Z';
+---
+
+<!--
+  Reveal at 377.80s = 00:06:17,800 — slide #162, the opt-in box.
+  The value lives in src/data/vsl-reveal.json (source: timecodes.csv row 162),
+  measured from the HeyGen/Vincent rebuild (2026-10-27) after resync2.
+  The copy below matches the video's own opt-in slide and button exactly.
+-->
+<VslPlayer
+  slug="gluten-free"
+  mode="app"
+  revealAt={reveal.revealAt}
+  title="Watch — gluten-free is a setting, not a negotiation"
+  description="Barry shows how a gluten-free profile builds one dinner both of you can eat."
+  offerHead="Put your email in the box under this video&hellip;"
+  buttonLabel="Start cooking with CookTwo"
+  microcopy="Opens in your browser. Installable on your phone. Free to start — no card."
+  doneHead="Welcome to your kitchen."
+  doneSub="Your access link is on its way to your inbox — and CookTwo is opening now. Set-up takes about five minutes."
+  leadEndpoint="/api/waitlist/subscribe"
+  leadSource="vsl-gluten-free"
+  openAppHref="https://cooktwo.app"
+  countdownTo={FOUNDING_DEADLINE}
+/>

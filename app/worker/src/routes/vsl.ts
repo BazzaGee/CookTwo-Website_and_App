@@ -19,6 +19,13 @@ const VIDEOS: Record<string, string> = {
   'solo-finale': 'vsl/vsl-solo-finale-1080p.mp4',
   'app-offer': 'vsl/vsl-09-app-offer-1080p.mp4',
   'cardiac-low-sodium': 'vsl/vsl-17-cardiac-low-sodium-1080p.mp4',
+  weight: 'vsl/vsl-10-weight-management-1080p.mp4',
+  'time-poor': 'vsl/vsl-11-time-poor-1080p.mp4',
+  'family-picky': 'vsl/vsl-12-family-picky-1080p.mp4',
+  'gluten-free': 'vsl/vsl-13-gluten-free-1080p.mp4',
+  'plant-based': 'vsl/vsl-14-plant-based-split-1080p.mp4',
+  keto: 'vsl/vsl-15-keto-low-carb-1080p.mp4',
+  multi: 'vsl/vsl-16-multi-restriction-1080p.mp4',
 };
 
 function parseRangeHeader(header: string, size: number): R2Range | null {

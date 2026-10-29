@@ -14,17 +14,66 @@
     "verifiedBy": "30fps frame extraction on the rendered MP4 — first frame carrying the opt-in slide is 15001 = 500.033s, one frame after this value"
   },
   "app": {
-    "revealAt": 485.63,
+    "revealAt": 373.77,
     "slide": 154,
-    "source": "script/timecodes.csv row 154 (t_in 485.63) — vsl-09_app-offer-couples",
-    "verified": "2026-10-26",
-    "verifiedBy": "30fps frame extraction on the rendered MP4 (vsl-09-app-offer-1080p.mp4, free-only fix pass, SAPI draft) — frame at 485.57s still shows slide 153 (rather than just agree with me), frame at 485.70s shows the opt-in box slide up; build/verify/v2_reveal_before.png + v2_reveal_after.png. Re-measure after the ElevenLabs re-voice — durations will shift."
+    "source": "script/timecodes.csv row 154 (t_in 373.77) — vsl-09-app-offer, HeyGen Bram rebuild 2026-10-29",
+    "verified": "2026-10-29",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (188 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
   },
   "cardiac": {
-    "revealAt": 523.97,
+    "revealAt": 385.13,
     "slide": 165,
-    "source": "script/timecodes.csv row 165 (t_in 523.97) — vsl-17_cardiac-low-sodium, rebuilt 2026-10-27",
+    "source": "script/timecodes.csv row 165 (t_in 385.13) — vsl-17-cardiac-low-sodium, HeyGen Vincent rebuild 2026-10-29",
+    "verified": "2026-10-29",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (198 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "weight": {
+    "revealAt": 392.37,
+    "slide": 161,
+    "source": "script/timecodes.csv row 161 (t_in 392.37) — vsl-10-weight-management, HeyGen bram rebuild 2026-10-27",
     "verified": "2026-10-27",
-    "verifiedBy": "slides_timing.json: slide index 164 (1-based 165) t0=523.97s, the opt-in slide 'Put your email in the box under this video...'; locked by construction (per-slide SAPI audio -> segment lengths)."
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "time-poor": {
+    "revealAt": 371.47,
+    "slide": 160,
+    "source": "script/timecodes.csv row 160 (t_in 371.47) — vsl-11-time-poor, HeyGen vincent rebuild 2026-10-27",
+    "verified": "2026-10-27",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "family-picky": {
+    "revealAt": 392.43,
+    "slide": 161,
+    "source": "script/timecodes.csv row 161 (t_in 392.43) — vsl-12-family-picky, HeyGen bram rebuild 2026-10-27",
+    "verified": "2026-10-27",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "gluten-free": {
+    "revealAt": 377.8,
+    "slide": 162,
+    "source": "script/timecodes.csv row 162 (t_in 377.80) — vsl-13-gluten-free, HeyGen vincent rebuild 2026-10-27",
+    "verified": "2026-10-27",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "plant-based": {
+    "revealAt": 397.03,
+    "slide": 162,
+    "source": "script/timecodes.csv row 162 (t_in 397.03) — vsl-14-plant-based-split, HeyGen bram rebuild 2026-10-27",
+    "verified": "2026-10-27",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "keto": {
+    "revealAt": 376.2,
+    "slide": 162,
+    "source": "script/timecodes.csv row 162 (t_in 376.20) — vsl-15-keto-low-carb, HeyGen vincent rebuild 2026-10-28",
+    "verified": "2026-10-28",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (197 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "multi": {
+    "revealAt": 393.2,
+    "slide": 163,
+    "source": "script/timecodes.csv row 163 (t_in 393.20) — vsl-16-multi-restriction, HeyGen bram rebuild 2026-10-28",
+    "verified": "2026-10-28",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset (197 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
   }
 }

@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Who's watching the salt?",
+    choices: [
+      { id: "me", label: "Just me" },
+      { id: "partner", label: "Just my partner" },
+      { id: "both", label: "Both of us" },
+      { id: "home", label: "We're trying to cook at home more" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "Where does most of the salt come from?",
+    choices: [
+      { id: "takeaway", label: "The takeaway" },
+      { id: "uncooked", label: "Food we didn't cook" },
+      { id: "shaker", label: "The shaker at the table" },
+      { id: "unsure", label: "Honestly, not sure" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different needs" },
+      { id: "same", label: "Together — the same needs" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The salt quiz"
+  description="Three questions about where the salt comes from in your week — then the video that matches."
+>
+  <FactorQuiz
+    factor="cardiac"
+    steps={steps}
+    videoPath="/video/cardiac"
+    thankyouSub="You told me where the salt comes from in your week. Here's how cooking fresh becomes the decision that's already made."
+  />
+</FunnelLayout>

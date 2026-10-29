@@ -1,0 +1,49 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Which one is your house right now?",
+    choices: [
+      { id: "one-lighter", label: "One of us is eating lighter — the other isn't" },
+      { id: "both-lighter", label: "We're both eating lighter" },
+      { id: "maintain", label: "We're maintaining — just tired of the guesswork" },
+      { id: "diff-goals", label: "Different goals, one kitchen" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What breaks first?",
+    choices: [
+      { id: "compromise", label: "The compromise plate" },
+      { id: "portions", label: "Guessing portions for two" },
+      { id: "takeaway", label: "Takeaway when the plan slips" },
+      { id: "two-dinners", label: "Cooking two dinners" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    micro: "Either way is fine — this just tells me who I'm talking to.",
+    choices: [
+      { id: "diff-goals", label: "Together — different goals" },
+      { id: "same-goal", label: "Together — the same goal" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The two-goal kitchen quiz"
+  description="Three quick questions about how you two eat — then the video that matches your kitchen."
+>
+  <FactorQuiz
+    factor="weight"
+    steps={steps}
+    videoPath="/video/weight"
+    thankyouSub="You told me what breaks first in your kitchen. Here's how one dinner can plate both goals — same food, sized to each of you."
+  />
+</FunnelLayout>

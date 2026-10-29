@@ -1,0 +1,58 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "How many rules run your kitchen?",
+    choices: [
+      { id: "one-two", label: "One or two restrictions" },
+      { id: "three", label: "Three or more between us" },
+      { id: "each", label: "A restriction and a goal each" },
+      { id: "complicated", label: "Honestly — it's complicated" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "Which ones are in the mix?",
+    choices: [
+      { id: "gluten-dairy", label: "Gluten and dairy" },
+      { id: "veg-omni", label: "Plant-based and omnivore" },
+      { id: "allergies", label: "Allergies on top of a diet" },
+      { id: "mixed", label: "A bit of everything" },
+    ],
+  },
+  {
+    kicker: "Almost there",
+    question: "What breaks first?",
+    choices: [
+      { id: "remember", label: "Forgetting whose rule is whose" },
+      { id: "plain", label: "Plain, safe meals" },
+      { id: "double", label: "Cooking twice" },
+      { id: "shop", label: "The shop is a minefield" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different rules" },
+      { id: "same", label: "Together — the same rules" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The rulebook quiz"
+  description="Four questions about the rules in your kitchen — then the video that matches."
+>
+  <FactorQuiz
+    factor="multi"
+    steps={steps}
+    videoPath="/video/multi"
+    thankyouSub="You told me what's in the mix. Here's how one kitchen can hold both of your lists — and still get one dinner on the table."
+  />
+</FunnelLayout>

@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "What's your dinner reality?",
+    choices: [
+      { id: "question", label: "One question, every night" },
+      { id: "goals", label: "Two goals, one kitchen" },
+      { id: "prep", label: "Meal prep that dies midweek" },
+      { id: "takeaway", label: "Takeaway wins too often" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What would fix it first?",
+    choices: [
+      { id: "list", label: "One list, one shop" },
+      { id: "pantry", label: "Cook from what we have" },
+      { id: "plates", label: "One recipe, two plates" },
+      { id: "decided", label: "A decision already made" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different goals" },
+      { id: "same", label: "Together — the same goal" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The one-dinner quiz"
+  description="Three questions about your evenings — then the video that ends the nightly question."
+>
+  <FactorQuiz
+    factor="app"
+    steps={steps}
+    videoPath="/video/app"
+    thankyouSub="You told me what your evenings look like. Here's how one dinner, one pan and two plates end the nightly question."
+  />
+</FunnelLayout>

@@ -14,7 +14,7 @@
 import revealData from '../data/vsl-reveal.json';
 
 export type VslMode = 'couples' | 'solo' | 'app';
-export type VslRevealKey = VslMode | 'cardiac';
+export type VslRevealKey = keyof typeof revealData;
 
 export interface RevealTiming {
   revealAt: number;

@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Who's cutting carbs?",
+    choices: [
+      { id: "me", label: "Just me" },
+      { id: "partner", label: "Just my partner" },
+      { id: "both", label: "Both of us" },
+      { id: "start", label: "Not sure where to start" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What breaks first?",
+    choices: [
+      { id: "rice", label: "The rice-and-pasta question at 6pm" },
+      { id: "two", label: "Cooking two dinners" },
+      { id: "carbs", label: "Guessing the carbs on both plates" },
+      { id: "busy", label: "Falling off when the week gets busy" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different plates" },
+      { id: "same", label: "Together — the same plate" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The low-carb kitchen quiz"
+  description="Three questions about carbs at your table — then the video that matches."
+>
+  <FactorQuiz
+    factor="keto"
+    steps={steps}
+    videoPath="/video/keto"
+    thankyouSub="You told me what breaks first. Here's how one dinner can land the carbs differently on each plate."
+  />
+</FunnelLayout>

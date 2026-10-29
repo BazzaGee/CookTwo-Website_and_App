@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Who eats plant-based?",
+    choices: [
+      { id: "me", label: "Just me" },
+      { id: "partner", label: "Just my partner" },
+      { id: "both", label: "Both of us" },
+      { id: "more", label: "I'm trying to eat more plants" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What does dinner look like now?",
+    choices: [
+      { id: "two", label: "I cook two meals" },
+      { id: "side", label: "I eat the side dish" },
+      { id: "compromise", label: "The same compromise plate" },
+      { id: "repeat", label: "The same veggie meal every week" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different appetites" },
+      { id: "same", label: "Together — the same plate" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The plant-based split quiz"
+  description="Three questions about the dinner you two actually eat — then the video that matches."
+>
+  <FactorQuiz
+    factor="plant-based"
+    steps={steps}
+    videoPath="/video/plant-based"
+    thankyouSub="You told me what dinner looks like now. Here's how one plant-based recipe still plates two different goals."
+  />
+</FunnelLayout>

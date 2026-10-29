@@ -1,0 +1,48 @@
+---
+import FunnelLayout from '../../layouts/FunnelLayout.astro';
+import FactorQuiz from '../../components/funnel/FactorQuiz.astro';
+
+const steps = [
+  {
+    kicker: "Quick, so we keep it real",
+    question: "Who eats gluten-free?",
+    choices: [
+      { id: "me", label: "Just me" },
+      { id: "partner", label: "Just my partner" },
+      { id: "both", label: "Both of us" },
+      { id: "trying", label: "I'm trying to cut back on gluten" },
+    ],
+  },
+  {
+    kicker: "Be honest with yourself",
+    question: "What does it cost you?",
+    choices: [
+      { id: "two", label: "Two dinners" },
+      { id: "plain", label: "Plain food, cooked separately" },
+      { id: "shelf", label: "The expensive shelf" },
+      { id: "repeat", label: "The same safe meal every week" },
+    ],
+  },
+  {
+    kicker: "Last one",
+    question: "How do you two eat?",
+    choices: [
+      { id: "diff", label: "Together — different rules" },
+      { id: "same", label: "Together — the same rules" },
+      { id: "solo", label: "Mostly on my own" },
+    ],
+  },
+];
+---
+
+<FunnelLayout
+  title="The gluten-free kitchen quiz"
+  description="Three questions about how gluten-free works in your house — then the video that matches."
+>
+  <FactorQuiz
+    factor="gluten-free"
+    steps={steps}
+    videoPath="/video/gluten-free"
+    thankyouSub="You told me how gluten-free works in your kitchen. Here's how it becomes a setting, not a negotiation — one dinner both of you can eat."
+  />
+</FunnelLayout>

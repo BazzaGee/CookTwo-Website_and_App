@@ -30,6 +30,8 @@ interface Props {
   leadEndpoint?: string;
   openAppHref?: string;
   countdownTo?: string;
+  /** Attribution written to the lead record (waitlist.source). Defaults to slug. */
+  leadSource?: string;
 }
 
 const {
@@ -46,6 +48,7 @@ const {
   leadEndpoint = mode === 'app' ? '/api/waitlist/subscribe' : '/api/lead/vsl-tool',
   openAppHref = 'https://cooktwo.app',
   countdownTo = '',
+  leadSource = slug,
 } = Astro.props;
 
 const toolHref = mode === 'solo' ? '/kitchen-tool-solo' : mode === 'app' ? openAppHref : '/kitchen-tool';
@@ -54,7 +57,7 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
 
 <FunnelLayout title={title} description={description}>
   <main class="watch">
-    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref} data-endpoint={leadEndpoint} data-redirect={mode === 'app' ? openAppHref : ''}>
+    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref} data-endpoint={leadEndpoint} data-redirect={mode === 'app' ? openAppHref : ''} data-source={leadSource}>
       <!-- 0 · founding-window countdown (app mode only — one ISO date, the
            label is derived from it so copy and clock can never disagree) -->
       {countdownTo && (
@@ -195,6 +198,7 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
     var mode = stage.getAttribute('data-mode') || 'couples';
     var leadEndpoint = stage.getAttribute('data-endpoint') || '/api/lead/vsl-tool';
     var successRedirect = stage.getAttribute('data-redirect') || '';
+    var leadSource = stage.getAttribute('data-source') || stage.getAttribute('data-slug') || '';
     var magnetName = mode === 'app' ? 'cooktwo-app' : 'kitchen-tool';
 
     // ── founding-window countdown ────────────────────────────────────
@@ -545,6 +549,7 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
             quiz_attempt_id: quizAttemptId(),
             visitor_id: visitorId(),
             source_email: sourceEmail(),
+            source: leadSource,
           }),
         })
           .then(function (res) {
