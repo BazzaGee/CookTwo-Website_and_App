@@ -1,0 +1,156 @@
+---
+/**
+ * Factor hub — the page before a factor is known.
+ *
+ * Same chrome as the quiz's first question (kicker, one question, chips), but
+ * each chip is a link into that factor's own quiz funnel. Nothing is asked or
+ * stored here beyond a click event: the choice happens by navigating.
+ */
+const OPTIONS = [
+  { factor: 'weight', href: '/quiz/weight/', label: "One of us is eating lighter — the other isn't" },
+  { factor: 'time-poor', href: '/quiz/time-poor/', label: 'We’re out of time by 6pm' },
+  { factor: 'family-picky', href: '/quiz/family-picky/', label: 'One of us is picky' },
+  { factor: 'keto', href: '/quiz/keto/', label: 'One of us is cutting carbs' },
+  { factor: 'gluten-free', href: '/quiz/gluten-free/', label: 'Gluten-free in the mix' },
+  { factor: 'plant-based', href: '/quiz/plant-based/', label: 'One of us eats plant-based' },
+  { factor: 'multi', href: '/quiz/multi/', label: 'Several rules in the kitchen' },
+  { factor: 'cardiac', href: '/quiz/cardiac/', label: 'One of us is watching the salt' },
+  { factor: 'app', href: '/quiz/app/', label: 'None of these — just want better dinners' },
+];
+---
+
+<div class="hub" id="factor-hub">
+  <header class="progress">
+    <div class="track" aria-hidden="true">
+      <span class="seg done"></span>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="step is-active">
+      <p class="kicker">Quick, so we keep it real</p>
+      <h1>Which of these sounds like your kitchen?</h1>
+      <p class="micro">Pick the one that fits — sixty seconds and you’re watching the right video.</p>
+      <div class="chips">
+        {OPTIONS.map((o) => (
+          <a class="chip" href={o.href} data-factor={o.factor}>{o.label}</a>
+        ))}
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  import { flush, startSession, track } from '../../lib/funnel-tracker';
+
+  (function () {
+    'use strict';
+    var root = document.getElementById('factor-hub');
+    if (!root) return;
+
+    startSession({ entry: 'quiz' });
+
+    Array.prototype.forEach.call(root.querySelectorAll('.chip[data-factor]'), function (a) {
+      a.addEventListener('click', function () {
+        track('factor_hub_click', { value: a.getAttribute('data-factor') || '' });
+        flush();
+      });
+    });
+  })();
+</script>
+
+<style>
+  .hub {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: #FAF6EE;
+    color: #2C3E2D;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-y: auto;
+  }
+  .progress {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem clamp(1.25rem, 4vw, 2.5rem) 0;
+  }
+  .track {
+    flex: 1;
+    display: flex;
+    gap: 0.4rem;
+    max-width: 26rem;
+  }
+  .seg {
+    height: 0.25rem;
+    flex: 1;
+    border-radius: 999px;
+    background-color: #E5E1DA;
+  }
+  .seg.done { background-color: #7A9E7E; }
+  .stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem clamp(1.25rem, 4vw, 2.5rem) 2rem;
+  }
+  .step {
+    width: 100%;
+    max-width: 38rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .kicker {
+    font-size: clamp(0.72rem, 1.6vw, 0.8rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7A9E7E;
+    margin: 0 0 0.75rem;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 5.2vw, 2.4rem);
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #2C3E2D;
+    margin: 0 0 1.5rem;
+  }
+  .micro {
+    font-size: clamp(0.88rem, 1.8vw, 0.97rem);
+    color: #6B7B6C;
+    margin: -0.9rem 0 1.4rem;
+  }
+  .chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    max-width: 30rem;
+    margin: 0 auto;
+  }
+  .chip {
+    display: block;
+    font: inherit;
+    font-size: clamp(0.95rem, 2.2vw, 1.02rem);
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    color: #2C3E2D;
+    background-color: #FFFEFB;
+    border: 1px solid #E5E1DA;
+    border-radius: 12px;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  }
+  .chip:hover {
+    border-color: #7A9E7E;
+    transform: translateY(-1px);
+  }
+  .chip:focus-visible {
+    outline: 2px solid #7A9E7E;
+    outline-offset: 2px;
+  }
+</style>

@@ -16,6 +16,8 @@
   "app": {
     "revealAt": 373.77,
     "slide": 154,
+    "deadlineAt": 422.4,
+    "deadlineSlide": 171,
     "source": "script/timecodes.csv row 154 (t_in 373.77) — vsl-09-app-offer, HeyGen Bram rebuild 2026-10-29",
     "verified": "2026-10-29",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (188 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -23,6 +25,8 @@
   "cardiac": {
     "revealAt": 385.13,
     "slide": 165,
+    "deadlineAt": 431.77,
+    "deadlineSlide": 182,
     "source": "script/timecodes.csv row 165 (t_in 385.13) — vsl-17-cardiac-low-sodium, HeyGen Vincent rebuild 2026-10-29",
     "verified": "2026-10-29",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (198 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -30,6 +34,8 @@
   "weight": {
     "revealAt": 392.37,
     "slide": 161,
+    "deadlineAt": 441.03,
+    "deadlineSlide": 178,
     "source": "script/timecodes.csv row 161 (t_in 392.37) — vsl-10-weight-management, HeyGen bram rebuild 2026-10-27",
     "verified": "2026-10-27",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -37,6 +43,8 @@
   "time-poor": {
     "revealAt": 371.47,
     "slide": 160,
+    "deadlineAt": 418.1,
+    "deadlineSlide": 177,
     "source": "script/timecodes.csv row 160 (t_in 371.47) — vsl-11-time-poor, HeyGen vincent rebuild 2026-10-27",
     "verified": "2026-10-27",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -44,6 +52,8 @@
   "family-picky": {
     "revealAt": 392.43,
     "slide": 161,
+    "deadlineAt": 441.07,
+    "deadlineSlide": 178,
     "source": "script/timecodes.csv row 161 (t_in 392.43) — vsl-12-family-picky, HeyGen bram rebuild 2026-10-27",
     "verified": "2026-10-27",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -51,6 +61,8 @@
   "gluten-free": {
     "revealAt": 377.8,
     "slide": 162,
+    "deadlineAt": 424.43,
+    "deadlineSlide": 179,
     "source": "script/timecodes.csv row 162 (t_in 377.80) — vsl-13-gluten-free, HeyGen vincent rebuild 2026-10-27",
     "verified": "2026-10-27",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -58,6 +70,8 @@
   "plant-based": {
     "revealAt": 397.03,
     "slide": 162,
+    "deadlineAt": 445.67,
+    "deadlineSlide": 179,
     "source": "script/timecodes.csv row 162 (t_in 397.03) — vsl-14-plant-based-split, HeyGen bram rebuild 2026-10-27",
     "verified": "2026-10-27",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (195 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -65,6 +79,8 @@
   "keto": {
     "revealAt": 376.2,
     "slide": 162,
+    "deadlineAt": 422.87,
+    "deadlineSlide": 179,
     "source": "script/timecodes.csv row 162 (t_in 376.20) — vsl-15-keto-low-carb, HeyGen vincent rebuild 2026-10-28",
     "verified": "2026-10-28",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (197 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
@@ -72,6 +88,8 @@
   "multi": {
     "revealAt": 393.2,
     "slide": 163,
+    "deadlineAt": 441.87,
+    "deadlineSlide": 180,
     "source": "script/timecodes.csv row 163 (t_in 393.20) — vsl-16-multi-restriction, HeyGen bram rebuild 2026-10-28",
     "verified": "2026-10-28",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (197 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"

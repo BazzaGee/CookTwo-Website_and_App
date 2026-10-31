@@ -30,6 +30,9 @@ interface Props {
   leadEndpoint?: string;
   openAppHref?: string;
   countdownTo?: string;
+  /** Seconds into the video when the founding-window strip may appear.
+   *  0/absent = show immediately (legacy behaviour). */
+  deadlineAt?: number;
   /** Attribution written to the lead record (waitlist.source). Defaults to slug. */
   leadSource?: string;
 }
@@ -48,6 +51,7 @@ const {
   leadEndpoint = mode === 'app' ? '/api/waitlist/subscribe' : '/api/lead/vsl-tool',
   openAppHref = 'https://cooktwo.app',
   countdownTo = '',
+  deadlineAt = 0,
   leadSource = slug,
 } = Astro.props;
 
@@ -57,11 +61,11 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
 
 <FunnelLayout title={title} description={description}>
   <main class="watch">
-    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref} data-endpoint={leadEndpoint} data-redirect={mode === 'app' ? openAppHref : ''} data-source={leadSource}>
+    <div class="stage" id="stage" data-reveal={revealAt} data-mode={mode} data-slug={slug} data-tool={toolHref} data-endpoint={leadEndpoint} data-redirect={mode === 'app' ? openAppHref : ''} data-source={leadSource} data-deadline-at={deadlineAt}>
       <!-- 0 · founding-window countdown (app mode only — one ISO date, the
            label is derived from it so copy and clock can never disagree) -->
       {countdownTo && (
-        <div class="deadline" id="deadline" role="status" data-at={countdownTo}>
+        <div class="deadline" id="deadline" role="status" data-at={countdownTo} hidden={deadlineAt > 0}>
           <span class="deadline-label" id="deadline-label">Founding window closes</span>
           <span class="deadline-clock" id="deadline-clock">&mdash;</span>
         </div>
@@ -205,6 +209,15 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
     // Label is derived from the same ISO date the clock counts to, so the
     // two can never disagree. After expiry the strip says so honestly.
     var deadlineEl = document.getElementById('deadline');
+    var deadlineGate = parseFloat(stage.getAttribute('data-deadline-at') || '0') || 0;
+    var deadlineShown = !(deadlineGate > 0);
+    function maybeShowDeadline() {
+      if (deadlineShown || !deadlineEl) return;
+      if (video.currentTime < deadlineGate) return;
+      deadlineShown = true;
+      deadlineEl.hidden = false;
+      deadlineEl.classList.add('is-in');
+    }
     if (deadlineEl) {
       var atMs = new Date(deadlineEl.getAttribute('data-at') || '').getTime();
       var dLabel = document.getElementById('deadline-label');
@@ -372,6 +385,7 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
       if (video.currentTime > maxTime) maxTime = video.currentTime;
       accumulateWatch();
       maybeReveal();
+      maybeShowDeadline();
     });
 
     video.addEventListener('seeked', function () {
@@ -498,6 +512,8 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
 
     video.addEventListener('loadedmetadata', maybeReveal);
     video.addEventListener('canplay', maybeReveal);
+    video.addEventListener('loadedmetadata', maybeShowDeadline);
+    video.addEventListener('canplay', maybeShowDeadline);
 
     if (emailIn) {
       var ctaFocused = false;
@@ -694,7 +710,14 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
     flex: none;
     line-height: 1;
   }
-  /* founding-window countdown pill — terracotta tint, sits above the banner */
+  /* founding-window countdown pill — terracotta tint, sits above the banner.
+     Held hidden until the video actually names the window (data-deadline-at). */
+  .deadline[hidden] { display: none; }
+  .deadline.is-in { animation: deadline-in 0.4s ease both; }
+  @keyframes deadline-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+  }
   .deadline {
     display: flex;
     align-items: center;
