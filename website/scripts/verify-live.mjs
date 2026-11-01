@@ -24,6 +24,9 @@ const PAGES = ['/video/couples/', '/video/solo/', '/video/app/', '/video/cardiac
   '/video/gluten-free/', '/video/plant-based/', '/video/keto/', '/video/multi/',
   '/quiz/weight/', '/quiz/time-poor/', '/quiz/family-picky/', '/quiz/gluten-free/',
   '/quiz/plant-based/', '/quiz/keto/', '/quiz/multi/', '/quiz/cardiac/', '/quiz/app/',
+  '/video/weight-solo/', '/video/time-poor-solo/', '/video/family-picky-solo/',
+  '/video/gluten-free-solo/', '/video/plant-based-solo/', '/video/keto-solo/',
+  '/video/multi-solo/', '/video/cardiac-solo/', '/video/app-solo/',
   '/factors/', '/'];
 
 const distDir = resolve('./dist');

@@ -301,21 +301,26 @@ async function syncResendContact(env: Env, answers: QuizAnswers): Promise<void> 
 // Factor quiz funnels
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Each factor quiz feeds exactly one VSL. The client is told the same path. */
-const FACTOR_VIDEOS: Record<string, string> = {
-  weight: '/video/weight',
-  'time-poor': '/video/time-poor',
-  'family-picky': '/video/family-picky',
-  'gluten-free': '/video/gluten-free',
-  'plant-based': '/video/plant-based',
-  keto: '/video/keto',
-  multi: '/video/multi',
-  cardiac: '/video/cardiac',
-  app: '/video/app',
+/** Each factor quiz feeds one of two VSLs — couples or solo — decided by the
+ *  final router question. The client is told the same path the server computes. */
+const FACTOR_VIDEOS: Record<string, { couples: string; solo: string }> = {
+  weight: { couples: '/video/weight', solo: '/video/weight-solo' },
+  'time-poor': { couples: '/video/time-poor', solo: '/video/time-poor-solo' },
+  'family-picky': { couples: '/video/family-picky', solo: '/video/family-picky-solo' },
+  'gluten-free': { couples: '/video/gluten-free', solo: '/video/gluten-free-solo' },
+  'plant-based': { couples: '/video/plant-based', solo: '/video/plant-based-solo' },
+  keto: { couples: '/video/keto', solo: '/video/keto-solo' },
+  multi: { couples: '/video/multi', solo: '/video/multi-solo' },
+  cardiac: { couples: '/video/cardiac', solo: '/video/cardiac-solo' },
+  app: { couples: '/video/app', solo: '/video/app-solo' },
 };
 
-/** Step count per factor (multi-restriction carries one extra question). */
-const FACTOR_STEPS: Record<string, number> = { multi: 4 };
+/** Step count per factor (multi-restriction carries one extra question; every
+ *  quiz ends with the router question, which is the angle decision). */
+const FACTOR_STEPS: Record<string, number> = { multi: 5 };
+
+const ROUTER_SOLO = new Set(['just-me', 'just-me-their-way']);
+const ROUTER_COUPLES = new Set(['together-same', 'together-different']);
 
 const ANSWER_RE = /^[a-z0-9-]{1,40}$/;
 
@@ -330,15 +335,15 @@ async function handleFactorQuiz(
   factor: string,
   email: string,
 ): Promise<Response> {
-  const video = FACTOR_VIDEOS[factor];
-  if (!video) {
+  const videos = FACTOR_VIDEOS[factor];
+  if (!videos) {
     return c.json({ error: 'Unknown quiz.' }, 400);
   }
   if (email && !EMAIL_RE.test(email)) {
     return c.json({ error: 'Please enter a valid email address.' }, 400);
   }
 
-  const expected = FACTOR_STEPS[factor] ?? 3;
+  const expected = FACTOR_STEPS[factor] ?? 4;
   const raw = Array.isArray(body.answers) ? body.answers : [];
   if (raw.length !== expected) {
     return c.json({ error: 'Missing quiz answers.' }, 400);
@@ -353,6 +358,16 @@ async function handleFactorQuiz(
     }
     answers.push({ q, a });
   }
+
+  // The last answer is the router question: solo vs couples. Anything else is
+  // a malformed submission — never guess a viewer into the wrong video.
+  const last = answers[answers.length - 1];
+  if (!last) return c.json({ error: 'Missing quiz answers.' }, 400);
+  const router = last.a;
+  let angle: 'solo' | 'couples';
+  if (ROUTER_SOLO.has(router)) angle = 'solo';
+  else if (ROUTER_COUPLES.has(router)) angle = 'couples';
+  else return c.json({ error: 'Invalid quiz answer.' }, 400);
 
   const incoming = (body.utm && typeof body.utm === 'object' ? body.utm : {}) as Record<string, unknown>;
   const utm: Record<string, string> = {};
@@ -370,10 +385,10 @@ async function handleFactorQuiz(
       `INSERT INTO quiz_attempts
          (id, session_id, visitor_id, email, angle, factor, answers,
           utm_source, utm_medium, utm_campaign, utm_content, via)
-       VALUES (?, ?, ?, ?, 'couples', ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
-        attemptId, sessionId, visitorId, email || null, factor,
+        attemptId, sessionId, visitorId, email || null, angle, factor,
         JSON.stringify(answers),
         utm.utm_source ?? null, utm.utm_medium ?? null,
         utm.utm_campaign ?? null, utm.utm_content ?? null, utm.via ?? null,
@@ -409,11 +424,11 @@ async function handleFactorQuiz(
 
   // Best-effort contact tag; the redirect must never wait on Resend.
   if (email && c.env.RESEND_API_KEY) {
-    later(c, syncFactorContact(c.env, email, factor, answers, utm)
+    later(c, syncFactorContact(c.env, email, factor, angle, answers, utm)
       .catch((err) => console.error('resend factor quiz sync failed:', err)));
   }
 
-  const redirect = withFunnelParams(video, sessionId, attemptId, utm);
+  const redirect = withFunnelParams(videos[angle], sessionId, attemptId, utm);
   return c.json({ status: 'ok', redirect, session_id: sessionId, attempt_id: attemptId });
 }
 
@@ -422,6 +437,7 @@ async function syncFactorContact(
   env: Env,
   email: string,
   factor: string,
+  angle: 'solo' | 'couples',
   answers: FactorAnswer[],
   utm: Record<string, string>,
 ): Promise<void> {
@@ -433,6 +449,7 @@ async function syncFactorContact(
   };
   const properties: Record<string, string> = {
     quiz_factor: factor,
+    quiz_angle: angle,
     quiz_answers: answers.map((a) => a.a).join(','),
     quiz_completed_at: new Date().toISOString().slice(0, 10),
   };

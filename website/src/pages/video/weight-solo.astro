@@ -1,0 +1,34 @@
+---
+import VslPlayer from '../../components/funnel/VslPlayer.astro';
+import { revealFor } from '../../lib/reveal-at';
+
+// Single source: src/data/vsl-reveal.json. Do not paste the number here.
+const reveal = revealFor('weight-solo');
+
+// The founding-window cutoff, one ISO instant. The VSL's spoken deadline
+// (OFFER["DEADLINE"] in the VSL folder's slides.py) names the same date.
+const FOUNDING_DEADLINE = '2026-11-07T00:00:00Z';
+---
+
+<!--
+  Reveal at 364.03s — slide #158, the opt-in box.
+  Founding-window pill at 409.40s — slide #175, first spoken deadline.
+  Both live in src/data/vsl-reveal.json (source: slides_timing.json).
+-->
+<VslPlayer
+  slug="weight-solo"
+  mode="app"
+  revealAt={reveal.revealAt}
+  deadlineAt={reveal.deadlineAt}
+  title="Watch — a plate sized to your goal"
+  description="Barry shows how one dinner, one plate and one shop make eating lighter the default."
+  offerHead="Put your email in the box under this video&hellip;"
+  buttonLabel="Start cooking with CookTwo"
+  microcopy="Opens in your browser. Installable on your phone. Free to start — no card."
+  doneHead="Welcome to your kitchen."
+  doneSub="Your access link is on its way to your inbox — and CookTwo is opening now. Set-up takes about five minutes."
+  leadEndpoint="/api/waitlist/subscribe"
+  leadSource="vsl-weight-solo"
+  openAppHref="https://cooktwo.app"
+  countdownTo={FOUNDING_DEADLINE}
+/>

@@ -93,5 +93,86 @@
     "source": "script/timecodes.csv row 163 (t_in 393.20) — vsl-16-multi-restriction, HeyGen bram rebuild 2026-10-28",
     "verified": "2026-10-28",
     "verifiedBy": "slides_timing.json after resync2 exact-onset (197 narration groups); t0 is the first frame of the opt-in slide on the 30 fps timeline"
+  },
+  "weight-solo": {
+    "revealAt": 364.03,
+    "slide": 158,
+    "deadlineAt": 409.4,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-18-weight-management-solo, HeyGen vincent; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "time-poor-solo": {
+    "revealAt": 374.7,
+    "slide": 158,
+    "deadlineAt": 422.3,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-19-time-poor-solo, HeyGen bram; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "family-picky-solo": {
+    "revealAt": 362.7,
+    "slide": 158,
+    "deadlineAt": 408.07,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-20-family-picky-solo, HeyGen vincent; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "gluten-free-solo": {
+    "revealAt": 377.4,
+    "slide": 158,
+    "deadlineAt": 425.0,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-21-gluten-free-solo, HeyGen bram; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "plant-based-solo": {
+    "revealAt": 362.83,
+    "slide": 158,
+    "deadlineAt": 408.17,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-22-plant-based-split-solo, HeyGen vincent; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "keto-solo": {
+    "revealAt": 376.07,
+    "slide": 158,
+    "deadlineAt": 423.67,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-23-keto-low-carb-solo, HeyGen bram; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "multi-solo": {
+    "revealAt": 362.93,
+    "slide": 158,
+    "deadlineAt": 408.27,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-24-multi-restriction-solo, HeyGen vincent; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "cardiac-solo": {
+    "revealAt": 380.5,
+    "slide": 158,
+    "deadlineAt": 428.1,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-25-cardiac-low-sodium-solo, HeyGen bram; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
+  },
+  "app-solo": {
+    "revealAt": 361.83,
+    "slide": 158,
+    "deadlineAt": 407.2,
+    "deadlineSlide": 175,
+    "source": "solo rebuild 2026-10-31 — vsl-26-app-offer-solo, HeyGen vincent; opt-in slide 158, deadline slide 175",
+    "verified": "2026-10-31",
+    "verifiedBy": "slides_timing.json after resync2 exact-onset; opt-in and founding-window cues are segment t0 on the 30 fps timeline"
   }
 }
