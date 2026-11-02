@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfiles, type Gender, type ActivityLevel, type Goal, type PartnerProfile } from '../hooks/useProfiles';
 import { useDietList } from '../hooks/useDietInfo';
+import { normalizeCategoryKey } from '../lib/dietCatalog';
 import { DIET_CATEGORIES, type DietCatalogEntry } from '../types/diet';
 import { useAuthStore } from '../stores/authStore';
 import { usePreferencesStore } from '../stores/preferencesStore';
@@ -71,7 +72,7 @@ export default function ProfilesTab() {
     const groups: Record<string, DietCatalogEntry[]> = {};
     for (const d of dietList) {
       if (d.isCondition) continue;
-      const cat = d.category;
+      const cat = normalizeCategoryKey(d.category);
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(d);
     }

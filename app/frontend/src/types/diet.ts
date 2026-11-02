@@ -37,11 +37,13 @@ export interface DietArticleContent {
 export const DIET_CATEGORIES: Record<string, string> = {
   balanced: 'Balanced',
   lowCarb: 'Low-Carb',
-  plantBased: 'Plant-Based',
+  'plant-based': 'Plant-Based',
   macronutrient: 'Macronutrient-Focused',
+  'macronutrient-focused': 'Macronutrient-Focused',
   therapeutic: 'Therapeutic / Medical',
   lifestyle: 'Lifestyle',
   elimination: 'Elimination',
+  ancestral: 'Ancestral',
   timing: 'Timing Pattern',
   condition: 'Health Condition',
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createHousehold, joinHousehold } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
@@ -7,23 +7,12 @@ import { useUsage } from '../hooks/useUsage';
 import { apiFetch } from '../lib/api';
 import BodyMetricsFields from '../components/BodyMetricsFields';
 import { useDietList } from '../hooks/useDietInfo';
-import type { DietCatalogEntry } from '../types/diet';
+import { FALLBACK_DIET_OPTIONS, groupDietOptions, type DietOption } from '../lib/dietCatalog';
 import type { Diet, Goal, Gender, ActivityLevel } from '../hooks/useProfiles';
 
 type Step = 'welcome' | 'name' | 'preferences' | 'goals' | 'body' | 'pantry' | 'plan' | 'created' | 'join-code' | 'partner-check' | 'ready';
 
-const DIETS: readonly Diet[] = ['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'gluten-free'] as const;
 const GOALS: readonly Goal[] = ['lose', 'maintain', 'gain', 'none'] as const;
-
-const DIET_LABELS: Record<Diet, string> = {
-  omnivore: 'No restrictions',
-  vegetarian: 'Vegetarian',
-  vegan: 'Vegan',
-  pescatarian: 'Pescatarian',
-  keto: 'Keto',
-  paleo: 'Paleo',
-  'gluten-free': 'Gluten-free',
-};
 
 const GOAL_LABELS: Record<Goal, string> = {
   lose: 'Lose weight',
@@ -62,8 +51,10 @@ export default function Onboarding() {
   const [submitting, setSubmitting] = useState(false);
   const [searchParams] = useSearchParams();
   const { data: dietList = [] } = useDietList();
-  const dietOptions = dietList.filter((d) => !d.isCondition);
-  const conditionOptions = dietList.filter((d) => d.isCondition);
+  const dietSource = dietList.length > 0 ? dietList : FALLBACK_DIET_OPTIONS;
+  const dietOptions = dietSource.filter((d) => !d.isCondition);
+  const conditionOptions = dietSource.filter((d) => d.isCondition);
+  const dietGroups = useMemo(() => groupDietOptions(dietOptions), [dietList]);
 
   useEffect(() => {
     const joinParam = searchParams.get('join');
@@ -266,7 +257,7 @@ export default function Onboarding() {
               diet={diet}
               conditions={conditions}
               allergies={allergies}
-              dietOptions={dietOptions}
+              dietGroups={dietGroups}
               conditionOptions={conditionOptions}
               onDietChange={setDiet}
               onConditionsChange={setConditions}
@@ -526,7 +517,7 @@ function PreferencesStep({
   diet,
   conditions,
   allergies,
-  dietOptions,
+  dietGroups,
   conditionOptions,
   onDietChange,
   onConditionsChange,
@@ -537,8 +528,8 @@ function PreferencesStep({
   diet: Diet;
   conditions: string[];
   allergies: string;
-  dietOptions: DietCatalogEntry[];
-  conditionOptions: DietCatalogEntry[];
+  dietGroups: { key: string; label: string; diets: DietOption[] }[];
+  conditionOptions: DietOption[];
   onDietChange: (v: Diet) => void;
   onConditionsChange: (v: string[]) => void;
   onAllergiesChange: (v: string) => void;
@@ -569,17 +560,15 @@ function PreferencesStep({
             onChange={(e) => onDietChange(e.target.value as Diet)}
             className="w-full bg-white border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors appearance-none"
           >
-            {dietOptions.length > 0
-              ? dietOptions.map((d) => (
+            {dietGroups.map((group) => (
+              <optgroup key={group.key} label={group.label}>
+                {group.diets.map((d) => (
                   <option key={d.dietKey} value={d.dietKey}>
                     {d.emoji ? `${d.emoji} ` : ''}{d.displayLabel}
                   </option>
-                ))
-              : DIETS.map((d) => (
-                  <option key={d} value={d}>
-                    {DIET_LABELS[d]}
-                  </option>
                 ))}
+              </optgroup>
+            ))}
           </select>
         </div>
 

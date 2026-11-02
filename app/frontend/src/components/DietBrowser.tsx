@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useDietArticles, useDietArticle } from '../hooks/useDietInfo';
+import { dietGuideUrl } from '../lib/dietGuideLinks';
 
 interface DietBrowserProps {
   dietKey: string;
@@ -9,8 +10,9 @@ interface DietBrowserProps {
 }
 
 export default function DietBrowser({ dietKey, onClose }: DietBrowserProps) {
-  const { data: articles = [] } = useDietArticles(dietKey);
+  const { data: articles = [], isLoading: articlesLoading } = useDietArticles(dietKey);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const hasArticles = articles.length > 0;
 
   useEffect(() => {
     if (articles.length > 0 && !activeSlug) {
@@ -64,7 +66,27 @@ export default function DietBrowser({ dietKey, onClose }: DietBrowserProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-6 md:px-8 md:py-8">
-          {isLoading ? (
+          {!hasArticles && !articlesLoading ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-sage/10 flex items-center justify-center">
+                <span className="text-2xl" aria-hidden="true">🧭</span>
+              </div>
+              <div>
+                <p className="text-text-primary text-lg font-semibold">Full evidence guide</p>
+                <p className="text-text-secondary text-sm max-w-sm mt-1">
+                  The deep, research-backed explainer for this diet — what the studies show, the honest trade-offs, and who it suits — lives on the CookTwo website.
+                </p>
+              </div>
+              <a
+                href={dietGuideUrl(dietKey)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-sage text-white rounded-xl px-5 py-3 text-sm font-medium hover:bg-sage-dark transition-colors"
+              >
+                Read the guide on cooktwo.com →
+              </a>
+            </div>
+          ) : isLoading ? (
             <p className="text-text-secondary text-sm text-center">Loading…</p>
           ) : article ? (
             <article className="prose-content max-w-none">
@@ -75,6 +97,19 @@ export default function DietBrowser({ dietKey, onClose }: DietBrowserProps) {
             <p className="text-text-secondary text-sm text-center">No content available.</p>
           )}
         </div>
+
+        {hasArticles && (
+          <div className="border-t border-border bg-white px-5 py-3 text-center">
+            <a
+              href={dietGuideUrl(dietKey)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sage hover:text-sage-dark text-xs font-medium"
+            >
+              Read the full consumer guide on cooktwo.com →
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
