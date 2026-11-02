@@ -1,0 +1,17 @@
+---
+interface Props {
+  strong?: boolean;
+  note?: string;
+}
+
+const { strong = false, note } = Astro.props;
+
+const DEFAULT_NOTE = 'This guide summarizes published research for education only. It is not medical advice and it replaces nobody\u2019s clinician. If you have a medical condition, take medication, are pregnant or breastfeeding, or are feeding a child or teenager, talk to a doctor or registered dietitian before changing how you eat.';
+---
+
+<aside class:list={['not-prose mt-8 rounded-2xl border p-5 text-sm leading-relaxed', strong ? 'border-error/40 bg-error/5' : 'border-border bg-cream-dark']}>
+  <p class="font-semibold text-text-primary mb-1">Not medical advice</p>
+  <p class="text-text-secondary">
+    {note ? note : DEFAULT_NOTE}
+  </p>
+</aside>

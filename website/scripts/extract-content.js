@@ -190,8 +190,12 @@ function extractContentFile(filePath, type) {
 
 const blogFiles = getAllFiles(join(rootDir, 'src', 'content', 'blog'), ['.md', '.mdx']);
 const pageContentFiles = getAllFiles(join(rootDir, 'src', 'content', 'pages'), ['.md', '.mdx']);
+const dietContentFiles = getAllFiles(join(rootDir, 'src', 'content', 'diets'), ['.md', '.mdx']);
 const blogPosts = blogFiles.map((f) => extractContentFile(f, 'post'));
 const pillarPages = pageContentFiles.map((f) => extractContentFile(f, 'page'));
+const dietPages = dietContentFiles
+  .map((f) => extractContentFile(f, 'diet'))
+  .filter((d) => d.draft !== true);
 
 const whatIs = faq.find((q) => /what is cooktwo/i.test(q.question));
 const business = {
@@ -212,6 +216,7 @@ const siteContent = {
   pages,
   blogPosts,
   pillarPages,
+  dietPages,
   navigation: navigationRaw.navigation || {},
   generatedAt: new Date().toISOString(),
 };
@@ -241,4 +246,5 @@ console.log(`  Competitors compared: ${comparison.competitors.length}`);
 console.log(`  Pages: ${pages.length}`);
 console.log(`  Blog posts: ${blogPosts.length}`);
 console.log(`  Pillar pages: ${pillarPages.length}`);
+console.log(`  Diet guides: ${dietPages.length}`);
 console.log('Done!');

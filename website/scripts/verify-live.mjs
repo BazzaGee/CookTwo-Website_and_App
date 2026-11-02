@@ -27,7 +27,7 @@ const PAGES = ['/video/couples/', '/video/solo/', '/video/app/', '/video/cardiac
   '/video/weight-solo/', '/video/time-poor-solo/', '/video/family-picky-solo/',
   '/video/gluten-free-solo/', '/video/plant-based-solo/', '/video/keto-solo/',
   '/video/multi-solo/', '/video/cardiac-solo/', '/video/app-solo/',
-  '/factors/', '/'];
+  '/factors/', '/diets/', '/diets/keto/', '/diets/healthy-eating/', '/'];
 
 const distDir = resolve('./dist');
 

@@ -1,0 +1,15 @@
+---
+interface Props {
+  heading?: string;
+}
+
+const { heading = 'The relief buried in the evidence' } = Astro.props;
+---
+
+<div class="not-prose my-12 rounded-2xl border border-border bg-sage/5 p-6 sm:p-8">
+  <p class="text-xs font-semibold uppercase tracking-widest text-sage-dark mb-2">{heading}</p>
+  <p class="text-lg leading-relaxed text-text-primary">
+    You do not have to pick the one perfect diet. You have to pick the right foods inside whichever plan suits your life, and give it a fair run. That is the thread across all 25
+    <a href="/diets" class="font-semibold text-sage-dark hover:text-sage underline decoration-sage/40 underline-offset-2">CookTwo diet evidence guides</a>.
+  </p>
+</div>

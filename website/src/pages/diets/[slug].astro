@@ -1,0 +1,18 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import DietLayout from '../../layouts/DietLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('diets', ({ data }) => data.draft !== true);
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry: entry as CollectionEntry<'diets'> } }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const toc = headings.filter((h) => h.depth === 2);
+---
+
+<DietLayout entry={entry} headings={toc}>
+  <Content />
+</DietLayout>

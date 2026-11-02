@@ -1,0 +1,29 @@
+---
+interface Source {
+  label: string;
+  detail?: string;
+  url?: string;
+}
+
+interface Props {
+  sources: Source[];
+}
+
+const { sources } = Astro.props;
+---
+
+<section class="not-prose mt-14 border-t border-border pt-8" aria-label="Sources">
+  <h2 class="text-xl font-bold text-text-primary mb-1">Sources & further reading</h2>
+  <p class="text-sm text-text-secondary mb-5">Primary studies, systematic reviews and public-health guidelines used to write this guide.</p>
+  <ol class="space-y-3 text-sm">
+    {sources.map((s, i) => (
+      <li class="flex gap-3 text-text-secondary leading-relaxed">
+        <span class="font-semibold text-text-primary select-none">[{i + 1}]</span>
+        <span>
+          {s.url ? <a href={s.url} class="text-sage-dark hover:text-sage underline decoration-sage/40 underline-offset-2" target="_blank" rel="noopener noreferrer">{s.label}</a> : <span class="text-text-primary">{s.label}</span>}
+          {s.detail && <span class="block mt-0.5">{s.detail}</span>}
+        </span>
+      </li>
+    ))}
+  </ol>
+</section>

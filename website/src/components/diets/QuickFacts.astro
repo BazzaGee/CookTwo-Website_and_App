@@ -1,0 +1,73 @@
+---
+interface Props {
+  grade?: string;
+  macroSplit?: { carb: number; protein: number; fat: number };
+  isTimingPattern?: boolean;
+  restrictiveness?: number;
+  bestFor?: string;
+  hardestPart?: string;
+  medicalCaution?: string;
+}
+
+const { grade, macroSplit, isTimingPattern = false, restrictiveness, bestFor, hardestPart, medicalCaution } = Astro.props;
+const dots = restrictiveness ? Array.from({ length: 5 }, (_, i) => i + 1) : [];
+---
+
+<div class="not-prose rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+  <div class="px-5 py-4 bg-cream-dark border-b border-border">
+    <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">At a glance</p>
+  </div>
+  <dl class="px-5 py-4 divide-y divide-border text-sm">
+    {grade && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary">Evidence</dt>
+        <dd><span class="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm text-white bg-sage">{grade.toUpperCase()}</span></dd>
+      </div>
+    )}
+    {isTimingPattern && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary">Type</dt>
+        <dd class="text-right font-medium text-text-primary">Timing pattern</dd>
+      </div>
+    )}
+    {macroSplit && (
+      <div class="py-3">
+        <dt class="text-text-secondary mb-2">Macro split</dt>
+        <dd>
+          <div class="flex w-full h-2.5 overflow-hidden rounded-full bg-cream border border-border">
+            <div class="bg-sage" style={`width:${macroSplit.carb}%`}></div>
+            <div class="bg-terracotta-dark" style={`width:${macroSplit.protein}%`}></div>
+            <div class="bg-[#6B7B6C]" style={`width:${macroSplit.fat}%`}></div>
+          </div>
+          <p class="mt-1.5 text-xs text-text-secondary text-right">{macroSplit.carb}% carb · {macroSplit.protein}% protein · {macroSplit.fat}% fat</p>
+        </dd>
+      </div>
+    )}
+    {restrictiveness && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary">Restrictiveness</dt>
+        <dd class="flex items-center gap-1 pt-1" title={`${restrictiveness} of 5`} aria-label={`Restrictiveness ${restrictiveness} of 5`}>
+          {dots.map((d) => <span class:list={['w-2.5 h-2.5 rounded-full', d <= restrictiveness ? 'bg-terracotta-dark' : 'bg-cream border border-border']}></span>)}
+        </dd>
+      </div>
+    )}
+    {bestFor && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary flex-shrink-0">Best for</dt>
+        <dd class="text-right text-text-primary font-medium">{bestFor}</dd>
+      </div>
+    )}
+    {hardestPart && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary flex-shrink-0">Hardest part</dt>
+        <dd class="text-right text-text-primary font-medium">{hardestPart}</dd>
+      </div>
+    )}
+    {medicalCaution && (
+      <div class="flex items-start justify-between gap-4 py-3">
+        <dt class="text-text-secondary flex-shrink-0">Caution</dt>
+        <dd class="text-right text-terracotta-dark font-medium">{medicalCaution}</dd>
+      </div>
+    )}
+  </dl>
+</div>

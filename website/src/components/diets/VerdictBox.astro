@@ -1,0 +1,23 @@
+---
+interface Props {
+  answer: string;
+  conditions?: string[];
+}
+
+const { answer, conditions = [] } = Astro.props;
+---
+
+<div class="not-prose my-10 rounded-2xl border-2 border-sage/60 bg-sage/5 p-6 sm:p-8">
+  <p class="text-xs font-semibold uppercase tracking-widest text-sage-dark mb-2">The verdict</p>
+  <p class="text-xl leading-relaxed text-text-primary font-medium">{answer}</p>
+  {conditions.length > 0 && (
+    <ul class="mt-4 space-y-2 text-text-primary">
+      {conditions.map((c) => (
+        <li class="flex gap-2.5">
+          <svg class="w-5 h-5 text-sage-dark flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>{c}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>

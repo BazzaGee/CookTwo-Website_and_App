@@ -1,0 +1,26 @@
+---
+interface Props {
+  carb: number;
+  protein: number;
+  fat: number;
+  compact?: boolean;
+}
+
+const { carb, protein, fat, compact = false } = Astro.props;
+const h = compact ? 'h-2.5' : 'h-4';
+---
+
+<div class="not-prose">
+  <div class:list={['flex w-full overflow-hidden rounded-full bg-cream-dark border border-border', h]} role="img" aria-label={`Macro split of energy: ${carb}% carbohydrate, ${protein}% protein, ${fat}% fat`}>
+    <div class="bg-sage" style={`width:${carb}%`}></div>
+    <div class="bg-terracotta-dark" style={`width:${protein}%`}></div>
+    <div class="bg-[#6B7B6C]" style={`width:${fat}%`}></div>
+  </div>
+  {!compact && (
+    <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-text-secondary">
+      <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sage inline-block"></span>Carbohydrate {carb}%</span>
+      <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-terracotta-dark inline-block"></span>Protein {protein}%</span>
+      <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B7B6C] inline-block"></span>Fat {fat}%</span>
+    </div>
+  )}
+</div>

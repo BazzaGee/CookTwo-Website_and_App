@@ -75,7 +75,7 @@ export function buildSiteSections() {
   for (const p of c.pages || []) {
     if (p.content) s.push({ source: `/${p.slug}`, title: p.title || p.slug, text: `${p.title}. ${p.description || ''} ${p.content}` });
   }
-  for (const p of [...(c.pillarPages || []), ...(c.blogPosts || [])]) {
+  for (const p of [...(c.pillarPages || []), ...(c.dietPages || []), ...(c.blogPosts || [])]) {
     if (p.content) s.push({ source: `/${p.slug}`, title: p.title || p.slug, text: `${p.title}. ${p.description || ''} ${p.content}` });
   }
 

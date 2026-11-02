@@ -1,0 +1,47 @@
+---
+interface Props {
+  eat: string[];
+  moderate?: string[];
+  avoid?: string[];
+  title?: string;
+}
+
+const { eat, moderate = [], avoid = [], title = 'The food framework' } = Astro.props;
+
+const head = (icon: 'leaf' | 'pause' | 'ban', label: string) => {
+  const paths = {
+    leaf: 'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10ZM2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12',
+    pause: 'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0ZM10 15V9M14 15V9',
+    ban: 'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0ZM4.93 4.93l14.14 14.14'
+  };
+  return `<svg class="w-4 h-4 text-sage-dark flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]}"/></svg>`;
+};
+---
+
+<figure class="not-prose my-8 rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+  <figcaption class="px-5 sm:px-7 py-4 bg-cream-dark border-b border-border text-base font-bold text-text-primary">{title}</figcaption>
+  <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+    <div class="p-5 sm:p-6">
+      <p class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-sage-dark mb-3"><Fragment set:html={head('leaf', 'Eat freely')} />Eat freely</p>
+      <ul class="space-y-2 text-sm text-text-primary">
+        {eat.map((f, i) => (<li class:set={['flex gap-2.5', i !== 0 && 'pt-2 border-t border-border border-dotted']}><span class="text-sage-dark select-none" aria-hidden="true">+</span><span>{f}</span></li>))}
+      </ul>
+    </div>
+    {moderate.length > 0 && (
+      <div class="p-5 sm:p-6">
+        <p class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-terracotta-dark mb-3"><Fragment set:html={head('pause', 'In moderation')} />In moderation</p>
+        <ul class="space-y-2 text-sm text-text-primary">
+          {moderate.map((f, i) => (<li class:set={[i !== 0 && 'pt-2 border-t border-border border-dotted', 'flex gap-2.5']}><span class="text-terracotta-dark select-none" aria-hidden="true">~</span><span>{f}</span></li>))}
+        </ul>
+      </div>
+    )}
+    {avoid.length > 0 && (
+      <div class="p-5 sm:p-6 bg-cream/60">
+        <p class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-error mb-3"><Fragment set:html={head('ban', 'Leave out')} />Leave out</p>
+        <ul class="space-y-2 text-sm text-text-primary">
+          {avoid.map((f, i) => (<li class:set={[i !== 0 && 'pt-2 border-t border-border border-dotted', 'flex gap-2.5']}><span class="text-error select-none" aria-hidden="true">−</span><span>{f}</span></li>))}
+        </ul>
+      </div>
+    )}
+  </div>
+</figure>

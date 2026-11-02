@@ -7,12 +7,23 @@ interface FaqItem {
 interface Props {
   items: FaqItem[];
   title?: string;
+  schema?: boolean;
 }
 
-const { items, title } = Astro.props;
+const { items, title, schema = false } = Astro.props;
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
+};
 ---
 
 {title && <h2 class="text-2xl font-bold text-text-primary mt-12 mb-4">{title}</h2>}
+{schema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>}
 <div class="not-prose my-8 space-y-3">
   {items.map((item) => (
     <details class="group bg-white border border-border rounded-2xl overflow-hidden">

@@ -1,0 +1,113 @@
+---
+title: "Vegan Diet: What the Science Says"
+description: "The vegan diet is very well documented in cohorts — with one non-negotiable nutrient (B12) and several others that need planning. The evidence, the nutrient checklist and the honest verdict."
+pubDate: 2026-11-02
+updatedDate: 2026-11-02
+author: "CookTwo Research"
+ogImage: "/images/diets/og/vegan.webp"
+dietKey: "vegan"
+evidenceGrade: "A"
+category: "plant-based"
+restrictiveness: 3
+macroSplit: { carb: 55, protein: 15, fat: 30 }
+bestFor: "Heart health, weight and diabetes prevention — with rigorous nutrient planning"
+hardestPart: "B12 is non-negotiable; iron, calcium, iodine and omega-3 all need attention"
+medicalCaution: "Pregnancy, children, and anyone with B12 or iron-deficiency history need professional guidance"
+medical: false
+readingTime: "9 min"
+targetKeyword: "vegan diet science health evidence"
+tags: ["vegan", "diet evidence", "plant-based"]
+draft: false
+---
+
+import PillarCheck from '../../components/diets/PillarCheck.astro';
+import StudyCard from '../../components/diets/StudyCard.astro';
+import FoodFramework from '../../components/diets/FoodFramework.astro';
+import VerdictBox from '../../components/diets/VerdictBox.astro';
+import Callout from '../../components/prose/Callout.astro';
+import Faq from '../../components/prose/Faq.astro';
+import RelatedDiets from '../../components/diets/RelatedDiets.astro';
+import SourceList from '../../components/diets/SourceList.astro';
+
+Open with the thesis plainly. The vegan diet — no animal products at all — is one of the best-investigated patterns in the cohort literature, and the debate about whether it is *healthier* than pescatarian or vegetarian is still live. What the data is consistent about are the pattern's core outcomes: better body weight, lower blood pressure, lower LDL cholesterol, and the biggest diabetes-risk reduction of the entire plant-based spectrum. It is also — like any pattern that eliminates a food family — the one with the longest list of nutrient requirements to plan around. Here is the data, including the non-negotiables.
+
+<PillarCheck rows={[
+  { label: 'Whole food quality', status: 'strong', note: 'When the actual plate is legumes, grains, vegetables, fruit, nuts — the same whole-food base that carries Mediterranean — the quality is unimpeachable. UPF-era veganism is the failure mode.' },
+  { label: 'Protein adequacy', status: 'mixed', note: 'Achievable — legumes, soy, tempeh, seitan, nuts, plant protein — with 10–20% more total protein than animal plans for the same bioavailability.' },
+  { label: 'Fibre & micronutrients', status: 'mixed', note: 'Fibre is exceptional; B12 is non-supplementary, iron and zinc are lower-efficacy forms, calcium needs fortification or tofu, vitamin D often needs help.' },
+  { label: 'Metabolic outcomes', status: 'strong', note: 'Blood pressure, cholesterol, weight and diabetes risk fall consistently; ~30% lower metabolic-syndrome prevalence among vegans in AHS-2.' },
+  { label: 'Liveability & safety', status: 'strong', note: 'B12 supplementation makes the diet worth respecting; without it, the years-long gaps are hidden but not harmless.' }
+]} />
+
+## What the cohorts show
+
+<StudyCard name="Orlich et al. — vegan all-cause mortality (JAMA Internal Medicine, 2013)" design="Prospective cohort, five patterns" participants="73,308 Adventists" duration="~5.8 years" finding="Vegans tracked an 15% lower all-cause mortality (HR 0.85) than omnivores, with cardiometabolic deaths significantly lower in all vegetarian arms — one of the closest-to-zero-meat patterns tested anywhere in a large cohort." url="https://pubmed.ncbi.nlm.nih.gov/23836264/" />
+
+<StudyCard name="Tonstad et al. — diabetes stepwise drop (Nutrition, Metabolism & Cardiovascular Diseases, 2013)" design="Prospective cohort, five patterns" participants="60,903 adults" duration="2 years" finding="Vegans carried a 49% lower prevalence of type 2 diabetes — the largest single effect in the entire spectrum, driven by body weight but not fully explained by it." url="https://pubmed.ncbi.nlm.nih.gov/21983060/" />
+
+<StudyCard name="Dinu et al. — vegan disease profile meta-analysis (Critical Reviews in Food Science and Nutrition, 2017)" design="Systematic review" participants="96 observational studies" duration="—" finding="Vegan patterns associated with ~18% lower overall cancer incidence, better body weight and cholesterol — and flagged bone fracture risk in vegans as a repeated finding where calcium and vitamin D are not added." url="https://doi.org/10.1080/10408398.2016.1138447" />
+
+The line study of note worth naming is the EPIC-Oxford cohort, the largest European dataset of vegans (~10,000 of 60,310 people) — which found fracture risk in strict vegans consistently elevated in subgroups where calcium and vitamin D intake was low. That is the pattern's one real-world price to monitor.
+
+## The nutrient plan that makes it work
+
+Vegan nutrition is not loaded, but it is meticulous — the plan is a predictable, repeatable shopping list:
+
+1. **B12 — the non-negotiable.** Supplement or fortified foods, reliably, no exceptions. Deficiency within 1–2 years is physiological, not ideological.
+2. **Iron and zinc — pairing plant iron with vitamin C.** Lentils, tofu, chickpeas, with a citrus squeeze or a side of bell peppers; the zinc reads clearer with cashews and pumpkin seeds.
+3. **Calcium — fortify or tofu.** Calcium-set tofu, fortified plant milk, almonds, figs — edibles pushing the requirement above the dailies when dairy is out.
+4. **Omega-3.** ALA from flax and chia converts to EPA/DHA at single-digit yields; a once-daily algae oil fixes the gap cheaply.
+5. **Vitamin D.** Sunlight, fortified plant milk, or a standard supplement — more complicated in northern winters.
+6. **Iodine.** Occasional seaweed or iodized salt. Variable by region, influenced by pregnancy.
+
+Three things, and the pattern is fully competitive with the omnivore nutrition piles observed in the Adventist data.
+
+<Callout variant="warning" title="Pregnancy, children and strict veganism">
+Most major nutrition bodies accept that a *well-planned* vegan diet is safe for pregnancy, breastfeeding, infants and teenagers — with the operative words "well planned", plus B12, iron, iodine, calcium and vitamin D as active requirements. The failed planning in each of those windows is much more dangerous than a more restrictive adherence, which is why our disclaimer is firm. Anyone feeding a child or carrying a pregnancy on a vegan diet should work with a registered dietitian, not a Facebook group.
+</Callout>
+
+<FoodFramework
+  title="The vegan food framework"
+  eat={['Legumes — lentils, chickpeas, black beans, split peas — at every meal anchor', 'Soy foods: tempeh, tofu, miso, calcium-set tofu', 'Whole grains: oats, farro, barley, buckwheat, quinoa, brown rice', 'Vegetables — leafy greens and crucifer especially — and generous fruit', 'Nuts, seeds and nut butters daily; ground flax or chia for ALA', 'Fortified plant milk and nutritional yeast; algae-derived EPA/DHA']
+  }
+  moderate={['Extracted oils — olive or avocado primary; coconut sparingly', 'Vegan "meats" and packaged snacks — occasional, not structural', 'Dried fruit as unsweetened snacks rather than everyday fillers']
+  }
+  avoid={['All meat, poultry, fish, dairy, eggs and honey', 'Vegan UPF — burgers, fries, sweetened soy milks — as everyday staples', 'Refined flours and sugary drinks under a green banner']
+  }
+/>
+
+## Who a vegan diet suits
+
+- **Anyone with ethics as a hard priority** — where it is the only honest answer, this is the one that plans best with B12 discipline.
+- **Anyone managing weight, cholesterol and blood sugar together** — vegan patterns deliver the best automated package of those three in the cohort literature.
+- **Anyone who likes to cook** — poorly planned veganism is a shop-aisle problem; well-planned uses one chapter of ingredients.
+
+<VerdictBox answer="Yes — with a preliminary clarification: in cohort datasets, vegan patterns carry *some of the best cardiometabolic profiles ever recorded*, and only one thing they cannot do on their own: supply B12." conditions={['Diabetes prevalence falls 49%; blood pressure 4–7 mmHg; weight class advantages over vegetarians in AHS-2.', 'B12 supplementation is not optional under any interpretation of the pattern.', 'Bone health benefits require deliberate calcium and vitamin D additions.', 'Whole-food cooking is what carries the result; the packaged-vegan version does not.']} />
+
+## Common questions
+
+<Faq schema items={[
+  { q: "Is a vegan diet actually healthy?", a: "Yes — well planned. Cohorts record lower body weight, lower blood pressure, lower LDL cholesterol, ~18% lower cancer incidence, and — strikingly — a 49% lower prevalence of type 2 diabetes. The requirements are B12 supplementation always, calcium and vitamin D attention, and deliberate protein planning. A junk-food vegan pattern is not tested or endorsed by any of that literature." },
+  { q: "Do I need B12 supplements on a vegan diet?", a: "Triple yes — non-negotiable. Vitamin B12 is found only in animal biology and deficiency within one to two years is expected without fortification. A standard B12 supplement or reliably fortified plant milk solves it cheaply and definitively." },
+  { q: "Where do I get calcium on a vegan diet?", a: "Calcium-set tofu, fortified plant milks, almonds, kale, figs and tahini. Studies tracking both British (EPIC-Oxford) and American cohorts found elevated fracture risk when calcium intake is not deliberately built in. Modern fortified milks largely close the gap, but they need to be in the shopping list." },
+  { q: "Does a vegan diet improve blood pressure and cholesterol?", a: "Both. Blood pressure drops 4–7 mmHg across trials and cohorts — an effect comparable to one BP medication — and LDL cholesterol falls on the order of 12–14 mg/dL in trials. Drop weight, drop saturated fat, drop the sodium load, and the diet produces the most consistent cardiometabolic profile outside the drug trials." },
+  { q: "Is a vegan diet safe for pregnancy or children?", a: "It can be — most major nutrition bodies accept well-planned vegan diets for pregnancy, infancy, and adolescence — but they all specify careful planning: B12 always, iron, iodine, calcium, vitamin D and adequate total calories. If you are feeding or carrying a child on vegan eating, use a registered dietitian; the downside of a gap at those stages is far bigger than a deficiency in an adult." },
+  { q: "What about packaged vegan junk food that wears the health badge?", a: "It is not within the research umbrella. The evidence applies to whole-food plant-based patterns; packaged substitutes, sweetened plant milks and additive-laden burgers live in the same NOVA ultra-processed category that the weight and heart evidence identifies as the problem across all diets. A vegan health signal follows the plate, not the label." }
+]} />
+
+## Related reading
+
+<RelatedDiets items={[
+  { href: '/diets/vegetarian', emoji: '🥚', label: 'Vegetarian', desc: 'Same structure with eggs and dairy back in the frame.' },
+  { href: '/diets/pescatarian', emoji: '🐟', label: 'Pescatarian', desc: 'The plant-forward version that solved DHA and B12 in fish first.' },
+  { href: '/diets/plant-based', emoji: '🥗', label: 'Plant-based', desc: 'The umbrella pattern that contains this whole page.' },
+  { href: '/diets/macrobiotic', emoji: '🍚', label: 'Macrobiotic', desc: 'The philosophical plant-based cousin with its own caution tale.' }
+]} />
+
+<SourceList sources={[
+  { label: 'Orlich MJ, et al. Vegetarian dietary patterns and mortality in Adventist Health Study 2. JAMA Internal Medicine, 2013.', url: 'https://pubmed.ncbi.nlm.nih.gov/23836264/' },
+  { label: 'Tonstad S, et al. Vegetarian diets and incidence of diabetes in the Adventist Health Study-2. Nutrition, Metabolism and Cardiovascular Diseases, 2013.', url: 'https://pubmed.ncbi.nlm.nih.gov/21983060/' },
+  { label: 'Dinu M, et al. Vegetarian, vegan diets and multiple health outcomes: a systematic review with meta-analysis of observational studies. Critical Reviews in Food Science and Nutrition, 2017.', url: 'https://doi.org/10.1080/10408398.2016.1138447' },
+  { label: 'Key TJ, et al. Mortality in British vegetarians: results from EPIC-Oxford. American Journal of Clinical Nutrition, 2009.', url: 'https://doi.org/10.3945/ajcn.2009.26736L' },
+  { label: 'Yokoyama Y, et al. Vegetarian diets and blood pressure: a meta-analysis. JAMA Internal Medicine, 2014.', url: 'https://pubmed.ncbi.nlm.nih.gov/24566949/' }
+]} />

@@ -1,0 +1,391 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Faq from '../../components/prose/Faq.astro';
+import StudyCard from '../../components/diets/StudyCard.astro';
+import SharedPrinciples from '../../components/diets/SharedPrinciples.astro';
+import DietSpectrum from '../../components/diets/DietSpectrum.astro';
+import DietCard from '../../components/diets/DietCard.astro';
+import SourceList from '../../components/diets/SourceList.astro';
+import EarlyAccessButton from '../../components/forms/EarlyAccessButton.astro';
+import Callout from '../../components/prose/Callout.astro';
+import { DIETS } from '../../data/diets';
+import { DIET_CATEGORY_ORDER, DIET_GUIDES } from '../../data/diet-guides';
+
+const title = 'Any Sensible Diet Can Work. Here Is What the Evidence Says | CookTwo';
+const description = 'Keto, low-carb, high-carb, low-fat, vegan, paleo — the research keeps pointing at the same thing: food quality, nutrient adequacy and adherence decide whether a diet is healthy.';
+const pubDate = new Date('2026-11-02');
+
+const dietsById = new Map(DIETS.map((d) => [d.dietKey, d]));
+const published = await getCollection('diets', ({ data }) => data.draft !== true);
+const publishedKeys = new Set(published.map((entry) => entry.id));
+// published paths use entry.id as slug, guide rows are keyed by dietKey
+const slugByKey = new Map(published.map((entry) => [`/${entry.id}`, entry.id]));
+// Build ordered guide rows sorted by hub categories then label
+const orderedGuides = DIET_CATEGORY_ORDER.flatMap((cat) =>
+  DIET_GUIDES
+    .filter((g) => g.category === cat.id && dietsById.has(g.dietKey))
+    .map((g) => ({ row: g, diet: dietsById.get(g.dietKey) as (typeof DIETS)[number] }))
+);
+
+const faqs = [
+  { q: 'Can any diet be healthy?', a: 'Any sensible diet can be healthy when it is built from whole foods, meets your protein, fibre and micronutrient needs, and you can sustain it. Randomized trials directly comparing well-constructed low-carb and low-fat diets found near-identical weight loss, and landmark cohorts show the healthiest carbohydrate window sits in the moderate middle. What reliably harms: ultra-processed food, nutrient gaps, and extremes nobody can maintain. Extreme elimination patterns — carnivore, 80/10/10 — have weak evidence and belong in a different category entirely.' },
+  { q: 'What matters more: the diet or the food quality?', a: 'Food quality, and it is not close. In the most controlled study ever run on this question, people ate 508 more calories a day and gained weight on an ultra-processed diet even though its nutrition label matched the whole-food diet they lost weight on. The same calories and macros in different food packages produced a 1,000-calorie swing. Processing level beats macro ratio as the health variable.' },
+  { q: 'Which diet has the strongest evidence?', a: 'The Mediterranean diet, with multiple large randomized trials including a ~30% reduction in major cardiovascular events in the PREDIMED study, followed by DASH, which deliberately lowered blood pressure in landmark trials. Several others — keto, low FODMAP, plant-based — have grade-A or solid evidence within specific uses. No diet is best at everything, and "strongest evidence" depends what outcome you count.' },
+  { q: 'Why do nutrition studies seem to contradict each other?', a: 'Because they measure different things at different strengths. Randomized controlled trials test cause-and-effect for months. Cohort studies follow hundreds of thousands of people for years but only show association. Both are honest; both have blind spots. This guide grades every claim so you can see which kind of evidence sits behind it.' },
+  { q: 'Is a high-carb diet unhealthy?', a: 'Whole-food carbohydrate is not. Two of the longest-lived populations in documented history — Okinawa at roughly 85% carbohydrate and Sardinia at roughly 50% — sat at opposite ends of the fat scale and both lived long. What harms is refined, starch-milled, sugar-laden carbohydrate. The 2018 Lancet Public Health analysis found mortality lowest at 50–55% carbohydrate, rising at the extremes.' },
+  { q: 'What should I do if my partner and I follow different diets?', a: 'Pick whichever evidence-backed pattern fits your health goal — or keep one flexible base and adapt each plate. CookTwo is built for exactly this: one shared recipe, personalised portions and diet adaptations per plate from the same handful of ingredients.' }
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://cooktwo.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Diet evidence', item: 'https://cooktwo.com/diets/' }
+  ]
+};
+
+const itemSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'CookTwo diet evidence guides',
+  itemListElement: DIET_CATEGORY_ORDER.flatMap((cat) =>
+    DIET_GUIDES
+      .filter((g) => g.category === cat.id && dietsById.has(g.dietKey))
+      .map((g) => ({
+        '@type': 'ListItem',
+        name: (dietsById.get(g.dietKey) as (typeof DIETS)[number]).displayLabel,
+        url: `https://cooktwo.com${g.href}/`
+      }))
+  )
+};
+
+const tocItems = [
+  ['the-short-answer', 'The short answer'],
+  ['evidence', 'What the evidence shows'],
+  ['quality', 'Food quality beats the label'],
+  ['map', 'The proof is on the map'],
+  ['fundamentals', 'What every healthy diet shares'],
+  ['spectrum', 'The diet spectrum'],
+  ['catalog', 'Compare all 25 diet guides'],
+  ['judge', 'How to judge any diet'],
+  ['limits', 'When a diet is not okay'],
+  ['method', 'How we research'],
+  ['faq', 'Common questions']
+] as const;
+---
+
+<BaseLayout title={title} description={description} ogImage="/images/diets/og/diet-hub.webp" canonicalURL="/diets" isArticle={true} articlePublishedDate={pubDate.toISOString()} articleAuthor="CookTwo Research" articleTags={['diets', 'nutrition evidence', 'food quality']}>
+  {breadcrumbSchema && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>}
+  {faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>}
+  {itemSchema && <script type="application/ld+json" set:html={JSON.stringify(itemSchema)}></script>}
+
+  <nav aria-label="On this page" class="sticky top-20 z-30 bg-cream/85 backdrop-blur-md border-b border-border">
+    <div class="container-custom max-w-6xl">
+      <ul class="flex items-center gap-1 overflow-x-auto py-3 text-sm font-medium no-scrollbar">
+        <li class="text-text-secondary/70 whitespace-nowrap pr-2 hidden sm:block">On this page:</li>
+        {tocItems.map(([id, label]) => (
+          <li><a href={`#${id}`} class="whitespace-nowrap px-3 py-1.5 rounded-lg text-text-secondary hover:text-sage-dark hover:bg-sage/5 transition-colors">{label}</a></li>
+        ))}
+      </ul>
+    </div>
+  </nav>
+
+  <section class="container-custom max-w-6xl pt-12 pb-6 md:pt-20">
+    <span class="badge-signature mb-6 inline-block">Diet evidence</span>
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-text-primary leading-tight mb-6">Any sensible diet can work.<br/><span class="text-sage">Here is what the evidence says.</span></h1>
+    <p class="text-xl md:text-2xl text-text-secondary leading-relaxed max-w-3xl mb-8">
+      Keto, low-carb, high-carb, low-fat, vegan, paleo — the internet turns diets into rival teams. The research quietly disagrees. Across landmark randomized trials, ten-million-person reviews and five continents of traditional eating, the variable that separates healthy diets from unhealthy ones is not the name of the plan. It is the quality of the food on the way in, whether the nutrients arrive, and whether a human being can actually keep it going.
+    </p>
+    <div class="flex flex-wrap items-center gap-3 text-sm text-text-secondary mb-4">
+      <span>CookTwo Research</span>
+      <span aria-hidden="true">·</span>
+      <time datetime={pubDate.toISOString()}>November 2, 2026</time>
+      <span aria-hidden="true">·</span>
+      <span>18 min read</span>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+      {[
+        { v: '25', l: 'diet evidence guides', s: 'every pattern in the CookTwo app' },
+        { v: '6', l: 'landmark studies below', s: 'DIETFITS, PURE, Hall & PREDIMED' },
+        { v: '5', l: 'fundamentals that decide', s: 'the same in every food culture' },
+        { v: '1', l: 'sentence of relief', s: 'you do not have to be perfect' }
+      ].map((s) => (
+        <div class="bg-white rounded-2xl border border-border p-5 shadow-sm text-center">
+          <p class="text-3xl md:text-4xl font-bold text-sage tracking-tight">{s.v}</p>
+          <p class="text-sm font-semibold text-text-primary mt-1.5">{s.l}</p>
+          <p class="text-xs text-text-secondary mt-0.5">{s.s}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section id="the-short-answer" class="container-custom max-w-6xl py-10 md:py-14">
+    <div class="rounded-2xl border-2 border-sage/60 bg-sage/5 p-6 sm:p-10">
+      <p class="text-xs font-semibold uppercase tracking-widest text-sage-dark mb-3">The short answer</p>
+      <p class="text-xl md:text-2xl leading-relaxed text-text-primary">
+        <strong>Almost any sensible diet can be healthy.</strong> Trials that built a good low-carb diet and a good low-fat diet found the same weight loss at a year. The largest cohort ever assembled found the safest carbohydrate window in the moderate middle, not at an extreme. The most controlled feeding study ever run found that people gain weight on a matching-calorie ultra-processed diet and lose weight on whole food. And every long-lived population on earth, at every possible macro ratio, ate real food, moved a lot, and stayed at it for a lifetime.
+      </p>
+      <p class="mt-4 text-text-primary leading-relaxed">
+        That is the thesis of this hub — and every one of the <a href="#catalog" class="text-sage-dark font-medium hover:text-sage underline decoration-sage/40 underline-offset-2">25 diet guides</a> below applies it honestly, including where the science is thin and where an honest writer must say "no".
+      </p>
+    </div>
+  </section>
+
+  <section id="evidence" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">What the evidence actually shows</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      Four studies and one map。 Together they dismantle the idea that one macro ratio is the master key — and they explain why the diet wars never resolve.
+    </p>
+
+    <StudyCard name="DIETFITS — a healthy low-carb diet vs a healthy low-fat diet (JAMA, 2018)" design="Randomized controlled trial" participants="609 adults" duration="12 months" finding="Weight loss came out nearly identical — about 5–6 kg in both groups — and each person's baseline insulin sensitivity did not predict which diet worked better for them. Both diets were built from whole food and both cut sugar and refined flour." url="https://pubmed.ncbi.nlm.nih.gov/29490351/" />
+
+    <StudyCard name="Hall et al. — the NIH inpatient ultra-processed diet trial (Cell Metabolism, 2019)" design="Randomized crossover, metabolic ward" participants="20 adults" duration="2 weeks per arm" finding="With calories, macros, sugar, fibre and sodium matched, a nearly-identical nutrition label hid a 508 kcal/day difference: people over-ate and gained weight on the ultra-processed version and lost weight on the whole-food version. Processing level — not the macro maths — overrode satiety." url="https://pubmed.ncbi.nlm.nih.gov/31195085/" />
+
+    <StudyCard name="PURE — 135,000 people across 18 countries (The Lancet, 2017)" design="Prospective cohort" participants="135,335 adults, 5 continents" duration="Median 7.4 years" finding="High carbohydrate intake above 60% of energy — mostly from refined staples — tracked with higher total mortality. Total fat, including saturated fat, tracked with lower. Neither is a hero or villain; the extremes and the refining are the problem." url="https://doi.org/10.1016/S0140-6736(17)32252-3" />
+
+    <StudyCard name="Seidelmann et al. — the carbohydrate U-curve (Lancet Public Health, 2018)" design="Cohort + meta-analysis" participants="432,179 adults" duration="~25 years" finding="Mortality was lowest at 50–55% carbohydrate and rose at both extremes. Crucially, what replaced the carbohydrate decided the direction: swapping carb calories for plant fat and plant protein tracked with reduced mortality; swapping them for animal fat and animal protein tracked with increased." url="https://pubmed.ncbi.nlm.nih.gov/30122560/" />
+
+    <StudyCard name="Ma et al. — the umbrella review of 124 meta-analyses (Nutrients, 2024)" design="Umbrella review" participants="Over 5 million pooled" duration="—" finding="Pulled every major cohort review together: both very-low-carb and very-low-fat patterns sit alongside worse outcomes; balanced macronutrient intake — within a wide range — sits with the best. Dose-response relationships are U-shaped for both carbohydrate and fat." url="https://doi.org/10.3390/nu16010152" />
+
+    <Callout variant="quote" title="Read the grades, not the vibes">
+      Every CookTwo diet guide labels its evidence A (strong), B (moderate), C (limited) or D (insufficient), and links the primary studies. A's must come from randomized trials and consistent cohorts, not from a celebrity's cholesterol panel. When a diet guide shows grade C or D, it says so in the first screen — including on the ones with the biggest marketing budgets.
+    </Callout>
+  </section>
+
+  <section id="quality" class="container-custom max-w-6xl py-10 md:py-16 bg-white/0">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">Food quality beats the label</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      The NOVA framework sorts food by how processed it is, not by nutrient. Group 1 is edible things from plants and animals — vegetables, beans, eggs, meat, milk. Group 2 is cooking ingredients — oil, salt, sugar. Group 3 is simple combinations like bread, cheese and canned fish. Group 4 is the industrial formulation, built from extracted substances and additives: soft drinks, snack packs, instant noodles, most breakfast cereals, and yes, a large slice of the "health food" aisle.
+    </p>
+    <div class="grid md:grid-cols-3 gap-5 mb-6">
+      {[
+        { n: '1', t: 'The calorie experiment', d: "Hall's metabolic-ward trial put matched macros on two shelves. Whole food produced spontaneous 500-calorie/day under-eating. The ultra-processed shelf produced over-eating — eating that happens before fullness registers." },
+        { n: '2', t: 'The 45-meta-analysis pile-up', d: 'The 2024 BMJ umbrella review found dose-response links between ultra-processed food intake and cardiovascular disease, type 2 diabetes, obesity, several cancers, depression and mortality — across about 10 million people.' },
+        { n: '3', t: 'The food matrix', d: 'Two foods with identical nutrition labels can digest differently. Intact cellular structure slows eating-rate, feeds gut bacteria and triggers satiety hormones. Pulverized industrial food skips all three.' }
+      ].map((q) => (
+        <div class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <p class="w-9 h-9 rounded-full bg-sage text-white font-bold flex items-center justify-center mb-3">{q.n}</p>
+          <p class="font-bold text-text-primary">{q.t}</p>
+          <p class="mt-1.5 text-sm text-text-secondary leading-relaxed">{q.d}</p>
+        </div>
+      ))}
+    </div>
+    <p class="text-lg text-text-primary leading-relaxed max-w-3xl">
+      This is why the diet wars are noise. Almost every named diet — keto, paleo, vegan, Mediterranean, DASH, Whole30 — quietly agrees on one instruction: <strong>stop eating most ultra-processed food.</strong> From an evidence standpoint, that agreement is doing more of the work than the differences.
+    </p>
+  </section>
+
+  <section id="map" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">The proof is on the map — not in the podium fight</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      If one macro ratio unlocked longevity, it would show up as one long-lived population eating that ratio. Instead it shows up everywhere, at every ratio, always on the same foundation.
+    </p>
+    <div class="not-prose my-8 overflow-x-auto rounded-2xl border border-border bg-white shadow-sm">
+      <table class="w-full text-sm border-collapse min-w-[640px]">
+        <caption class="sr-only">Long-lived population diets differing in macro ratio</caption>
+        <thead>
+          <tr class="bg-cream-dark">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary border-b border-border">Population</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary border-b border-border">Approx. carb / fat / protein</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary border-b border-border">The distillation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="px-4 py-3 border-b border-border font-semibold text-text-primary">Okinawa, Japan</td><td class="px-4 py-3 border-b border-border">~85 / ~6 / ~9 — sweet potato, soy, vegetables</td><td class="px-4 py-3 border-b border-border text-text-secondary">Very-high-carb, extremely low-fat, very-low-protein. Longevity record: among the world's best.</td></tr>
+          <tr><td class="px-4 py-3 border-b border-border font-semibold text-text-primary">Ikaria, Greece</td><td class="px-4 py-3 border-b border-border">~45 / ~40 / ~15 — olive oil, greens, legumes, goat</td><td class="px-4 py-3 border-b border-border text-text-secondary">Higher-fat Mediterranean pattern. More than twice the expected rate of reaching 90.</td></tr>
+          <tr><td class="px-4 py-3 border-b border-border font-semibold text-text-primary">Sardinia, Italy</td><td class="px-4 py-3 border-b border-border">~50 / ~30 / ~15 — barley bread, beans, pecorino, wine</td><td class="px-4 py-3 border-b border-border text-text-secondary">Includes daily saturated fat and alcohol. Highest documented male centenarian rate on earth.</td></tr>
+          <tr><td class="px-4 py-3 border-b border-border font-semibold text-text-primary">Nicoya, Costa Rica</td><td class="px-4 py-3 border-b border-border">~60 / ~20 / ~18 — beans, corn, squash, eggs, pork</td><td class="px-4 py-3 border-b border-border text-text-secondary">A moderate middle: home cooking, low processing, ~20% lower mortality than the rest of the country.</td></tr>
+          <tr><td class="px-4 py-3 border-b border-border font-semibold text-text-primary">Loma Linda, USA</td><td class="px-4 py-3 border-b border-border">~55 / ~30 / ~15 — plant-forward, nuts, legumes, whole grains</td><td class="px-4 py-3 border-b border-border text-text-secondary">The Adventist cohort: 7–10 years of extra life expectancy, in America.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-lg text-text-primary leading-relaxed max-w-3xl">
+      Not a single healthy long-lived population ran on ultra-processed food. Not one ran on a diet that granted nothing to a human body or soul. If macro ratios were the key, Okinawa and Ikaria could not share a planet.
+    </p>
+  </section>
+
+  <section id="fundamentals" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">What every healthy diet shares</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-6">
+      Strip the brands off the five healthiest diets on earth — or the five longest-lived towns — and the same five fundamentals are running underneath. Trade between them freely.
+    </p>
+    <SharedPrinciples />
+  </section>
+
+  <section id="spectrum" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">The diet spectrum</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      Pick a cell — any cell — and evidence-backed eats exist inside it. Colours mark evidence strength, not moral worth. Grades are explained below the map.
+    </p>
+    <DietSpectrum chips={[
+      { label: 'Keto', href: '/diets/keto', row: 4, col: 1, grade: 'B' },
+      { label: 'Carnivore', href: '/diets/carnivore', row: 4, col: 1, grade: 'D' },
+      { label: 'Paleo', href: '/diets/paleo', row: 4, col: 2, grade: 'C' },
+      { label: 'Whole30', href: '/diets/whole30', row: 4, col: 2, grade: 'C-D' },
+      { label: 'High-protein', href: '/diets/high-protein', row: 3, col: 2, grade: 'B' },
+      { label: 'Mediterranean', href: '/diets/mediterranean', row: 3, col: 3, grade: 'A' },
+      { label: 'Healthy eating', href: '/diets/healthy-eating', row: 2, col: 3, grade: 'A' },
+      { label: 'Flexitarian', href: '/diets/flexitarian', row: 3, col: 3, grade: 'B-C' },
+      { label: 'Pescatarian', href: '/diets/pescatarian', row: 3, col: 3, grade: 'A' },
+      { label: 'Low FODMAP', href: '/diets/low-fodmap', row: 3, col: 3, grade: 'B' },
+      { label: 'Gluten-free*', href: '/diets/gluten-free', row: 3, col: 3, grade: 'A' },
+      { label: 'DASH', href: '/diets/dash', row: 2, col: 3, grade: 'A' },
+      { label: 'Plant-based', href: '/diets/plant-based', row: 2, col: 3, grade: 'B' },
+      { label: 'Vegan', href: '/diets/vegan', row: 2, col: 3, grade: 'A' },
+      { label: 'Vegetarian', href: '/diets/vegetarian', row: 2, col: 3, grade: 'A' },
+      { label: 'MIND', href: '/diets/mind', row: 2, col: 3, grade: 'B' },
+      { label: 'Volumetrics', href: '/diets/volumetrics', row: 2, col: 3, grade: 'B-C' },
+      { label: 'Low-sodium*', href: '/diets/low-sodium', row: 2, col: 3, grade: 'A' },
+      { label: 'Diabetes*', href: '/diets/diabetes-friendly', row: 2, col: 3, grade: 'A' },
+      { label: 'Bone-health*', href: '/diets/bone-health', row: 2, col: 3, grade: 'B' },
+      { label: 'Macrobiotic', href: '/diets/macrobiotic', row: 2, col: 4, grade: 'C-D' },
+      { label: 'Pritikin', href: '/diets/pritikin', row: 1, col: 4, grade: 'B-C' },
+      { label: 'High-carb', href: '/diets/high-carb', row: 1, col: 4, grade: 'C-D' },
+      { label: '80/10/10', href: '/diets/80-10-10', row: 1, col: 4, grade: 'D' }
+    ]} />
+    <p class="text-sm text-text-secondary">* Condition-based patterns (low FODMAP adjustments aside — gluten-free, low-sodium, diabetes-friendly, bone-health) adapt the base diet rather than pin a macro position; they are placed at their typical real-world home.</p>
+  </section>
+
+  <section id="catalog" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">Compare all 25 diet guides</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-10">
+      Every dietary pattern the CookTwo app supports, with the evidence verdict, the honest strength and the honest cost. Guides open in the same window so you can read in order.
+    </p>
+    {DIET_CATEGORY_ORDER.map((cat) => {
+      const rows = orderedGuides.filter((r) => r.row.category === cat.id);
+      if (rows.length === 0) return null;
+      return (
+        <div class="mb-12">
+          <h3 class="text-2xl font-bold text-text-primary mb-1.5">{cat.label}</h3>
+          <p class="text-text-secondary mb-6 max-w-3xl">{cat.blurb}</p>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map(({ row, diet }) => <DietCard diet={diet} href={row.href} hubSummary={row.strengthLine} />)}
+          </div>
+        </div>
+      );
+    })}
+  </section>
+
+  <section id="judge" class="container-custom max-w-6xl py-10 md:py-16 bg-cream-dark rounded-3xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">How to judge any diet in seven questions</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      This is the whole checklist we used to write every guide above. It takes about two minutes to apply to any plan a book, influencer, GP or app will ever hand you.
+    </p>
+    <ol class="space-y-4 max-w-3xl">
+      {[
+        ['Does it run on whole food?', 'Look at the actual ingredient stream, not the marketing. If 80% of it is recognisably food, good start. If it requires branded bars, shakes or powders, that is a product business wearing a diet costume.'],
+        ['Does it cover protein?', 'Around 0.8 g/kg body weight minimum for healthy adults — higher for older adults, hard training or a calorie deficit. Any diet that cannot get you there is a weight plan first and a health plan second.'],
+        ['Does it cover fibre and micronutrients?', 'Where the plants, whole grains, nuts, fruit and legumes sit in the plan. Total elimination of a whole food family needs a reason and usually a supplement.'],
+        ['Is the energy balance survivable?', 'Portions should land near what you burn. If the plan requires misery to maintain a deficit, you will regain and blame yourself rather than the plan.'],
+        ['What are you being asked to eliminate, and why?', 'Ultra-processed food earns elimination with the most consistent evidence in nutrition. Food families like grains, dairy or plants get no such high ground — legitimate arguments exist, but the burden of proof is on the eliminator.'],
+        ['What is the evidence grade on the actual claim?', 'Not anecdotes. Not testimonials. Randomized trials, cohorts, or better a meta-analysis. This page explains the grades; every guide wears its own on its sleeve.'],
+        ['Would you still be doing it in five years?', 'The most underused question in nutrition. Over twelve-month horizons nearly every sensible plan converges; over five years, only the sustainable ones have members.']
+      ].map(([q, a], i) => (
+        <li class="bg-white rounded-2xl border border-border p-5 shadow-sm">
+          <p class="font-bold text-text-primary flex gap-3"><span class="text-sage">{i + 1}.</span> {q}</p>
+          <p class="mt-1.5 text-text-secondary leading-relaxed">{a}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="limits" class="container-custom max-w-6xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">When a diet is not okay</h2>
+    <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
+      "Any sensible diet can work" has a hard boundary. Some patterns are not sensible as written; some people should not restrict without a clinician watching; and a few red flags cancel everything else on a website's claims.
+    </p>
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        <p class="font-bold text-text-primary mb-2">Red flags in the plan itself</p>
+        <ul class="space-y-2.5 text-text-secondary text-sm leading-relaxed">
+          <li class="flex gap-2"><span class="text-error font-bold" aria-hidden="true">×</span>Bans an entire food group without a medical reason and expects you to buy their supplement line</li>
+          <li class="flex gap-2"><span class="text-error font-bold" aria-hidden="true">×</span>Claims to work for everyone, always, and dismisses real risks as myths</li>
+          <li class="flex gap-2"><span class="text-error font-bold" aria-hidden="true">×</span>Sells the "one true diet" and treats every alternative as sabotage or corruption</li>
+          <li class="flex gap-2"><span class="text-error font-bold" aria-hidden="true">×</span>Promises more than 2 lbs/week of fat loss ad infinitum, or "cures" a chronic disease</li>
+          <li class="flex gap-2"><span class="text-error font-bold" aria-hidden="true">×</span>Cites no studies, or cites only testimonials, or cannot tell you what its own risks are</li>
+        </ul>
+      </div>
+      <div class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        <p class="font-bold text-text-primary mb-2">The people who should not self-restrict</p>
+        <ul class="space-y-2.5 text-text-secondary text-sm leading-relaxed">
+          <li class="flex gap-2"><span class="text-terracotta-dark font-bold" aria-hidden="true">!</span>Anyone with type 1 diabetes, kidney disease, heart failure, or a complex medication regimen — dietary change can change drug doses</li>
+          <li class="flex gap-2"><span class="text-terracotta-dark font-bold" aria-hidden="true">!</span>Anyone pregnant or breastfeeding — restriction has a real cost curve</li>
+          <li class="flex gap-2"><span class="text-terracotta-dark font-bold" aria-hidden="true">!</span>Anyone with a personal or family history of disordered eating; rigid food rules reliably escalate</li>
+          <li class="flex gap-2"><span class="text-terracotta-dark font-bold" aria-hidden="true">!</span>Children and teenagers, whose nutritional floors are higher and whose relationships with food are still loading</li>
+          <li class="flex gap-2"><span class="text-terracotta-dark font-bold" aria-hidden="true">!</span>Older adults under-eating protein — sarcopenia hides in calorie deficits</li>
+        </ul>
+      </div>
+    </div>
+    <p class="mt-6 text-lg text-text-primary leading-relaxed max-w-3xl">
+      Where does that leave the strictest patterns — carnivore, 80/10/10, macrobiotic? We cover them anyway, in full, honestly, with their grade-D evidence in the first screen rather than buried nine scrolls down. Read <a href="/diets/carnivore" class="text-sage-dark hover:text-sage font-medium underline decoration-sage/40 underline-offset-2">the carnivore guide</a> or <a href="/diets/80-10-10" class="text-sage-dark hover:text-sage font-medium underline decoration-sage/40 underline-offset-2">the 80/10/10 guide</a> and you will see the relief-thesis does not need to lie for the extreme versions — it simply cannot stretch that far, and this hub says so.
+    </p>
+  </section>
+
+  <section id="method" class="container-custom max-w-6xl py-10 md:py-16 bg-white border-y border-border">
+    <div class="grid lg:grid-cols-2 gap-10">
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold text-text-primary mb-4">How we research the diet guides</h2>
+        <p class="text-text-secondary leading-relaxed mb-4">Every guide follows the same pipeline, and we publish the outcome grades instead of hiding them in the eleventh paragraph.</p>
+        <ol class="space-y-3 text-sm text-text-secondary">
+          <li class="flex gap-3"><span class="text-sage font-bold">1</span><span><strong class="text-text-primary">Source the primary literature.</strong> Randomized trials, systematic reviews, large prospective cohorts and meta-analyses — with DOIs, so you can verify every claim in one click.</span></li>
+          <li class="flex gap-3"><span class="text-sage font-bold">2</span><span><strong class="text-text-primary">Grade the evidence</strong> A through D, domain by domain, on a standard rubric adapted from GRADE — not a vibe.</span></li>
+          <li class="flex gap-3"><span class="text-sage font-bold">3</span><span><strong class="text-text-primary">Write for the reader, not the exam.</strong> Plain sentences, real numbers, mechanistic jargon translated on first use.</span></li>
+          <li class="flex gap-3"><span class="text-sage font-bold">4</span><span><strong class="text-text-primary">Separate food from the label.</strong> "Clean" vs "dirty" versions are explicitly addressed for every pattern that has them.</span></li>
+          <li class="flex gap-3"><span class="text-sage font-bold">5</span><span><strong class="text-text-primary">Publish the risks with the verdict.</strong> Every guide carries a "who should not do this" section and a firm not-medical-advice notice.</span></li>
+        </ol>
+      </div>
+      <div>
+        <h3 class="text-xl font-bold text-text-primary mb-4">What the evidence grades mean</h3>
+        <div class="space-y-3 text-sm">
+          {[
+            ['A', 'bg-sage-dark', 'Strong', 'Multiple randomized trials or meta-analyses of consistent, meaningful effect; endorsed by major health bodies.'],
+            ['B', 'bg-sage', 'Moderate', 'Randomized trials or large cohorts with generally consistent results; moderate effect sizes.'],
+            ['C', 'bg-terracotta-dark', 'Limited', 'Small trials, observational data, or inconsistent results. Promising, not proven.'],
+            ['D', 'bg-error', 'Insufficient', 'Mainly mechanistic reasoning, case reports and testimonials. No randomized trials.']
+          ].map(([letter, bg, label, text]) => (
+            <div class="flex gap-4 rounded-2xl border border-border bg-cream-dark p-4">
+              <span class:list={[bg, 'w-9 h-9 flex items-center justify-center rounded-full text-white font-bold flex-shrink-0']}>{letter}</span>
+              <div>
+                <p class="font-bold text-text-primary">{label} evidence</p>
+                <p class="text-text-secondary">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="container-custom max-w-4xl py-10 md:py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-8">Common questions</h2>
+    <Faq items={faqs} />
+  </section>
+
+  <section class="container-custom max-w-6xl py-10 md:py-14">
+    <SourceList sources={[
+      { label: 'Gardner CD, et al. Effect of low-fat vs low-carbohydrate diet on 12-month weight loss in overweight adults: the DIETFITS randomized clinical trial. JAMA, 2018.', url: 'https://pubmed.ncbi.nlm.nih.gov/29490351/' },
+      { label: 'Hall KD, et al. Ultra-processed diets cause excess calorie intake and weight gain: an inpatient randomized controlled trial of ad libitum food intake. Cell Metabolism, 2019.', url: 'https://pubmed.ncbi.nlm.nih.gov/31195085/' },
+      { label: 'Dehghan M, et al. Associations of fats and carbohydrate intake with cardiovascular disease and mortality in 18 countries (PURE): a prospective cohort study. The Lancet, 2017.', url: 'https://doi.org/10.1016/S0140-6736(17)32252-3' },
+      { label: 'Seidelmann SB, et al. Dietary carbohydrate intake and mortality: a prospective cohort study and meta-analysis. Lancet Public Health, 2018.', url: 'https://pubmed.ncbi.nlm.nih.gov/30122560/' },
+      { label: 'Ma Y, et al. Dietary macronutrient intake and the risk of cardiovascular disease and mortality: an umbrella review of meta-analyses. Nutrients, 2024.', url: 'https://doi.org/10.3390/nu16010152' },
+      { label: 'Lane MM, et al. Ultra-processed food exposure and adverse health outcomes: umbrella review of epidemiological meta-analyses. BMJ, 2024.', url: 'https://doi.org/10.1136/bmj-2023-077310' },
+      { label: 'Estruch R, et al. Primary prevention of cardiovascular disease with a Mediterranean diet supplemented with extra-virgin olive oil or nuts (PREDIMED). NEJM, 2018.', url: 'https://pubmed.ncbi.nlm.nih.gov/29897819/' },
+      { label: 'Monteiro CA, et al. Ultra-processed foods, diet quality, and health using the NOVA classification system. Public Health Nutrition, 2018.', url: 'https://doi.org/10.1017/S1368980017000234' },
+      { label: 'Orlich MJ, et al. Vegetarian dietary patterns and mortality in Adventist Health Study 2. JAMA Internal Medicine, 2013.', url: 'https://doi.org/10.1001/jamainternmed.2013.6473' },
+      { label: 'Willcox BJ, et al. Caloric restriction, the traditional Okinawan diet, and healthy aging. Annals of the NY Academy of Sciences, 2007.', url: 'https://pubmed.ncbi.nlm.nih.gov/17986602/' }
+    ]} />
+    <div class="not-prose mt-12 rounded-2xl border-2 border-sage/60 bg-sage/5 p-8 text-center">
+      <p class="text-xl md:text-2xl font-bold text-text-primary mb-2">One dinner. Two plates. Zero arguments about whose diet it is.</p>
+      <p class="text-text-secondary mb-6 max-w-xl mx-auto">CookTwo reads both partners' diets — from the 24 patterns on this page — and turns one shared recipe into two personalised plates.</p>
+      <EarlyAccessButton label="Get early access" variant="primary" />
+    </div>
+  </section>
+</BaseLayout>

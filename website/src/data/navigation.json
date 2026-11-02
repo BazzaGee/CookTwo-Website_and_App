@@ -13,6 +13,7 @@
         ]
       },
       { "label": "How It Works", "href": "/how-it-works" },
+      { "label": "Diet Evidence", "href": "/diets" },
       { "label": "Compare", "href": "/compare" },
       { "label": "About", "href": "/about" },
       { "label": "FAQ", "href": "/faq" }
@@ -24,6 +25,7 @@
         { "label": "Compare", "href": "/compare" }
       ],
       "resources": [
+        { "label": "Diet Evidence Guides", "href": "/diets" },
         { "label": "App Guide", "href": "/app-guide" },
         { "label": "Blog", "href": "/blog" },
         { "label": "one meal, two plates", "href": "/one-meal-two-plates" }

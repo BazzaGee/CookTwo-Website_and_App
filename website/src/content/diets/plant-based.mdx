@@ -1,0 +1,123 @@
+---
+title: "Plant-Based Diets: What the Science Says"
+description: "The umbrella guide — plant-based eating spanning vegan, vegetarian and pescatarian patterns. The cohort dose-response, the two honest failure modes, and a nutrient checklist that makes either work."
+pubDate: 2026-11-02
+updatedDate: 2026-11-02
+author: "CookTwo Research"
+ogImage: "/images/diets/og/plant-based.webp"
+dietKey: "plant-based"
+evidenceGrade: "B"
+category: "plant-based"
+restrictiveness: 3
+macroSplit: { carb: 55, protein: 15, fat: 30 }
+bestFor: "Heart health, weight, diabetes risk, and planetary footprint — in one pattern"
+hardestPart: "Nutrient planning when the animal is gone entirely"
+medicalCaution: "Vegans need B12 supplementation — non-negotiable in any form"
+medical: false
+readingTime: "10 min"
+targetKeyword: "plant based diet evidence"
+tags: ["plant-based", "diet evidence", "vegan"]
+draft: false
+---
+
+import PillarCheck from '../../components/diets/PillarCheck.astro';
+import StudyCard from '../../components/diets/StudyCard.astro';
+import FoodFramework from '../../components/diets/FoodFramework.astro';
+import VerdictBox from '../../components/diets/VerdictBox.astro';
+import Callout from '../../components/prose/Callout.astro';
+import Faq from '../../components/prose/Faq.astro';
+import RelatedDiets from '../../components/diets/RelatedDiets.astro';
+import SourceList from '../../components/diets/SourceList.astro';
+
+"Plant-based" is the umbrella term for eating patterns that make plants the structural backbone of the plate — with the animal kingdom filtering through at different doses. Vegan removes all of it. Vegetarian keeps eggs and dairy. Pescatarian keeps fish. Flexitarian keeps most options while skewing weekly. Each is on this map as its own guide; this page is the summary document and covers the pattern family, then links to each for the exact nutrients.
+
+What makes the pattern worth its own guide is that the gradient across these sub-patterns shares findings: people eating more plants — almost irrespective of what remains — track lower body weight, lower blood pressure, lower diabetes prevalence and improved cholesterol. The dose-response in the Adventist data has a clean order: vegan under vegetarian under pescatarian under omnivore. That pure monotonicity is what makes the pattern genuinely good science rather than one more ideology.
+
+<PillarCheck rows={[
+  { label: 'Whole food quality', status: 'mixed', note: 'Superb when the plant foods are actual plants — vegetables, legumes, whole grains, nuts, fruit. The vegan UPF problem (burgers with synthetic packaging) is the single biggest modern failure profile.' },
+  { label: 'Protein adequacy', status: 'strong', note: 'Legumes, soy, tofu, tempeh and nuts satisfy requirement distributions when meals are planned to include them. A Western plant-based plate with only lettuce and pasta does not.' },
+  { label: 'Fibre & micronutrients', status: 'strong', note: 'Fibre loads are the highest of any pattern — with B12, iron, calcium, omega-3 and vitamin D needing conscious attention (or supplementation) in the stricter spreads.' },
+  { label: 'Metabolic outcomes', status: 'strong', note: 'Blood pressure falls 4–7 mmHg across cohorts and meta-analyses; LDL drops; diabetes prevalence halves for vegans in AHS-2.' },
+  { label: 'Liveability & safety', status: 'strong', note: 'Mostly a matter of cooking skill and amount of time. The nutrient gaps are known, predicted and solveable — with supplements or fish.' }
+]} />
+
+## The evidence structure
+
+<StudyCard name="Orlich et al. — the Adventist dose-response (JAMA Internal Medicine, 2013)" design="Prospective cohort, five dietary patterns" participants="73,308 Adventists" duration="~5.8 years" finding="All-cause mortality fell stepwise as animal intake fell: lacto-ovo vegetarians HR 0.91, vegans HR 0.85, pescatarians HR 0.81 — with cardiometabolic mortality significantly lower across all vegetarian patterns. Pesco-vegetarians produced the strongest single signal." url="https://pubmed.ncbi.nlm.nih.gov/23836264/" />
+
+<StudyCard name="Yokoyama et al. — vegetarian diets and blood pressure (JAMA Internal Medicine, 2014)" design="Meta-analysis (7 RCTs + 32 cohorts)" participants="21,604 in cohorts, 311 in trials" duration="—" finding="Vegetarian patterns dropped blood pressure 4.8/2.2 mmHg in trials and 6.9/4.7 mmHg in cohorts — an effect size comparable to single-drug therapy, and one of the most replicated findings in plant-based nutrition." url="https://pubmed.ncbi.nlm.nih.gov/24566949/" />
+
+<StudyCard name="Tonstad et al. — diabetes stepwise drop (Nutrition, Metabolism & Cardiovascular Diseases, 2013)" design="Prospective cohort (AHS-2 sub-analysis)" participants="60,903 adults" duration="2 years" finding="Type 2 diabetes prevalence fell 49% in vegans and 38% in lacto-ovo vegetarians — largely but not only through lower body weight; an independent metabolic benefit held after BMI adjustment." url="https://pubmed.ncbi.nlm.nih.gov/21983060/" />
+
+<StudyCard name="Huang et al. — ischaemic heart disease meta-analysis (Annals of Nutrition and Metabolism, 2012)" design="Systematic review and meta-analysis" participants="124,706 across 6 cohorts" duration="—" finding="Vegetarian patterns associated with ~29% lower ischaemic heart disease mortality (RR 0.71), plus reliable LDL, glucose and HbA1c improvements. All-cause mortality was non-significant when the comparison population itself was health-conscious." url="https://pubmed.ncbi.nlm.nih.gov/22677096/" />
+
+<Callout variant="quote" title="The cleanest dose-response in cohort science">
+Between the pattern grades in the Adventist cohorts, as plant intake dominates the plate and animal intake recedes, every metabolic measure moves one direction: weight down, blood pressure down, cholesterol down, diabetes risk down. What does not exist anywhere in this dataset is an "ultra-processed vegan" subgroup with health outcomes to match the vegans eating lentils — it is the plants, in whole form, suppressing, not the animal category being ideological.
+</Callout>
+
+## The two honest failures of plant-based eating
+
+**The animal-losing, nutrient-losing diets.** The diet performs well only if each meal earns protein somewhere: legumes, soy, tofu, tempeh, nuts, or fish where the sub-pattern permits. For every studied reanalysis, it is the whole-food legume-and-nut-heavy pattern campuses benefit — always the fallback is grain-plus-vegetable-of-necessity, never packaged patties.
+
+**Vitamin B12.** Non-negotiable. On a purely plant-based diet with no supplementation, B12 status collapses over 1–2 years — the nutrient is in animal biology only. This is precisely what guidance latest has been for decades, and the data not needing further forwards.
+
+<Callout variant="tip" title="The two-directional B12 rule">
+B12 supplementation is one of the rare nutrition places where the fix is simple: the supplement form is inexpensive and effective. Every vegan-supportive nutrition body recommends an ongoing B12 source; pescatarians and semi-vegetarians get substantial amounts from fish or dairy and only rarely need one. There is no vegan food law that repairs this gap — fortified foods (nutritional yeast, plant milk) lean on the same nutrient.
+</Callout>
+
+## The plant-based nutrient checklist
+
+| Nutrient | Why it requires planning | Where it comes from |
+|---|---|---|
+| Vitamin B12 | No plant supplies it reliably | Supplement, fortified plant milk, nutritional yeast |
+| Iron | Lower bioavailability in plant sources | Lentils, tofu, pumpkin seeds with vitamin C | 
+| Calcium | Dairy absent in strict versions | Calcium-set tofu, fortified milks, kale, almonds |
+| Omega-3 (EPA/DHA) | ALA conversion is inefficient | Fish (pescatarian), walnuts, flax, chia; algae oil for strict vegans |
+| Vitamin D | Limited in diets of all patterns | Sunlight, fortified plant milk, supplements |
+| Iodine | Variable alongside seaweed | Iodized salt, occasional seaweed |
+| Zinc | Lower in grain- and legume-based diets | Legumes, cashews, pumpkin seeds |
+
+The required attention is real — and also worth stating that 6 of 7 rows are solved by adding one fortified staple to the weekly rotation plus standard fortified-staple shopping, if the diet includes fish and dairy. The pattern's strongest evidence lies in the global population data: several of the longest-living cohorts sit closer to the plant-forward end of this spectrum than to any modern all-vegetable ideology.
+
+<FoodFramework
+  title="What a well-built plant-based day looks like"
+  eat={['Legumes daily — lentils, chickpeas, beans, tempeh, tofu', 'Whole grains — oats, bulgur, farro, buckwheat, brown rice, whole-grain bread, quinoa', 'Nuts and seeds daily — a palmful minimum', 'Vegetables and fruit — aim 8 to 10 daily servings', 'Calcium-set tofu or fortified plant milk', 'Whole soy, not the packaged-burger bottom drawer']
+  }
+  moderate={['Eggs and dairy (vegetarian pattern)', 'Fish twice weekly (pescatarian)', 'Olive or avocado oil as the primary fat, not coconut']
+  }
+  avoid={['Vegan UPF — packaged veggie burgers, fries and sugary drinks, which rely on a health halo', 'Refined-carb defaults — white bread, white rice, sweetened cereals', 'Sweetened chain "healthy" juices']
+  }
+/>
+
+## Who it suits
+
+- **Households where one partner is enthusiastic about plants** — every listed pattern has a couple-friendly edition, and the shared-kitchen is the pattern's natural habitat.
+- **People managing cholesterol or blood-pressure first** — the LDL and systolic effects are the best-documented non-drug benefits outside DASH.
+- **Whatever dose you choose** — pescatarian, vegetarian, vegan or flexitarian, all meet the evidence criteria. The strictest is not the "most correct"; it is the one that requires more planning.
+
+<VerdictBox answer="Yes — plant-forward patterns consistently deliver the best heart, blood pressure and diabetes outcomes in the cohort literature, provided you actually plan the nutrients." conditions={['Blood pressure falls 4–7 mmHg and diabetes prevalence halves in the biggest cohorts.', 'Every step toward more plants shows benefit up to full plant-planning, not just at zero meat.', 'The rule set requires attention to B12 (always), protein (usually), calcium, iron and omega-3 (often).', 'A vegan UPF approach — packaged junk wearing a green badge — does not get the results; whole foods carry it.']} />
+
+## Common questions
+
+<Faq schema items={[
+  { q: "Which plant-based pattern is healthiest — vegan, vegetarian or pescatarian?", a: "The Adventist cohorts put pescatarian (HR 0.81) at or near the top for all-cause mortality, then vegans (0.85) and lacto-ovo vegetarians (0.91) — differing in nutrient-planning burden. Choose by what you can sustain and plan; the pattern's advantages arrive in the middle, not the extremes." },
+  { q: "Do I really need B12 on a vegan diet?", a: "Yes — the only robust source is supplement or food fortification. Every major vegetarian nutrition body recommends it. B12 deficiency takes one to two years to demonstrate but has irreversible neurological effects at late stages; the eventual condition is entirely preventable at a fraction of a cent per day." },
+  { q: "What protein do you need on a plant-based diet?", a: "Around 0.8 g per kg of body weight daily for most adults, with older adults and muscle-work training at higher targets. Legumes, soy, tofu and nuts bring plant-based plates to those levels when they are structured into meals; it does not appear by accident." },
+  { q: "Does a plant-based diet really lower blood pressure?", a: "Yes, and the effect size is commanding: meta-analysis in 2014 found a 4.8/2.2 mmHg drop in trials and 6.9/4.7 mmHg across cohorts — comparable to mild antihypertensive monotherapy, via potassium, magnesium, fibre and lower body weight." },
+  { q: "Is packaged vegan fake meat a healthy swap for actual meat?", a: "The evidence-backed headline favours whole plant foods — lentils, tofu, tempeh, chickpeas. Packaged vegan versions land in the NOVA ultra-processed category that this hub's evidence points to as harmful; occasional use is fine as a cultural food, not the protein block." },
+  { q: "How do I get omega-3 without fish?", a: "ALA sources (walnuts, flax, chia, hemp) are converted to the active EPA and DHA forms slowly and at low yield. Vegans usually supplement with algae-derived EPA/DHA; pescatarians get DHA directly from two weekly oily-fish servings." }
+]} />
+
+<RelatedDiets items={[
+  { href: '/diets/vegan', emoji: '🌱', label: 'Vegan', desc: 'The zero-animal version — nutrient planning in full.' },
+  { href: '/diets/vegetarian', emoji: '🥚', label: 'Vegetarian', desc: 'Eggs and dairy carry more of the load.' },
+  { href: '/diets/pescatarian', emoji: '🐟', label: 'Pescatarian', desc: 'The best mortality numbers in the Adventist data.' },
+  { href: '/diets/flexitarian', emoji: '🌱', label: 'Flexitarian', desc: 'The entry-plant-forward hatch.' }
+]} />
+
+<SourceList sources={[
+  { label: 'Orlich MJ, et al. Vegetarian dietary patterns and mortality in Adventist Health Study 2. JAMA Internal Medicine, 2013.', url: 'https://pubmed.ncbi.nlm.nih.gov/23836264/' },
+  { label: 'Yokoyama Y, et al. Vegetarian diets and blood pressure: a meta-analysis. JAMA Internal Medicine, 2014.', url: 'https://pubmed.ncbi.nlm.nih.gov/24566949/' },
+  { label: 'Tonstad S, et al. Vegetarian diets and incidence of diabetes in the Adventist Health Study-2. Nutrition, Metabolism and Cardiovascular Diseases, 2013.', url: 'https://pubmed.ncbi.nlm.nih.gov/21983060/' },
+  { label: 'Huang T, et al. Cardiovascular disease mortality and cancer incidence in vegetarians: a meta-analysis. Annals of Nutrition and Metabolism, 2012.', url: 'https://pubmed.ncbi.nlm.nih.gov/22677096/' }
+]} />

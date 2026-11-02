@@ -1,0 +1,27 @@
+---
+interface Props {
+  grade: string;
+  showLabel?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  label?: string;
+}
+
+const { grade, showLabel = true, size = 'md' } = Astro.props;
+const primary = grade.trim()[0].toUpperCase();
+
+const config: Record<string, { letter: string; label: string; chip: string; dot: string }> = {
+  A: { letter: 'A', label: 'Strong evidence', chip: 'bg-sage-dark text-white', dot: 'bg-sage-dark' },
+  B: { letter: 'B', label: 'Moderate evidence', chip: 'bg-sage text-white', dot: 'bg-sage' },
+  C: { letter: 'C', label: 'Limited evidence', chip: 'bg-terracotta-dark text-white', dot: 'bg-terracotta-dark' },
+  D: { letter: 'D', label: 'Insufficient evidence', chip: 'bg-error text-white', dot: 'bg-error' }
+};
+
+const entry = config[primary] ?? config.D;
+const dims = { sm: 'w-6 h-6 text-xs', md: 'w-8 h-8 text-sm', lg: 'w-10 h-10 text-base' } as const;
+const textSize = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' } as const;
+---
+
+<span class="inline-flex items-center gap-2">
+  <span class.list={[dims[size], 'inline-flex items-center justify-center rounded-full font-bold select-none', entry.chip]}>{grade.toUpperCase()}</span>
+  {showLabel && <span class:list={[textSize[size], 'font-medium text-text-secondary']}>{label ?? entry.label}</span>}
+</span>

@@ -1,0 +1,49 @@
+---
+interface Heading {
+  id: string;
+  text: string;
+}
+
+interface Props {
+  items: Heading[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="not-prose lg:sticky lg:top-24" aria-label="On this page">
+  <p class="hidden lg:block text-xs font-semibold uppercase tracking-widest text-text-secondary mb-3">On this page</p>
+  <ul class="lg:space-y-2 space-y-0 flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0 text-sm no-scrollbar">
+    {items.map((h) => (
+      <li class="whitespace-nowrap lg:whitespace-normal lg:shrink">
+        <a href={`#${h.id}`} data-toc-link class:list={['block px-3 py-1.5 rounded-lg text-text-secondary hover:text-sage-dark hover:bg-sage/10 transition-colors', 'lg:px-3']}>{h.text}</a>
+      </li>
+    ))}
+  </ul>
+</nav>
+<script>
+  const links = document.querySelectorAll('[data-toc-link]');
+  const targets = Array.from(links)
+    .map((l) => document.querySelector(l.getAttribute('href') || ''))
+    .filter((el): el is Element => Boolean(el));
+  if ('IntersectionObserver' in window && targets.length) {
+    const active = new Set<string>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          const id = e.target.id;
+          if (e.isIntersecting) active.add(id);
+          else active.delete(id);
+        });
+        links.forEach((l) => {
+          const on = active.has(l.getAttribute('href') || '');
+          l.classList.toggle('text-sage-dark', on);
+          l.classList.toggle('font-semibold', on);
+          l.classList.toggle('bg-sage/10', on);
+        });
+      },
+      { rootMargin: '-15% 0px -70% 0px', threshold: 0 }
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+</script>

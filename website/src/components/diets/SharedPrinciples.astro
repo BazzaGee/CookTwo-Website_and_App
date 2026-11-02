@@ -1,0 +1,52 @@
+---
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+
+const principles = [
+  {
+    title: 'Real, whole food',
+    text: 'The most consistent finding in all of nutrition. Diets built on recognisable food beat diets built from ingredient lists, at every macro ratio.',
+    icon: '<circle cx="12" cy="12" r="10"/><path d="M8 12c2-5 6-7 8-7-1 4-3 8-8 7Z"/>'
+  },
+  {
+    title: 'Enough protein',
+    text: 'Around 0.8 g/kg body weight minimum for most adults — more for older adults, hard training, or a calorie deficit. Every healthy pattern keeps this.',
+    icon: '<path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>'
+  },
+  {
+    title: 'Fibre & micronutrients',
+    text: 'Vegetables, fruit, legumes, whole grains, nuts. Vitamins, minerals and fibre come from food structure, not from labels shouting about added ones.',
+    icon: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>'
+  },
+  {
+    title: 'Energy balance',
+    text: 'Portions somewhere near what you burn. The ultra-processed trial showed why whole food does this almost by itself: you eat ~500 fewer calories a day.',
+    icon: '<path d="M19.07 4.93a10 10 0 0 1-14.14 14.14M4.93 19.07A10 10 0 0 0 19.07 4.93"/><path d="M12 2v20M2 12h20"/>'
+  },
+  {
+    title: 'You can live on it',
+    text: 'The best diet is the one you can sustain for years, not months. Adherence — not the macro split — is the strongest predictor of long-term results.',
+    icon: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/>'
+  }
+];
+---
+
+<figure class="not-prose my-8">
+  <figcaption class="sr-only">The five fundamentals every healthy diet shares</figcaption>
+  <div class:list={['grid gap-4', compact ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3']}>
+    {principles.map((p) => (
+      <div class="rounded-2xl border border-border bg-white p-5 sm:p-6 shadow-sm">
+        <p class="flex items-center gap-2.5 font-bold text-text-primary">
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-sage/10 text-sage-dark flex-shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><Fragment set:html={p.icon} /></svg>
+          </span>
+          {p.title}
+        </p>
+        <p class="mt-2.5 text-sm text-text-secondary leading-relaxed">{p.text}</p>
+      </div>
+    ))}
+  </div>
+</figure>

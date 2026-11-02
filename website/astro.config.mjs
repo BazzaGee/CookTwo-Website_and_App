@@ -16,7 +16,9 @@ export default defineConfig({
       serialize(item) {
         item.lastmod = today;
         item.changefreq = 'weekly';
-        item.priority = item.url === 'https://cooktwo.com/' ? 1.0 : 0.8;
+        if (item.url === 'https://cooktwo.com/') item.priority = 1.0;
+        else if (/\/diets\/?$/.test(item.url)) item.priority = 0.9;
+        else item.priority = 0.8;
         return item;
       }
     })

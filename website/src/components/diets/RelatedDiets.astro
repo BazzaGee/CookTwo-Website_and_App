@@ -1,0 +1,30 @@
+---
+interface RelatedDiet {
+  href: string;
+  emoji: string;
+  label: string;
+  desc: string;
+}
+
+interface Props {
+  items: RelatedDiet[];
+}
+
+const { items } = Astro.props;
+---
+
+<section class="not-prose mt-14" aria-label="Related diet guides">
+  <h2 class="text-xl font-bold text-text-primary mb-2">Related diet guides</h2>
+  <p class="text-sm text-text-secondary mb-5">Read the evidence for a neighbouring pattern — or start from the evidence <a href="/diets" class="text-sage-dark hover:text-sage font-medium underline decoration-sage/40 underline-offset-2">for all 25</a>.</p>
+  <div class="grid gap-4 sm:grid-cols-2">
+    {items.map((d) => (
+      <a href={d.href} class="group flex gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm hover:border-sage hover:shadow-md transition-all">
+        <span class="text-2xl leading-none" aria-hidden="true">{d.emoji}</span>
+        <span>
+          <span class="block font-semibold text-text-primary group-hover:text-sage transition-colors">{d.label}</span>
+          <span class="mt-1 block text-sm text-text-secondary leading-relaxed">{d.desc}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+</section>

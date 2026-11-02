@@ -1,0 +1,159 @@
+---
+title: "Keto Diet: What the Science Actually Says"
+description: "Keto has a grade-A clinical use in epilepsy and solid type 2 diabetes data — with honest LDL caveats. What the trials show, the LDL question, and how to build the healthy version of keto."
+pubDate: 2026-11-02
+updatedDate: 2026-11-02
+author: "CookTwo Research"
+ogImage: "/images/diets/og/keto.webp"
+dietKey: "keto"
+evidenceGrade: "B"
+category: "low-carb"
+restrictiveness: 4
+macroSplit: { carb: 5, protein: 20, fat: 75 }
+bestFor: "Blood sugar control, short-term fat loss, epilepsy"
+hardestPart: "Staying on it — and watching what happens to your LDL"
+medicalCaution: "Not for pregnancy, type 1 diabetes without specialist care, or SGLT2 inhibitor users"
+medical: false
+readingTime: "11 min"
+targetKeyword: "keto diet science evidence"
+tags: ["keto", "low-carb", "diet evidence"]
+draft: false
+---
+
+import PillarCheck from '../../components/diets/PillarCheck.astro';
+import StudyCard from '../../components/diets/StudyCard.astro';
+import FoodFramework from '../../components/diets/FoodFramework.astro';
+import VerdictBox from '../../components/diets/VerdictBox.astro';
+import Callout from '../../components/prose/Callout.astro';
+import Faq from '../../components/prose/Faq.astro';
+import RelatedDiets from '../../components/diets/RelatedDiets.astro';
+import SourceList from '../../components/diets/SourceList.astro';
+
+Keto is the rare diet that has both a gold-standard clinical use and a genuine scientific disagreement about everything else. For drug-resistant childhood epilepsy, the evidence is grade A: a Cochrane review found that about half of children cut their seizures by more than half. For weight loss and type 2 diabetes, the evidence is solid but time-limited. For heart safety, it is unresolved — in the range of a quarter of low-carb dieters, LDL cholesterol climbs sharply, and no long-term trial has followed the pattern to hard cardiovascular endpoints.
+
+So the honest answer to "is keto healthy?" is not a slogan. It is this: keto can be done healthily, and it can be done badly, and the difference is almost entirely about food quality and monitoring — the same difference that decides whether any diet on the map works. This guide walks through what keto is, what the trials actually measured, where it shines, where it is genuinely risky, and how to build a version worth eating for years rather than weeks.
+
+<PillarCheck rows={[
+  { label: 'Whole food quality', status: 'mixed', note: 'Best versions are built on fish, eggs, meat, olive oil and vegetables. The fastest way to ruin keto is processed meat, seed oil and "keto" snack bars.' },
+  { label: 'Protein adequacy', status: 'strong', note: 'Animal foods make protein easy. Keep it at roughly 15–25% of calories — starvation-level protein restriction is not required for ketosis.' },
+  { label: 'Fibre & micronutrients', status: 'weak', note: 'Dropping grains, legumes and most fruit cuts fibre, folate, magnesium and potassium. Vegetables, nuts, seeds and electrolytes are non-negotiable.' },
+  { label: 'Metabolic outcomes', status: 'strong', note: 'Weight, blood sugar, triglycerides and HDL improve reliably in the first 6–12 months. The advantage over other diets fades without adherence.' },
+  { label: 'Liveability & safety', status: 'weak', note: 'Restrictiveness 4/5, high trial dropout, real LDL risk in a subset. Legitimate for some goals; hard to defend as a default for everyone.' }
+]} />
+
+## What keto is — and what it was before it was a diet
+
+The ketogenic diet was invented in 1921 by Dr Russell Wilder at the Mayo Clinic as a medical therapy: a way to mimic the seizure control of fasting while still eating. It went to the margins once anti-epileptic drugs arrived in the 1930s, stayed at a handful of epilepsy centres for sixty years, and re-emerged in the 1990s through the Charlie Foundation and then, spectacularly, in the 2010s through Instagram.
+
+The modern low-carb movement traces back to Dr Robert Atkins — a cardiologist whose 1972 book sold millions — but keto as a distinct pattern is stricter: carbohydrate low enough to push the body into **nutritional ketosis**, where the liver converts fat into ketone bodies and the brain starts running partly on them.
+
+The numbers that define it:
+
+- **Net carbs: under 20–50 g per day** (net carbs = total carbohydrates minus fibre)
+- **Fat: 70–80% of calories**
+- **Protein: 15–25% of calories** — roughly 1.2–1.5 g/kg body weight for most people
+- **Blood ketones: 0.5–3.0 mmol/L** — about ten times lower than diabetic ketoacidosis, a point worth remembering when the word ketosis is used to scare you
+
+Variants fan out from there. Modified Atkins is a looser, more practical epilepsy treatment. Targeted keto lets athletes ring a small fast-carb snack around training. Cyclical keto alternates strict days with high-carb days and mostly suits bodybuilders. And "clean keto" versus "dirty keto" is the distinction that will matter most to your health: clean keto is meat, fish, eggs, olive oil and vegetables; dirty keto is the same macro maths delivered through sausage, cheese puff products and sugar-free sweeteners. The research on how much they differ is thin — but every mechanism we do understand says they differ enormously.
+
+## How it works
+
+Keto's claim rests on three mechanisms, and the evidence for each is stronger than the marketing, in some places, and weaker in others.
+
+**Ketosis replaces glucose as a major fuel.** With glycogen stores emptied within a couple of days, the liver makes beta-hydroxybutyrate and acetoacetate, which cross the blood-brain barrier and substitute for glucose in the brain. That this works at all is why the diet has a ninety-year clinical licence — brains accept ketones, particularly in drug-resistant epilepsy, where ketones shift the brain's GABA/glutamate balance and lower neuronal excitability.
+
+**Insulin drops.** Carbohydrate is the main driver of insulin, and meaningful carb restriction lowers fasting and post-meal insulin, improving insulin sensitivity and, in type 2 diabetes, sparing flagging pancreatic beta cells from constant demand. This mechanism is well accepted and is the reason blood-sugar results from keto are real, not a trick.
+
+**Appetite falls.** Ketogenic diets reliably lower hunger to a degree unusual among diets. Ketones act on appetite pathways, protein and fat increase satiety hormones like GLP-1 and PYY, and studies find participants eat 200–400 fewer calories a day without counting anything. The catch — and this is the point tribal keto forums skip — is contained in the most controlled keto experiment ever run, which looked for the famous "metabolic advantage" and failed to find it.
+
+<Callout variant="quote" title="The controlled feeding result that reframed the debate">
+In Kevin Hall's NIH trial, participants were locked into a metabolic ward and switched from a 50% carb diet to a barely-5% carb ketogenic diet with identical calories. Energy expenditure did not rise — it ticked down about 75 kcal/day — even though body fat fell faster for a time. Keto's weight-loss edge, where it exists, comes from eating less without trying, not from a fat-burning superpower.
+</Callout>
+
+## What the trials found
+
+<StudyCard name="Ketogenic diets for drug-resistant epilepsy — Cochrane systematic review (2020)" design="Systematic review (highest tier)" participants="Children across all included trials" duration="—" finding="About 50% of children on a ketogenic diet achieved more than 50% seizure reduction; about 30% achieved 90% or more. Modified Atkins matched much of the effect with better tolerability." url="https://pubmed.ncbi.nlm.nih.gov/32588900/" />
+
+<StudyCard name="Saslow et al. — very low carb vs moderate carb in type 2 diabetes (2017)" design="RCT" participants="32 adults with T2D or prediabetes" duration="12 weeks" finding="The very-low-carb group cut HbA1c by 0.8 points (vs 0.3), lost three times the weight, and 44% reduced or eliminated diabetes medication. Remote-delivered design shows this can happen outside a hospital." url="https://pubmed.ncbi.nlm.nih.gov/28301573/" note="Small trial; a real effect, echoed by larger work below." />
+
+<StudyCard name="Goldenberg et al. — low-carb diets and type 2 diabetes remission (BMJ 2021)" design="Meta-analysis of RCTs" participants="13 trials in the primary analysis" duration="6 and 12 months" finding="At six months, low-carb patients had higher diabetes remission rates, greater weight loss, lower triglycerides and reduced medication use. By 12 months much of the advantage had faded — and LDL had risen. Effectiveness is real but adherence-dependent." url="https://pubmed.ncbi.nlm.nih.gov/33472828/" />
+
+<StudyCard name="Mansoor et al. — low-carb vs low-fat meta-analysis (2016)" design="Meta-analysis of RCTs" participants="1,793 adults" duration="~6 months plus" finding="Low-carb dieting beat low-fat by about 1.15 kg more weight lost, with better HDL and triglycerides — and significantly worse LDL cholesterol. That trade is the keto contract in one sentence." url="https://doi.org/10.1017/S0007114515004699" />
+
+Alongside those trials sit two uncomfortable cohorts. In the PURE study of 135,000 people across 18 countries, very high carbohydrate intake tracked with higher mortality but fat did not — and in the 2018 Lancet Public Health analysis, the safest carbohydrate window was a moderate 50–55%, with mortality rising below 40%. Sub-group analyses are telling: in that same analysis, low-carb patterns built on animal foods tracked with *higher* mortality, while low-carb patterns built on plant foods tracked with *lower*. Observational data is never proof, but the direction is hard to ignore — it argues that a keto diet loaded with vegetables, olive oil and fish is a different biomedical animal from one built on bacon, and that the middle of the macro distribution is where population-level risk is lowest.
+
+No long-term RCT with heart attacks or strokes as endpoints has ever been run, in either direction. That gap is the strongest reason keto still carries a grade B overall rather than an A outside epilepsy: we know what happened at six months; we do not yet know what happens at six years.
+
+## Where keto is genuinely strong
+
+- **Blood sugar control.** The mechanism is direct: fewer carbs in, less glucose out. No diet-type debate changes this.
+- **Short-term fat loss.** Ketogenic diets edge other diets at 6–12 months, mostly by making people eat less without trying.
+- **Triglycerides, HDL, blood pressure.** The majority of trial participants improve on all three.
+- **Metabolic syndrome.** All five components — waist, BP, glucose, triglycerides, HDL — improve consistently, with reversal reported at meaningful rates.
+- **Epilepsy.** Grade A, ninety years old, Cochrane-reviewed, used in hospitals worldwide.
+
+## The honest trade-offs
+
+**LDL cholesterol.** In roughly 25–30% of low-carb dieters, LDL rises substantially — sometimes 50–100+ mg/dL — and elevated ApoB/LDL is one of the strongest modifiable cardiovascular risk factors we can measure. The American Heart Association's 2023 statement lists keto among patterns not recommended for heart health for exactly this reason. Anyone doing keto should do a baseline lipid panel and check again after three months. If LDL surges, the highest-quality response is to swap saturated fat (butter, fatty red meat, coconut oil) toward monounsaturated fat (olive oil, avocado, macadamias) and re-test.
+
+**Fibre and micronutrients.** Removing grains, legumes and most fruit strips out fibre, folate, magnesium and potassium. On keto you are not "supplementing" these — you are running a deficit unless you deliberately fill it: low-carb vegetables at every meal, nuts, seeds, avocado, leafy greens, and often a magnesium supplement.
+
+**Electrolytes and "keto flu".** The headache-fatigue-brain fog of the first fortnight is not ketosis poisoning you; it is sodium and water leaving the body as glycogen drains. Salt food generously, keep potassium and magnesium high, and the transition is far shorter and milder.
+
+**Adherence and social life.** Keto trial dropout runs 30–50% at a year. Restaurants, dinners with friends and holidays all become logistics. If you love the simplicity of the rules, that is manageable — rule-followers are often keto's happiest demographic. If you eat for pleasure and company, a looser low-carb pattern at 50–100 g of carbs usually delivers most of the benefit with a fraction of the friction.
+
+**Who should not do it without medical supervision.** Pregnancy and breastfeeding; anyone with type 1 diabetes without an endocrinologist; people on SGLT2 inhibitors, where keto is contraindicated outright because of euglycemic ketoacidosis risk; patients on insulin or sulfonylureas, who must not change carbohydrate intake unsupervised; people with existing heart disease and an LDL-sensitive picture; and anyone with a history of disordered eating, for whom this level of tracking is a known trigger.
+
+<FoodFramework
+  title="What a well-built keto week looks like"
+  eat={['Fatty fish — salmon, sardines, mackerel, herring (2–3x/week minimum)', 'Eggs, poultry, lamb, beef — any cuts, grilled or pan-cooked', 'Extra-virgin olive oil and avocado oil as the everyday cooking fats', 'Low-carb vegetables at every meal — spinach, kale, broccoli, peppers, zucchini, cauliflower, asparagus', 'Avocado, macadamias, walnuts, pecans, chia and flax', 'Full-fat Greek yogurt, cheese, butter and cream in measured amounts', 'A handful of berries for dessert — not a bowl of them']
+  }
+  moderate={['Dark chocolate above 85% cacao', 'Unsweetened full-fat dairy vs. cheese-only days', 'Red meat — 2–3x a week rather than nightly', 'Dry wine or spirits (alcohol slows ketosis and adds calories)']
+  }
+  avoid={['All grains — wheat, rice, oats, corn, quinoa', 'Sugar in every form, honey, maple syrup, agave', 'Potatoes, sweet potatoes and other starchy vegetables', 'Legumes — lentils, beans, chickpeas', 'Nearly all fruit — apples, bananas, melons, tropical fruit', 'Processed "keto-friendly" snack products and seed-oil deep-fried food']
+  }
+/>
+
+## Making keto genuinely healthy
+
+The version of keto worth defending is not the one from the forums. It is this one:
+
+1. **Keep the vegetables.** You need 6–8 cups of low-carb vegetables a day to hold fibre, folate, magnesium and the microbiome together. This is the single largest difference between clean and dirty keto.
+2. **Lead with fish and olive oil, not processed meat.** Weekly loops of salmon, sardines and vegetables carry the diet on their shoulders.
+3. **Protect protein.** Around 1.5 g/kg keeps muscle, appetite and satiety where they belong.
+4. **Rebuild electrolytes during adaptation.** Salt, potassium and magnesium in the first fortnight.
+5. **Test, do not assume.** Baseline lipids (including ApoB), a re-check at three months, HbA1c if blood sugar is the goal, and kidney function if you have any existing concerns.
+6. **Rehearse a low-carb fallback.** If strict keto makes you dread dinner, drop to 50–100 g of carbs with the same food principles. The evidence says you keep much of the benefit and stay in the game far longer.
+
+And if one partner is keto and the other is not: cook one shared protein-and-vegetable base, plate the insulin-lowering version without the starch, and put rice or potatoes on the other plate only. That is exactly the method CookTwo's [diet guides hub](/diets) builds on — one meal, two plates, no separate dinners.
+
+<VerdictBox answer="Keto can be healthy — but it is the most conditional yes on the board." conditions={['Build it from whole food — fish, olive oil, eggs, plenty of low-carb vegetables — not from processed meat and keto snacks.', 'Hold protein near 15–25% of calories; do not chase 90%-fat therapeutic ratios outside medicine.', 'Track LDL/ApoB before and three months after starting, and lean on monounsaturated fat if LDL climbs.', 'If you cannot see yourself doing this in three years, drop to a looser low-carb version — the evidence favours the person who adapts.']} />
+
+## Common questions
+
+<Faq schema items={[
+  { q: "Is the keto diet actually healthy?", a: "It can be, under conditions. Evidence is grade A for drug-resistant epilepsy, grade B for short-term weight loss and type 2 diabetes blood-sugar control, and unresolved for long-term cardiovascular safety — LDL rises sharply in roughly a quarter of followers, so lipid monitoring is essential. A well-built keto diet is whole-food based, vegetable-heavy and protein-adequate; that version has a liveable risk profile for most healthy adults. A processed-meat-heavy version does not." },
+  { q: "Why does keto work for weight loss if there is no metabolic advantage?", a: "Keto suppresses appetite. Ketones, higher protein and fat satiety lead people to eat 200–400 fewer calories a day without counting. The most controlled test of the metabolic advantage claim found slightly lower energy expenditure, not higher — so the diet's weight-loss edge fades as soon as adherence does." },
+  { q: "Does keto raise cholesterol?", a: "For most followers HDL rises and triglycerides fall, which is favourable. But LDL cholesterol rises significantly in about 25–30% of people, sometimes by 50–100 mg/dL, and elevated LDL is strongly linked to cardiovascular risk. Baseline and three-month lipid testing, plus leaning on olive oil and avocado over butter and fatty red meat, is the standard mitigation." },
+  { q: "Can you do keto long-term safely?", a: "There is no long-term RCT with hard cardiovascular endpoints, so nobody can honestly say either yes or no. Cohort studies associate very-low-carb intake built on animal foods with higher mortality and plant-food versions with lower mortality, which points to food quality as the deciding factor. Many people settle at a sustainable low-carb level of 50–100 g of carbs while keeping the whole-food principles." },
+  { q: "What is the difference between ketosis and ketoacidosis?", a: "Nutritional ketosis is a controlled, physiological state at blood ketones of 0.5–3.0 mmol/L. Diabetic ketoacidosis is an emergency state above roughly 10 mmol/L, occurring in uncontrolled type 1 diabetes. They are separated by about ten times the ketone concentration — but people with type 1 diabetes, or those taking SGLT2 inhibitor medication, should only pursue carbohydrate changes with specialist supervision." },
+  { q: "How much protein should I eat on keto?", a: "Most people do well at 15–25% of calories — roughly 1.2–1.5 g per kg of body weight. Protein does not need to be restricted to reach ketosis, and older adults and anyone training should stay at the higher end to protect muscle. The classical therapeutic epilepsy diet, at about 8% protein, is a medical tool rather than a general template." }
+]} />
+
+<RelatedDiets items={[
+  { href: '/diets/paleo', emoji: '🦴', label: 'Paleo', desc: 'Same whole-food instinct, fewer bans — and it lets the carbs back in.' },
+  { href: '/diets/carnivore', emoji: '🥩', label: 'Carnivore', desc: 'Keto taken to its zero-plant limit. What the evidence actually supports — and what it does not.' },
+  { href: '/diets/mediterranean', emoji: '🫒', label: 'Mediterranean', desc: 'The pattern with the strongest heart-outcome evidence on the board.' },
+  { href: '/diets/pritikin', emoji: '💚', label: 'Pritikin (very low fat)', desc: 'Keto mirror-imaged: hop the map to the opposite corner and see what holds.' }
+]} />
+
+<SourceList sources={[
+  { label: 'Martin-McGill KJ, et al. Ketogenic diets for drug-resistant epilepsy. Cochrane Database of Systematic Reviews, 2020.', detail: 'DOI 10.1002/14651858.CD001903.pub5', url: 'https://pubmed.ncbi.nlm.nih.gov/32588900/' },
+  { label: 'Hall KD, et al. Energy expenditure and body composition changes after an isocaloric ketogenic diet in overweight and obese men. American Journal of Clinical Nutrition, 2016.', detail: 'DOI 10.3945/ajcn.116.133561', url: 'https://pubmed.ncbi.nlm.nih.gov/27385608/' },
+  { label: 'Saslow LR, et al. A randomized pilot trial of a moderate carbohydrate diet compared to a very low carbohydrate diet in overweight or obese individuals with type 2 diabetes or prediabetes. PLoS ONE, 2017.', detail: 'DOI 10.1371/journal.pone.0192497', url: 'https://pubmed.ncbi.nlm.nih.gov/28301573/' },
+  { label: 'Goldenberg JZ, et al. Efficacy and safety of low and very low carbohydrate diets for type 2 diabetes remission. BMJ, 2021.', detail: 'DOI 10.1136/bmj.m4743', url: 'https://pubmed.ncbi.nlm.nih.gov/33472828/' },
+  { label: 'Mansoor N, et al. Effects of low-carbohydrate diets v. low-fat diets on body weight and cardiovascular risk factors. British Journal of Nutrition, 2016.', url: 'https://doi.org/10.1017/S0007114515004699' },
+  { label: 'Seidelmann SB, et al. Dietary carbohydrate intake and mortality: a prospective cohort study and meta-analysis. Lancet Public Health, 2018.', detail: 'DOI 10.1016/S2468-2667(18)30135-X', url: 'https://pubmed.ncbi.nlm.nih.gov/30122560/' },
+  { label: 'Paoli A, et al. Beyond weight loss: a review of the therapeutic uses of very-low-carbohydrate (ketogenic) diets. European Journal of Clinical Nutrition, 2013.', url: 'https://doi.org/10.1038/ejcn.2013.116' },
+  { label: 'Kosinski C, Jornayvaz FR. Effects of ketogenic diets on cardiovascular risk factors. Nutrients, 2017.', url: 'https://pubmed.ncbi.nlm.nih.gov/28556102/' }
+]} />

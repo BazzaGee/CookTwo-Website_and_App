@@ -1,0 +1,45 @@
+---
+interface PillarRow {
+  label: string;
+  status: 'strong' | 'mixed' | 'weak';
+  note: string;
+}
+
+interface Props {
+  rows: PillarRow[];
+}
+
+const { rows } = Astro.props;
+const chip = {
+  strong: { text: 'Supports', cls: 'bg-sage-dark text-white' },
+  mixed: { text: 'Mixed', cls: 'bg-terracotta-dark text-white' },
+  weak: { text: 'Weak', cls: 'bg-error text-white' }
+};
+---
+
+<figure class="not-prose my-8 rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+  <div class="px-5 sm:px-7 py-4 bg-cream-dark border-b border-border flex flex-wrap items-baseline justify-between gap-2">
+    <figcaption class="text-base font-bold text-text-primary">How this diet stacks against the five fundamentals</figcaption>
+    <a href="/diets#fundamentals" class="text-xs text-sage-dark hover:text-sage font-medium">What are the fundamentals? →</a>
+  </div>
+  <table class="w-full text-sm border-collapse">
+    <caption class="sr-only">Five fundamentals check for this dietary pattern</caption>
+    <thead>
+      <tr class="border-b border-border">
+        <th scope="col" class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary w-2/5 sm:w-1/4">Fundamental</th>
+        <th scope="col" class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary w-4/5 sm:w-auto">Fit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr class="border-b border-b-border last:border-b-0">
+          <td class="px-5 py-3 align-top font-semibold text-text-primary">{r.label}</td>
+          <td class="px-5 py-3 align-top">
+            <span class:list={[chip[r.status].cls, 'inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide']}>{chip[r.status].text}</span>
+            <span class="mt-1 block text-text-secondary">{r.note}</span>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</figure>
