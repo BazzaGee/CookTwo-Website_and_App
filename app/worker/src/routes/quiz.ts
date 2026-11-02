@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
 import { cleanUrl, id as funnelId, upsertFunnelSession } from './funnel';
+import { upsertContact } from '../lib/contact-sync';
 import { later } from '../lib/later';
 
 /**
@@ -441,12 +442,6 @@ async function syncFactorContact(
   answers: FactorAnswer[],
   utm: Record<string, string>,
 ): Promise<void> {
-  if (!env.RESEND_API_KEY) return;
-
-  const headers = {
-    Authorization: `Bearer ${env.RESEND_API_KEY}`,
-    'Content-Type': 'application/json',
-  };
   const properties: Record<string, string> = {
     quiz_factor: factor,
     quiz_angle: angle,
@@ -458,32 +453,6 @@ async function syncFactorContact(
   }
   if (utm.utm_campaign) properties.campaign = utm.utm_campaign;
 
-  const existing = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, { headers })
-    .then((r) => (r.status === 404 ? null : r))
-    .catch(() => null);
-
-  if (existing && existing.ok) {
-    const patch = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ properties }),
-    });
-    if (!patch.ok) throw new Error(`contact patch ${patch.status}: ${await patch.text()}`);
-  } else {
-    const create = await fetch('https://api.resend.com/contacts', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ email, unsubscribed: false, properties }),
-    });
-    if (!create.ok && create.status !== 409) {
-      throw new Error(`contact create ${create.status}: ${await create.text()}`);
-    }
-  }
-
-  const topicsRes = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}/topics`, {
-    method: 'PATCH',
-    headers,
-    body: JSON.stringify([{ id: DIET_TOPIC_ID, subscription: 'opt_in' }]),
-  });
-  if (!topicsRes.ok) throw new Error(`topics update ${topicsRes.status}: ${await topicsRes.text()}`);
+  // Through the provider seam: Resend and/or Brevo, whichever is configured.
+  await upsertContact(env, { email, properties }, { dietTopic: true });
 }

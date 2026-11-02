@@ -51,6 +51,7 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
             <option value="solo">solo</option>
           </select>
         </label>
+        <label>Video <input type="text" id="f-video" placeholder="weight-solo" /></label>
         <label>Search <input type="text" id="f-q" placeholder="email or session id" /></label>
         <label class="chk"><input type="checkbox" id="f-internal" /> internal</label>
       </div>
@@ -71,6 +72,10 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
         <div class="bd">
           <h2>By mode</h2>
           <table id="t-mode"><thead><tr><th>Key</th><th>Sessions</th><th>Quiz</th><th>Played</th><th>CTA</th><th>Verified</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="bd">
+          <h2>By video <span class="muted">(avg position = how far viewers got)</span></h2>
+          <table id="t-video"><thead><tr><th>Video</th><th>Sessions</th><th>Quiz</th><th>Played</th><th>Avg pos</th><th>CTA</th><th>Verified</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
 
@@ -200,7 +205,7 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
 
     function qs(extra) {
       var p = new URLSearchParams();
-      ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-q'].forEach(function (id) {
+      ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-video', 'f-q'].forEach(function (id) {
         var el = document.getElementById(id);
         var v = el && el.value ? el.value.trim() : '';
         if (!v) return;
@@ -290,6 +295,16 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
       fillTable('t-campaign', data.by_campaign || []);
       fillTable('t-content', data.by_content || []);
       fillTable('t-mode', data.by_mode || []);
+      fillVideoTable('t-video', data.by_video || []);
+    }
+
+    function fillVideoTable(id, rows) {
+      var body = document.querySelector('#' + id + ' tbody');
+      body.innerHTML = rows.map(function (r) {
+        return '<tr><td>' + esc(r.key) + '</td><td>' + r.sessions + '</td><td>' + r.quiz_completed +
+          '</td><td>' + r.vsl_played + '</td><td>' + (r.avg_position == null ? '—' : r.avg_position + 's') +
+          '</td><td>' + r.cta_success + '</td><td>' + r.cta_verified + '</td></tr>';
+      }).join('') || '<tr><td colspan="7" class="muted">no data</td></tr>';
     }
 
     function fillTable(id, rows) {
@@ -307,6 +322,17 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
     }
 
     function answers(s) {
+      if (s.factor) {
+        var out = ['<span class="pill">' + esc(s.factor) + '</span>'];
+        try {
+          var list = typeof s.answers === 'string' ? JSON.parse(s.answers) : s.answers;
+          (list || []).forEach(function (a) { out.push('<span class="pill">' + esc(a.a) + '</span>'); });
+        } catch (e) { /* answers kept as raw text below */ }
+        if (out.length === 1 && typeof s.answers === 'string' && s.answers) {
+          out.push('<span class="pill">' + esc(s.answers) + '</span>');
+        }
+        return out.join('');
+      }
       if (!s.goal) return '<span class="muted">—</span>';
       return '<span class="pill">' + esc(s.goal) + '</span><span class="pill">' + esc(s.blocker) +
         '</span><span class="pill">' + esc(s.situation) + '</span>';
@@ -367,7 +393,10 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
           ['Max position', s.max_position_s ? Math.round(s.max_position_s) + 's' : null],
           ['Email entered (video)', s.cta_submit_position_s != null ? fmtPos(s.cta_submit_position_s) + ' (' + Math.round(s.cta_submit_position_s) + 's)' : null],
           ['Email sent (video)', s.cta_success_position_s != null ? fmtPos(s.cta_success_position_s) + ' (' + Math.round(s.cta_success_position_s) + 's)' : null],
-          ['Answers', s.goal ? s.goal + ' / ' + s.blocker + ' / ' + s.situation : null],
+          ['Factor', s.factor],
+          ['Answers', s.factor
+            ? s.answers
+            : (s.goal ? s.goal + ' / ' + s.blocker + ' / ' + s.situation : null)],
           ['Country', s.country],
           ['Device', s.device],
         ];
@@ -426,7 +455,7 @@ import FunnelLayout from '../../layouts/FunnelLayout.astro';
       if (gate) gate.hidden = false;
     });
 
-    ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-q', 'f-internal'].forEach(function (id) {
+    ['f-from', 'f-to', 'f-campaign', 'f-content', 'f-mode', 'f-video', 'f-q', 'f-internal'].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('change', load);

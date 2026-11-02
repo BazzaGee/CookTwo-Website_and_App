@@ -253,7 +253,10 @@ const videoLabel = mode === 'solo' ? 'solo' : mode === 'app' ? 'app' : 'couples'
     // Adopt the quiz journey (?fs= / ?q= / ?e=), strip them from the address
     // bar, then open the VSL session — same row the quiz started.
     readAttribution({ strip: true });
-    startSession({ entry: 'vsl', vsl_mode: mode === 'solo' ? 'solo' : 'couples', vsl_video: videoSlug });
+    // Angle comes from the slug, not the page mode: factor pages all run
+    // mode="app" but half of them are solo videos (…-solo).
+    var vslMode = videoSlug.indexOf('-solo') > -1 || mode === 'solo' ? 'solo' : 'couples';
+    startSession({ entry: 'vsl', vsl_mode: vslMode, vsl_video: videoSlug });
 
     var countdown = document.getElementById('countdown');
     var cdNum = document.getElementById('cd-num');

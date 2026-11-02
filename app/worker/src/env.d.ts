@@ -23,6 +23,10 @@ export interface Env {
   STRIPE_PRICE_ID_MONTHLY?: string;
   STRIPE_PRICE_ID_YEARLY?: string;
   STRIPE_CUSTOMER_ID?: string;
+  // Provider-agnostic contact sync (lib/contact-sync.ts)
+  BREVO_API_KEY?: string;
+  BREVO_LIST_IDS?: string;   // comma-separated Brevo list ids
+  CONTACT_SYNC?: string;     // 'both' (default) | 'resend' | 'brevo'
   // Engagement email engine
   OPENROUTER_API_KEY?: string;
   EMAIL_MODEL?: string;

@@ -482,6 +482,11 @@ function parseFilters(q: Record<string, string>): Filters {
     clauses.push('s.vsl_mode = ?');
     binds.push(mode);
   }
+  const video = (q.video || '').trim().slice(0, 100);
+  if (video) {
+    clauses.push('s.vsl_video = ?');
+    binds.push(video);
+  }
   const search = (q.q || '').trim().slice(0, 320).toLowerCase();
   if (search) {
     clauses.push("(LOWER(COALESCE(s.source_email, '')) LIKE ? OR LOWER(COALESCE(s.capture_email, '')) LIKE ? OR LOWER(COALESCE(s.id, '')) LIKE ?)");
@@ -527,7 +532,7 @@ export async function handleFunnelSummary(c: Context<{ Bindings: Env }>): Promis
   const f = parseFilters(q);
 
   try {
-    const [totals, byCampaign, byContent, byMode, byDay] = await Promise.all([
+    const [totals, byCampaign, byContent, byMode, byVideo, byDay] = await Promise.all([
       c.env.DB.prepare(`SELECT ${STAGE_SQL} FROM funnel_sessions s ${f.where}`).bind(...f.binds).first(),
       c.env.DB.prepare(
         `SELECT COALESCE(s.utm_campaign, '(none)') AS key, ${STAGE_SQL}
@@ -551,6 +556,14 @@ export async function handleFunnelSummary(c: Context<{ Bindings: Env }>): Promis
         .bind(...f.binds)
         .all(),
       c.env.DB.prepare(
+        `SELECT COALESCE(s.vsl_video, '(none)') AS key, ${STAGE_SQL},
+                ROUND(AVG(s.max_position_s), 1) AS avg_position
+           FROM funnel_sessions s ${f.where}
+          GROUP BY key ORDER BY sessions DESC LIMIT 50`,
+      )
+        .bind(...f.binds)
+        .all(),
+      c.env.DB.prepare(
         `SELECT date(s.started_at / 1000, 'unixepoch') AS day,
                 COUNT(*) AS sessions,
                 SUM(CASE WHEN s.quiz_completed_at IS NOT NULL THEN 1 ELSE 0 END) AS quiz_completed,
@@ -568,6 +581,7 @@ export async function handleFunnelSummary(c: Context<{ Bindings: Env }>): Promis
         by_campaign: byCampaign.results || [],
         by_content: byContent.results || [],
         by_mode: byMode.results || [],
+        by_video: byVideo.results || [],
         by_day: byDay.results || [],
       }),
       { status: 200, headers: NO_STORE },
@@ -586,7 +600,7 @@ const SESSION_COLUMNS = `
   s.max_position_s, s.video_duration_s, s.played, s.completed,
   s.quiz_completed_at, s.offer_revealed_at, s.offer_reveal_position_s,
   s.cta_success_at, s.cta_verified_at, s.is_internal,
-  qa.goal, qa.blocker, qa.situation, qa.angle,
+  qa.goal, qa.blocker, qa.situation, qa.angle, qa.factor, qa.answers,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_play') AS play_count,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_pause') AS pause_count,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'quiz_answer') AS quiz_answer_count,
@@ -664,7 +678,8 @@ export async function handleFunnelSessionDetail(c: Context<{ Bindings: Env }>): 
 const CSV_COLUMNS = [
   'session_id', 'started_at', 'entry', 'vsl_mode', 'source_email', 'capture_email',
   'email_match', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'via',
-  'goal', 'blocker', 'situation', 'angle', 'watch_ms', 'wall_ms', 'max_position_s',
+  'goal', 'blocker', 'situation', 'angle', 'factor', 'answers',
+  'watch_ms', 'wall_ms', 'max_position_s',
   'video_duration_s', 'progress_pct', 'played', 'completed', 'bounced',
   'offer_revealed_at', 'cta_submitted', 'cta_success_at', 'cta_verified_at',
   'cta_submit_position_s', 'cta_success_position_s',
@@ -698,7 +713,7 @@ export async function handleFunnelExport(c: Context<{ Bindings: Env }>): Promise
       const cells = [
         r.id, started, r.entry, r.vsl_mode, r.source_email, r.capture_email, match,
         r.utm_source, r.utm_medium, r.utm_campaign, r.utm_content, r.via,
-        r.goal, r.blocker, r.situation, r.angle,
+        r.goal, r.blocker, r.situation, r.angle, r.factor, r.answers,
         r.watch_ms, r.wall_ms, r.max_position_s, r.video_duration_s, progress,
         r.played, r.completed, r.bounced,
         isoTs(r.offer_revealed_at), r.cta_submit_count, isoTs(r.cta_success_at),

@@ -1,6 +1,9 @@
 import type { Context } from 'hono';
 import type { Env } from '../env';
 import { ensureEngagementUser, markEngagementVerified } from './engagement';
+import { rollupFunnelSession } from './funnel';
+import { upsertContact } from '../lib/contact-sync';
+import { later } from '../lib/later';
 import { buildEngineEnv, computeUserState, decideNextEmail, generateAndSendEmail } from '../lib/engagement/email-engine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,6 +23,12 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
 
   const verifyToken = crypto.randomUUID();
   const siteUrl = c.env.SITE_URL || 'https://cooktwo.app';
+  // Funnel session the capture box came from — carried on the verify link so
+  // handleVerify can stamp cta_verified_at on the right journey.
+  const sessionId =
+    typeof body.session_id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.session_id)
+      ? body.session_id
+      : null;
 
   if (existing) {
     if (joinCode && !existing.join_code) {
@@ -47,7 +56,25 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
     }
   }
 
-  const verifyUrl = `${siteUrl}/api/waitlist/verify?token=${verifyToken}`;
+  const verifyUrl =
+    `${siteUrl}/api/waitlist/verify?token=${verifyToken}` + (sessionId ? `&s=${sessionId}` : '');
+
+  // Provider-agnostic contact record (Resend and/or Brevo): which video the
+  // address came from, straight from the capture box's leadSource.
+  const source = typeof body.source === 'string' ? body.source.slice(0, 100) : '';
+  if (source) {
+    later(
+      c,
+      upsertContact(c.env, {
+        email,
+        properties: {
+          source,
+          vsl_video: source.startsWith('vsl-') ? source.slice(4) : source,
+          captured_at: new Date().toISOString().slice(0, 10),
+        },
+      }).catch((err: unknown) => console.error('contact sync failed:', err)),
+    );
+  }
 
   // Mirror the subscribe into the engagement engine so the onboarding
   // email series has a user to work with.
@@ -76,6 +103,19 @@ export async function handleVerify(c: Context<{ Bindings: Env }>): Promise<Respo
   const token = c.req.query('token');
   if (!token) {
     return htmlResponse('Missing verification token. Please use the link from your email.', 400);
+  }
+
+  // `s=` rides along from the capture box so the funnel row records that this
+  // person confirmed (COALESCE — first click wins, replays are harmless).
+  const sessionId =
+    typeof c.req.query('s') === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(c.req.query('s') || '')
+      ? (c.req.query('s') as string)
+      : null;
+  if (sessionId) {
+    c.executionCtx.waitUntil(
+      rollupFunnelSession(c.env.DB, sessionId, { ctaVerifiedAt: Date.now(), lastSeenAt: Date.now() })
+        .catch((err: unknown) => console.error('cta_verified stamp failed:', err)),
+    );
   }
 
   const row = await c.env.DB.prepare('SELECT * FROM waitlist WHERE verify_token = ?')
