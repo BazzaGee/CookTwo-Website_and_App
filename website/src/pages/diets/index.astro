@@ -68,6 +68,7 @@ const itemSchema = {
 };
 
 const tocItems = [
+  ['story', 'The view from the gym floor'],
   ['the-short-answer', 'The short answer'],
   ['evidence', 'What the evidence shows'],
   ['quality', 'Food quality beats the label'],
@@ -82,7 +83,7 @@ const tocItems = [
 ] as const;
 ---
 
-<BaseLayout title={title} description={description} ogImage="/images/diets/og/diet-hub.webp" canonicalURL="/diets" isArticle={true} articlePublishedDate={pubDate.toISOString()} articleAuthor="CookTwo Research" articleTags={['diets', 'nutrition evidence', 'food quality']}>
+<BaseLayout title={title} description={description} ogImage="/images/diets/og/diet-hub.webp" canonicalURL="/diets" isArticle={true} articlePublishedDate={pubDate.toISOString()} articleAuthor="Vary (personal trainer)" articleTags={['diets', 'nutrition evidence', 'food quality']}>
   {breadcrumbSchema && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>}
   {faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>}
   {itemSchema && <script type="application/ld+json" set:html={JSON.stringify(itemSchema)}></script>}
@@ -102,14 +103,14 @@ const tocItems = [
     <span class="badge-signature mb-6 inline-block">Diet evidence</span>
     <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-text-primary leading-tight mb-6">Any sensible diet can work.<br/><span class="text-sage">Here is what the evidence says.</span></h1>
     <p class="text-xl md:text-2xl text-text-secondary leading-relaxed max-w-3xl mb-8">
-      Keto, low-carb, high-carb, low-fat, vegan, paleo — the internet turns diets into rival teams. The research quietly disagrees. Across landmark randomized trials, ten-million-person reviews and five continents of traditional eating, the variable that separates healthy diets from unhealthy ones is not the name of the plan. It is the quality of the food on the way in, whether the nutrients arrive, and whether a human being can actually keep it going.
+      Keto, low-carb, high-carb, low-fat, vegan, paleo — the internet turns diets into rival teams, and gyms spend all day refereeing the fights. The research quietly refuses to pick a side. Across landmark randomized trials, ten-million-person reviews and five continents of traditional eating, the variable that separates healthy diets from unhealthy ones is not the name of the plan. It is the quality of the food going in, whether the nutrients actually arrive, and whether a human being can keep the thing going. I have watched that truth play out with every client I have ever trained — and watched the diet wars ignore it with equal consistency.
     </p>
     <div class="flex flex-wrap items-center gap-3 text-sm text-text-secondary mb-4">
-      <span>CookTwo Research</span>
+      <span>Vary — personal trainer, writing with the CookTwo research desk</span>
       <span aria-hidden="true">·</span>
       <time datetime={pubDate.toISOString()}>November 2, 2026</time>
       <span aria-hidden="true">·</span>
-      <span>18 min read</span>
+      <span>19 min read</span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
       {[
@@ -127,6 +128,22 @@ const tocItems = [
     </div>
   </section>
 
+  <section id="story" class="container-custom max-w-4xl py-10 md:py-14">
+    <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-6">The view from the gym floor</h2>
+    <p class="text-lg text-text-primary leading-relaxed mb-5">
+      I have one quiet advantage over most people who publish diet opinions: I keep score after they stop talking. Personal training is where nutrition arguments hit contact with real life. A new client arrives carrying the diet they were most recently convinced by — a keto notebook, a screenshot of a fasting window, a shelf of branded shakes — and a few weeks later we both find out what the diet is actually made of, and whether a human being can live inside it.
+    </p>
+    <p class="text-lg text-text-secondary leading-relaxed mb-5">
+      Early in my career I made the classic mistake. I had my one plan, and I tried to file every client into it. Some agreed and did well. Others pushed back, kept their own eating — vegan, keto, plain "normal food" — and did just as well, provided the plan ran on real food and they genuinely liked living in it. No diet name ever predicted who would thrive. The fit between plan and person did, and so did the quality of the construction.
+    </p>
+    <p class="text-lg text-text-secondary leading-relaxed mb-5">
+      Years of keeping that score taught me to ask a better question. Not "which diet is best?" but "what does this diet share with every other one that worked?" So I sat down with the research, expecting it to finally crown a winner. It refused. Five landmark studies and one map, which you will meet below, say the same thing the gym floor already knew: the name of the plan is close to irrelevant. The construction is everything.
+    </p>
+    <p class="text-lg text-text-primary leading-relaxed">
+      What follows is that evidence, the shared floor every healthy diet stands on, honest evidence grades for every pattern CookTwo supports, and the questions I now run every client through before they commit to any plan. The short version is next, because you're busy.
+    </p>
+  </section>
+
   <section id="the-short-answer" class="container-custom max-w-6xl py-10 md:py-14">
     <div class="rounded-2xl border-2 border-sage/60 bg-sage/5 p-6 sm:p-10">
       <p class="text-xs font-semibold uppercase tracking-widest text-sage-dark mb-3">The short answer</p>
@@ -142,10 +159,15 @@ const tocItems = [
   <section id="evidence" class="container-custom max-w-6xl py-10 md:py-16">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">What the evidence actually shows</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
-      Four studies and one map。 Together they dismantle the idea that one macro ratio is the master key — and they explain why the diet wars never resolve.
+      I went looking for a winner — the one study that crowned the right diet name and finished the argument for good. Five landmark studies and one map later, I had finished with the argument instead. Not one of them cares about macro ratios the way the internet does. Together they explain exactly why the diet wars never resolve, and why the people quietly winning are not the people arguing.
     </p>
 
     <StudyCard name="DIETFITS — a healthy low-carb diet vs a healthy low-fat diet (JAMA, 2018)" design="Randomized controlled trial" participants="609 adults" duration="12 months" finding="Weight loss came out nearly identical — about 5–6 kg in both groups — and each person's baseline insulin sensitivity did not predict which diet worked better for them. Both diets were built from whole food and both cut sugar and refined flour." url="https://pubmed.ncbi.nlm.nih.gov/29490351/" />
+
+    <aside class="not-prose my-8 rounded-2xl border-l-4 border-terracotta/60 bg-terracotta/5 p-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-terracotta-dark mb-2">From the gym floor</p>
+      <p class="text-text-primary leading-relaxed">I have watched a devoted low-carber and a devoted high-carber land on nearly the same results in the same training block. Both plans ran on real food, both hit their protein, and both were being followed by people who had genuinely chosen them. Neither one needed to win an argument with the other. That is DIETFITS with faces on it.</p>
+    </aside>
 
     <StudyCard name="Hall et al. — the NIH inpatient ultra-processed diet trial (Cell Metabolism, 2019)" design="Randomized crossover, metabolic ward" participants="20 adults" duration="2 weeks per arm" finding="With calories, macros, sugar, fibre and sodium matched, a nearly-identical nutrition label hid a 508 kcal/day difference: people over-ate and gained weight on the ultra-processed version and lost weight on the whole-food version. Processing level — not the macro maths — overrode satiety." url="https://pubmed.ncbi.nlm.nih.gov/31195085/" />
 
@@ -163,7 +185,7 @@ const tocItems = [
   <section id="quality" class="container-custom max-w-6xl py-10 md:py-16 bg-white/0">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">Food quality beats the label</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
-      The NOVA framework sorts food by how processed it is, not by nutrient. Group 1 is edible things from plants and animals — vegetables, beans, eggs, meat, milk. Group 2 is cooking ingredients — oil, salt, sugar. Group 3 is simple combinations like bread, cheese and canned fish. Group 4 is the industrial formulation, built from extracted substances and additives: soft drinks, snack packs, instant noodles, most breakfast cereals, and yes, a large slice of the "health food" aisle.
+      Two people can run the same named diet and end up in two different bodies a year later — I have watched it happen more times than I can count. Nutrition science has a name for the variable that explains most of it: NOVA. It sorts food by how processed it is, not by nutrient. Group 1 is edible things from plants and animals — vegetables, beans, eggs, meat, milk. Group 2 is cooking ingredients — oil, salt, sugar. Group 3 is simple combinations like bread, cheese and canned fish. Group 4 is the industrial formulation, built from extracted substances and additives: soft drinks, snack packs, instant noodles, most breakfast cereals, and yes, a large slice of the "health food" aisle.
     </p>
     <div class="grid md:grid-cols-3 gap-5 mb-6">
       {[
@@ -178,6 +200,10 @@ const tocItems = [
         </div>
       ))}
     </div>
+    <aside class="not-prose my-8 rounded-2xl border-l-4 border-terracotta/60 bg-terracotta/5 p-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-terracotta-dark mb-2">From the gym floor</p>
+      <p class="text-text-primary leading-relaxed">Two people I worked with ran "keto" the same year. One ran it on shakes, bars and keto-branded snacks; the other ran it on eggs, fish, olive oil and vegetables. Same name, near-identical macros on paper. Six months in, you would have guessed they were following two different planets. The one still thriving at twelve months was the one whose food needed the least marketing.</p>
+    </aside>
     <p class="text-lg text-text-primary leading-relaxed max-w-3xl">
       This is why the diet wars are noise. Almost every named diet — keto, paleo, vegan, Mediterranean, DASH, Whole30 — quietly agrees on one instruction: <strong>stop eating most ultra-processed food.</strong> From an evidence standpoint, that agreement is doing more of the work than the differences.
     </p>
@@ -207,6 +233,10 @@ const tocItems = [
         </tbody>
       </table>
     </div>
+    <aside class="not-prose my-8 rounded-2xl border-l-4 border-terracotta/60 bg-terracotta/5 p-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-terracotta-dark mb-2">From the gym floor</p>
+      <p class="text-text-primary leading-relaxed">The fittest people past seventy I have ever worked with did not share a macro ratio either. One cooked the way her mother had in Greece — olive oil, greens, beans, a table full of people. One ate the way her family always had — rice, vegetables, soy, small plates. They shared two things: a kitchen somebody actually cooked in, and bodies that moved nearly every day. When I finally read the longevity research, I recognised the pattern before I finished the first page.</p>
+    </aside>
     <p class="text-lg text-text-primary leading-relaxed max-w-3xl">
       Not a single healthy long-lived population ran on ultra-processed food. Not one ran on a diet that granted nothing to a human body or soul. If macro ratios were the key, Okinawa and Ikaria could not share a planet.
     </p>
@@ -215,7 +245,7 @@ const tocItems = [
   <section id="fundamentals" class="container-custom max-w-6xl py-10 md:py-16">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">What every healthy diet shares</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-6">
-      Strip the brands off the five healthiest diets on earth — or the five longest-lived towns — and the same five fundamentals are running underneath. Trade between them freely.
+      For years I asked the wrong question whenever a client succeeded: "what made their diet the winner?" The better question — "what did their plan have in common with every other plan that succeeded?" — shrank the answer fast. Strip the brands off the five healthiest diets on earth, or the five longest-lived towns, and the same five fundamentals are running underneath. Trade between them freely.
     </p>
     <SharedPrinciples />
   </section>
@@ -223,7 +253,7 @@ const tocItems = [
   <section id="spectrum" class="container-custom max-w-6xl py-10 md:py-16">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">The diet spectrum</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
-      Pick a cell — any cell — and evidence-backed eats exist inside it. Colours mark evidence strength, not moral worth. Grades are explained below the map.
+      After enough gym-floor years, I stopped being impressed by which diet people declared and started noticing where it sat. This grid is that observation, drawn out. Pick a cell — any cell — and evidence-backed eating exists inside it. The position tells you where a pattern pins its macro ratio; the colour tells you how much evidence carries it. Colours mark evidence strength, not moral worth. Grades are explained below the map.
     </p>
     <DietSpectrum chips={[
       { label: 'Keto', href: '/diets/keto', row: 4, col: 1, grade: 'B' },
@@ -257,7 +287,7 @@ const tocItems = [
   <section id="catalog" class="container-custom max-w-6xl py-10 md:py-16">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">Compare all 25 diet guides</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-10">
-      Every dietary pattern the CookTwo app supports, with the evidence verdict, the honest strength and the honest cost. Guides open in the same window so you can read in order.
+      Every dietary pattern CookTwo supports, with the evidence verdict, the honest strength and the honest cost. I would rather hand a client the studies than an opinion, so every card links to a full guide that wears its evidence grade in the open — including the ones whose marketing budgets outran their footnotes. Guides open in the same window so you can read in order.
     </p>
     {DIET_CATEGORY_ORDER.map((cat) => {
       const rows = orderedGuides.filter((r) => r.row.category === cat.id);
@@ -277,7 +307,7 @@ const tocItems = [
   <section id="judge" class="container-custom max-w-6xl py-10 md:py-16 bg-cream-dark rounded-3xl">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">How to judge any diet in seven questions</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
-      This is the whole checklist we used to write every guide above. It takes about two minutes to apply to any plan a book, influencer, GP or app will ever hand you.
+      Every plan I have ever handed a client had to survive these seven questions first. They are also the exact checklist behind each guide above. It takes about two minutes to apply to any plan a book, influencer, GP or app will ever hand you — and if a plan survives all seven, it will probably work, whatever its name is.
     </p>
     <ol class="space-y-4 max-w-3xl">
       {[
@@ -300,7 +330,7 @@ const tocItems = [
   <section id="limits" class="container-custom max-w-6xl py-10 md:py-16">
     <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">When a diet is not okay</h2>
     <p class="text-lg text-text-secondary leading-relaxed max-w-3xl mb-8">
-      "Any sensible diet can work" has a hard boundary. Some patterns are not sensible as written; some people should not restrict without a clinician watching; and a few red flags cancel everything else on a website's claims.
+      I have also met the people who found the edge of "any sensible diet can work" the hard way — some of them on plans I would have run differently today, back when I had not yet learned where the fence was. So read this section slowly. Some patterns are not sensible as written. Some people should not restrict without a clinician watching. And a few red flags cancel everything else a website claims, whatever credentials stand behind it.
     </p>
     <div class="grid md:grid-cols-2 gap-5">
       <div class="rounded-2xl border border-border bg-white p-6 shadow-sm">
@@ -333,7 +363,7 @@ const tocItems = [
     <div class="grid lg:grid-cols-2 gap-10">
       <div>
         <h2 class="text-2xl md:text-3xl font-bold text-text-primary mb-4">How we research the diet guides</h2>
-        <p class="text-text-secondary leading-relaxed mb-4">Every guide follows the same pipeline, and we publish the outcome grades instead of hiding them in the eleventh paragraph.</p>
+        <p class="text-text-secondary leading-relaxed mb-4">The gym floor taught me what to look for; this pipeline is how every guide earns its verdict. The outcome grades get published, not buried in the eleventh paragraph.</p>
         <ol class="space-y-3 text-sm text-text-secondary">
           <li class="flex gap-3"><span class="text-sage font-bold">1</span><span><strong class="text-text-primary">Source the primary literature.</strong> Randomized trials, systematic reviews, large prospective cohorts and meta-analyses — with DOIs, so you can verify every claim in one click.</span></li>
           <li class="flex gap-3"><span class="text-sage font-bold">2</span><span><strong class="text-text-primary">Grade the evidence</strong> A through D, domain by domain, on a standard rubric adapted from GRADE — not a vibe.</span></li>
@@ -386,6 +416,19 @@ const tocItems = [
       <p class="text-xl md:text-2xl font-bold text-text-primary mb-2">One dinner. Two plates. Zero arguments about whose diet it is.</p>
       <p class="text-text-secondary mb-6 max-w-xl mx-auto">CookTwo reads both partners' diets — from the 24 patterns on this page — and turns one shared recipe into two personalised plates.</p>
       <EarlyAccessButton label="Get early access" variant="primary" />
+    </div>
+  </section>
+
+  <section class="container-custom max-w-4xl py-10 md:py-14 border-t border-border">
+    <div class="flex items-start gap-5">
+      <div class="w-14 h-14 rounded-full bg-sage text-white flex items-center justify-center text-xl font-bold flex-shrink-0" aria-hidden="true">V</div>
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-sage-dark mb-1.5">About the author</p>
+        <h2 class="text-xl md:text-2xl font-bold text-text-primary mb-2">Vary — personal trainer</h2>
+        <p class="text-text-secondary leading-relaxed max-w-3xl">
+          Vary has spent years as a personal trainer, watching ordinary people run an extraordinary range of diets — and quietly checking each one against the research. This hub was written with the CookTwo research desk: the studies are linked, the grades come from a published rubric, and the verdicts are honest on purpose, including the uncomfortable ones. Nobody who reads it is being asked to believe anything without a citation next to it.
+        </p>
+      </div>
     </div>
   </section>
 </BaseLayout>
