@@ -9,9 +9,11 @@ interface SpectrumChip {
 
 interface Props {
   chips: SpectrumChip[];
+  figLabel?: string;
+  caption?: string;
 }
 
-const { chips } = Astro.props;
+const { chips, figLabel, caption } = Astro.props;
 
 const colLabels = ['Under 10% carb', '10–35% carb', '35–60% carb', 'Over 60% carb'];
 const rowLabels = ['Under 10% fat', '10–30% fat', '30–45% fat', 'Over 45% fat'];
@@ -71,4 +73,9 @@ const gradeDot: Record<string, string> = {
       </div>
     </div>
   </div>
+  {caption && (
+    <p class="border-t border-border bg-cream-dark px-5 py-4 sm:px-7 text-sm leading-relaxed text-text-secondary">
+      {figLabel && <strong class="font-semibold text-text-primary">{figLabel}</strong>} {caption}
+    </p>
+  )}
 </figure>
