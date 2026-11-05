@@ -41,16 +41,38 @@ const OPTIONS = [
 </div>
 
 <script>
-  import { flush, startSession, track } from '../../lib/funnel-tracker';
+  import { flush, readAttribution, sourceEmail, startSession, track } from '../../lib/funnel-tracker';
 
   (function () {
     'use strict';
     var root = document.getElementById('factor-hub');
     if (!root) return;
 
+    // Capture ?e= / ?fs= / UTMs from the campaign link into sessionStorage
+    // (and strip the identity params from the address bar) BEFORE any event
+    // flushes, so hub traffic keeps its person.
+    var attr = readAttribution({ strip: true });
     startSession({ entry: 'quiz' });
 
+    // Chip links must carry identity + UTMs onward: the quiz reads ?e= from
+    // its own URL into quiz_attempts.email, and UTMs into the session row.
+    function withAttribution(href) {
+      try {
+        var url = new URL(href, window.location.origin);
+        var e = sourceEmail();
+        if (e && !url.searchParams.get('e')) url.searchParams.set('e', e);
+        Object.keys(attr.utm).forEach(function (k) {
+          if (!url.searchParams.get(k)) url.searchParams.set(k, attr.utm[k]);
+        });
+        return url.pathname + url.search;
+      } catch (err) {
+        return href;
+      }
+    }
+
     Array.prototype.forEach.call(root.querySelectorAll('.chip[data-factor]'), function (a) {
+      var base = a.getAttribute('href');
+      if (base) a.setAttribute('href', withAttribution(base));
       a.addEventListener('click', function () {
         track('factor_hub_click', { value: a.getAttribute('data-factor') || '' });
         flush();

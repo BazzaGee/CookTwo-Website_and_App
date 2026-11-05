@@ -21,6 +21,7 @@ import {
   handleFunnelSessions,
   handleFunnelSessionDetail,
   handleFunnelExport,
+  handleFunnelQuizSteps,
   pruneFunnelEvents,
 } from './routes/funnel';
 import {
@@ -111,7 +112,8 @@ app.post('/api/funnel/track', (c) => handleFunnelTrack(c));
 app.get('/api/admin/funnel/summary', (c) => handleFunnelSummary(c));
 app.get('/api/admin/funnel/sessions', (c) => handleFunnelSessions(c));
 app.get('/api/admin/funnel/sessions/:id', (c) => handleFunnelSessionDetail(c));
-app.get('/api/admin/funnel/export.csv', (c) => handleFunnelExport(c));
+  app.get('/api/admin/funnel/quiz-steps', (c) => handleFunnelQuizSteps(c));
+  app.get('/api/admin/funnel/export.csv', (c) => handleFunnelExport(c));
 
 // ─── VSL finale streaming (R2-backed, range-aware) ──────────────────
 app.get('/api/vsl/:slug', (c) => handleVslStream(c));

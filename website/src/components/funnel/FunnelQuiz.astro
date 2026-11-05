@@ -126,6 +126,18 @@
     readAttribution({ strip: true });
     startSession({ entry: 'quiz' });
 
+    // ── Step-level tracking: question views + time-to-answer ──────────────
+    // Every question shown fires quiz_step_view so the funnel dashboard can
+    // see exactly how far each person got (not just completed submissions).
+    var STEP_KEYS = { 1: 'goal', 2: 'blocker', 3: 'situation' };
+    var stepEnteredAt = Date.now();
+    function trackStepView(n) {
+      if (n < 1 || n > 3) return;
+      stepEnteredAt = Date.now();
+      track('quiz_step_view', { value: STEP_KEYS[n], meta: { step: n, quiz_type: 'legacy' } });
+    }
+    trackStepView(1);
+
     // ── Progress ─────────────────────────────────────────────────────
     function paintProgress(stepNum) {
       var shown = Math.min(Math.max(stepNum, 0), 3);
@@ -148,6 +160,7 @@
         el.classList.toggle('is-active', active);
       });
       paintProgress(n === 4 ? 3 : n);
+      if (n >= 1 && n <= 3) trackStepView(n);
       if (n === 4) startCountdown();
     }
 
@@ -172,11 +185,11 @@
 
     bindChips('.step[data-step="1"]', function (v) {
       state.goal = v;
-      track('quiz_answer', { value: v, meta: { question: 'goal' } });
+      track('quiz_answer', { value: v, meta: { question: 'goal', step: 1, quiz_type: 'legacy', ms_since_step: Date.now() - stepEnteredAt } });
     });
     bindChips('.step[data-step="2"]', function (v) {
       state.blocker = v;
-      track('quiz_answer', { value: v, meta: { question: 'blocker' } });
+      track('quiz_answer', { value: v, meta: { question: 'blocker', step: 2, quiz_type: 'legacy', ms_since_step: Date.now() - stepEnteredAt } });
     });
 
     // ── Step 3 — chips auto-submit ────────────────────────────────────
@@ -190,7 +203,7 @@
         });
         chip.classList.add('is-selected');
         state.situation = chip.getAttribute('data-choice') || '';
-        track('quiz_answer', { value: state.situation, meta: { question: 'situation' } });
+        track('quiz_answer', { value: state.situation, meta: { question: 'situation', step: 3, quiz_type: 'legacy', ms_since_step: Date.now() - stepEnteredAt } });
         chip.setAttribute('aria-busy', 'true');
         chip.textContent = chip.textContent.replace(/—.*/, '— sending\u2026');
         submit();
@@ -295,7 +308,7 @@
     // ── Back ──────────────────────────────────────────────────────────
     if (backBtn) {
       backBtn.addEventListener('click', function () {
-        if (state.step > 1 && state.step < 4) goTo(state.step - 1);
+        if (state.step > 1 && state.step < 4) { track('quiz_back', { value: String(state.step), meta: { from: state.step, to: state.step - 1, quiz_type: 'legacy' } }); goTo(state.step - 1); }
       });
     }
 

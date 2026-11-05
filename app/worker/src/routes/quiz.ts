@@ -159,15 +159,18 @@ export async function handleQuizSubmit(c: Context<{ Bindings: Env }>): Promise<R
     );
   }
 
-  const redirect = withFunnelParams(redirectFor(angle), sessionId, attemptId, utm);
+  const redirect = withFunnelParams(redirectFor(angle), sessionId, attemptId, utm, email || undefined);
   return c.json({ status: 'ok', redirect, session_id: sessionId, attempt_id: attemptId });
 }
 
-/** fs=<session> & q=<attempt> + the UTMs, so the VSL page joins the journey. */
-function withFunnelParams(base: string, sessionId: string, attemptId: string, utm: Record<string, string>): string {
+/** fs=<session> & q=<attempt> + the UTMs + e=<email>, so the VSL page joins
+ *  the journey even when the quiz-to-video hop opens in a new tab (the
+ *  VSL player strips ?e= from the address bar on arrival). */
+function withFunnelParams(base: string, sessionId: string, attemptId: string, utm: Record<string, string>, email?: string): string {
   const params = new URLSearchParams();
   params.set('fs', sessionId);
   params.set('q', attemptId);
+  if (email) params.set('e', email);
   for (const k of ALLOWED_PARAMS) {
     if (utm[k]) params.set(k, utm[k]);
   }
@@ -429,7 +432,7 @@ async function handleFactorQuiz(
       .catch((err) => console.error('resend factor quiz sync failed:', err)));
   }
 
-  const redirect = withFunnelParams(videos[angle], sessionId, attemptId, utm);
+  const redirect = withFunnelParams(videos[angle], sessionId, attemptId, utm, email || undefined);
   return c.json({ status: 'ok', redirect, session_id: sessionId, attempt_id: attemptId });
 }
 

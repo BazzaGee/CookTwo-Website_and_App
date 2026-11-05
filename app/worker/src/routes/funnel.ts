@@ -39,7 +39,10 @@ export const ALLOWED_EVENTS = [
   'page_exit',
   'visibility',
   'quiz_answer',
+  'quiz_step_view',
+  'quiz_back',
   'quiz_submit',
+  'factor_hub_click',
   'vsl_loaded',
   'vsl_countdown_start',
   'vsl_autoplay_blocked',
@@ -214,6 +217,7 @@ export interface RollupPatch {
   ctaSuccessAt?: number | null;
   ctaVerifiedAt?: number | null;
   endedAt?: number | null;
+  captureEmail?: string | null;
   wallMs?: number;
   lastSeenAt: number;
 }
@@ -234,6 +238,7 @@ export async function rollupFunnelSession(db: D1Database, sessionId: string, r: 
          offer_reveal_position_s = COALESCE(?, offer_reveal_position_s),
          cta_success_at = COALESCE(?, cta_success_at),
          cta_verified_at = COALESCE(?, cta_verified_at),
+         capture_email = COALESCE(capture_email, ?),
          ended_at = COALESCE(?, ended_at),
          wall_ms = MAX(wall_ms, COALESCE(?, 0)),
          last_seen_at = MAX(last_seen_at, ?),
@@ -251,6 +256,7 @@ export async function rollupFunnelSession(db: D1Database, sessionId: string, r: 
       r.offerRevealPositionS ?? null,
       r.ctaSuccessAt ?? null,
       r.ctaVerifiedAt ?? null,
+      r.captureEmail ?? null,
       r.endedAt ?? null,
       r.wallMs ?? null,
       r.lastSeenAt,
@@ -604,6 +610,9 @@ const SESSION_COLUMNS = `
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_play') AS play_count,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_pause') AS pause_count,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'quiz_answer') AS quiz_answer_count,
+  (SELECT MAX(CAST(json_extract(e.meta, '$.step') AS INTEGER)) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'quiz_step_view') AS quiz_last_step,
+  (SELECT json_extract(e.meta, '$.quiz_type') FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'quiz_step_view' ORDER BY e.client_ts DESC LIMIT 1) AS quiz_type,
+  (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'quiz_step_view') AS quiz_step_view_count,
   (SELECT COUNT(*) FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_cta_submit') AS cta_submit_count,
   (SELECT position_s FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_cta_submit' ORDER BY e.client_ts DESC LIMIT 1) AS cta_submit_position_s,
   (SELECT position_s FROM funnel_events e WHERE e.session_id = s.id AND e.event = 'vsl_cta_success' ORDER BY e.client_ts DESC LIMIT 1) AS cta_success_position_s,
@@ -685,6 +694,48 @@ const CSV_COLUMNS = [
   'cta_submit_position_s', 'cta_success_position_s',
   'lead_verified', 'app_signup', 'country', 'device', 'is_internal',
 ];
+
+export async function handleFunnelQuizSteps(c: Context<{ Bindings: Env }>): Promise<Response> {
+  if (!isAdmin(c)) return c.json({ error: 'unauthorized' }, 401);
+  const days = Math.min(Math.max(Number(c.req.query('days')) || 30, 1), 365);
+  const since = Date.now() - days * 86400000;
+  try {
+    const [reached, answered] = await Promise.all([
+      c.env.DB.prepare(
+        `SELECT json_extract(e.meta, '$.quiz_type') AS quiz_type,
+                CAST(json_extract(e.meta, '$.step') AS INTEGER) AS step,
+                COUNT(DISTINCT e.session_id) AS sessions
+           FROM funnel_events e
+          WHERE e.event = 'quiz_step_view' AND e.created_at >= ?
+            AND json_extract(e.meta, '$.quiz_type') IS NOT NULL
+          GROUP BY quiz_type, step
+          ORDER BY quiz_type, step`,
+      )
+        .bind(since)
+        .all(),
+      c.env.DB.prepare(
+        `SELECT json_extract(e.meta, '$.quiz_type') AS quiz_type,
+                CAST(json_extract(e.meta, '$.step') AS INTEGER) AS step,
+                COUNT(*) AS answers,
+                AVG(CAST(json_extract(e.meta, '$.ms_since_step') AS REAL)) AS avg_ms
+           FROM funnel_events e
+          WHERE e.event = 'quiz_answer' AND e.created_at >= ?
+            AND json_extract(e.meta, '$.quiz_type') IS NOT NULL
+          GROUP BY quiz_type, step
+          ORDER BY quiz_type, step`,
+      )
+        .bind(since)
+        .all(),
+    ]);
+    return new Response(
+      JSON.stringify({ days, reached: reached.results || [], answered: answered.results || [] }),
+      { status: 200, headers: NO_STORE },
+    );
+  } catch (err) {
+    console.error('quiz steps failed:', err);
+    return c.json({ error: 'Query failed.' }, 503);
+  }
+}
 
 export async function handleFunnelExport(c: Context<{ Bindings: Env }>): Promise<Response> {
   if (!isAdmin(c)) return c.json({ error: 'unauthorized' }, 401);

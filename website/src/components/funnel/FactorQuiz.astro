@@ -133,6 +133,16 @@ const total = steps.length;
     readAttribution({ strip: true });
     startSession({ entry: 'quiz' });
 
+    // ── Step-level tracking: question views + time-to-answer ──────────────
+    // Applies to every factor funnel — quiz_type carries the factor id.
+    var stepEnteredAt = Date.now();
+    function trackStepView(n) {
+      if (n < 1 || n > total) return;
+      stepEnteredAt = Date.now();
+      track('quiz_step_view', { value: factor + '-' + n, meta: { step: n, quiz_type: factor } });
+    }
+    trackStepView(1);
+
     function paintProgress(stepNum) {
       var shown = Math.min(Math.max(stepNum, 0), total);
       segments.forEach(function (seg, i) { seg.classList.toggle('done', i < shown); });
@@ -151,6 +161,7 @@ const total = steps.length;
         el.classList.toggle('is-active', active);
       });
       paintProgress(done ? total : n);
+      if (!done && n >= 1 && n <= total) trackStepView(n);
       if (done) {
         backBtn.hidden = true;
         startCountdown();
@@ -174,7 +185,7 @@ const total = steps.length;
           var value = chip.getAttribute('data-choice') || '';
           state.answers = state.answers.filter(function (a) { return a.q !== stepNum; });
           state.answers.push({ q: stepNum, a: value });
-          track('quiz_answer', { value: value, meta: { question: factor + '-' + stepNum } });
+          track('quiz_answer', { value: value, meta: { question: factor + '-' + stepNum, step: stepNum, quiz_type: factor, ms_since_step: Date.now() - stepEnteredAt } });
           if (stepNum === total) {
             chip.setAttribute('aria-busy', 'true');
             chip.textContent = (chip.getAttribute('data-label') || '') + ' — sending…';
@@ -273,6 +284,7 @@ const total = steps.length;
     if (backBtn) {
       backBtn.addEventListener('click', function () {
         if (state.step <= 1 || state.step > total) return;
+        track('quiz_back', { value: String(state.step), meta: { from: state.step, to: state.step - 1, quiz_type: factor } });
         var target = state.step - 1;
         state.answers = state.answers.filter(function (a) { return a.q <= target; });
         var scope = root.querySelector('.step[data-step="' + target + '"]');

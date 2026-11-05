@@ -259,6 +259,8 @@ export function createTestD1(): D1Database {
       blocker TEXT,
       situation TEXT,
       angle TEXT NOT NULL,
+      factor TEXT,
+      answers TEXT,
       utm_source TEXT,
       utm_medium TEXT,
       utm_campaign TEXT,

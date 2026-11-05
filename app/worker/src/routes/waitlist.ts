@@ -29,6 +29,18 @@ export async function handleSubscribe(c: Context<{ Bindings: Env }>): Promise<Re
     typeof body.session_id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.session_id)
       ? body.session_id
       : null;
+  // Stamp the funnel row server-side: the CTA capture belongs to this
+  // session even if the client beacon never flushes (lost beacon would
+  // otherwise undercount email captures in the dashboard).
+  if (sessionId) {
+    c.executionCtx.waitUntil(
+      rollupFunnelSession(c.env.DB, sessionId, {
+        captureEmail: email,
+        ctaSuccessAt: Date.now(),
+        lastSeenAt: Date.now(),
+      }).catch((err: unknown) => console.error('waitlist capture stamp failed:', err)),
+    );
+  }
 
   if (existing) {
     if (joinCode && !existing.join_code) {
