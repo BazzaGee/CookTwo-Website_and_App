@@ -10,14 +10,32 @@
 //   SUPABASE_SERVICE_ROLE_KEY service role / secret key (server-side only! it
 //                             must never reach the browser)
 //
+// Schema: website/supabase/chat-memory.sql (apply once in the Supabase SQL
+// editor). Tables: chat_sessions, chat_messages.
+//
 // All operations are best-effort: if the env is missing or a call fails the
 // chat still works, it just falls back to the client-provided history.
 
 import { MAX_HISTORY, MAX_INPUT_CHARS, sanitizeHistory, isValidSessionId } from './_chatShared.js';
 
-const REST_TIMEOUT_MS = 4000;
+const REST_TIMEOUT_MS = 3500;
+const DOWN_MS = 60000;
+
+// When Supabase is unreachable or the tables are missing, stop paying the
+// timeout on every message. The client-provided history keeps the chat
+// coherent until the circuit closes again.
+let memoryDownUntil = 0;
+
+function markMemoryDown() {
+  memoryDownUntil = Date.now() + DOWN_MS;
+}
+
+function markMemoryUp() {
+  memoryDownUntil = 0;
+}
 
 export function memoryConfigured(env) {
+  if (Date.now() < memoryDownUntil) return false;
   return Boolean(env && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
@@ -48,13 +66,19 @@ async function rest(env, path, init = {}) {
 // Inserts the session row if it does not exist yet.
 export async function ensureSession(env, sessionId, pageUrl, mode) {
   try {
-    await rest(env, '/rest/v1/chat_sessions', {
+    const res = await rest(env, '/rest/v1/chat_sessions', {
       method: 'POST',
       headers: headers(env, { prefer: 'resolution=ignore-duplicates,return=minimal' }),
       body: JSON.stringify([{ id: sessionId, first_page: pageUrl || null, mode: mode || null }]),
     });
+    if (!res.ok) {
+      markMemoryDown();
+      return false;
+    }
+    markMemoryUp();
     return true;
   } catch {
+    markMemoryDown();
     return false;
   }
 }
@@ -82,7 +106,10 @@ export async function loadHistory(env, sessionId, limit = MAX_HISTORY, mode = nu
         `&role=in.(user,assistant)&select=role,content,created_at&order=created_at.desc&limit=${limit}${modeQuery}`,
       { method: 'GET', headers: headers(env) },
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      markMemoryDown();
+      return [];
+    }
     const rows = await res.json();
     if (!Array.isArray(rows)) return [];
     return rows
@@ -90,6 +117,7 @@ export async function loadHistory(env, sessionId, limit = MAX_HISTORY, mode = nu
       .filter((r) => typeof r.content === 'string' && r.content.trim())
       .map((r) => ({ role: r.role, content: String(r.content).slice(0, MAX_INPUT_CHARS * 4) }));
   } catch {
+    markMemoryDown();
     return [];
   }
 }
@@ -108,8 +136,10 @@ export async function saveMessage(env, sessionId, { role, content, pageUrl, mode
         model: model || null,
       }]),
     });
+    if (!res.ok) markMemoryDown();
     return res.ok;
   } catch {
+    markMemoryDown();
     return false;
   }
 }

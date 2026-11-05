@@ -33,33 +33,92 @@ function readJSON(filePath, fallback) {
   }
 }
 
+function decodeEntities(text) {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&rsquo;/g, '’')
+    .replace(/&lsquo;/g, '‘')
+    .replace(/&rdquo;/g, '”')
+    .replace(/&ldquo;/g, '“')
+    .replace(/&hellip;/g, '…')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+// Remove JSX/Astro expression blocks, innermost first, so nested .map()
+// callbacks do not leave `))}` debris in the extracted prose.
+function stripExpressions(text) {
+  let current = text;
+  let previous;
+  do {
+    previous = current;
+    current = current.replace(/\{[^{}]*\}/g, ' ');
+  } while (current !== previous);
+  return current;
+}
+
 function stripAstroContent(content) {
   let text = content;
-  text = text.replace(/^---[\s\S]*?---/, '');
+  // Frontmatter delimiters are lines that contain exactly three dashes — not
+  // the `// ---- section ----` comments used inside page scripts.
+  text = text.replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/, '');
+  text = text.replace(/<!--[\s\S]*?-->/g, ' ');
   text = text.replace(/import\s+.*?from\s+['"][^'"]*['"];?\n?/g, '');
   text = text.replace(/export\s+interface\s+[\s\S]*?\n}/g, '');
   text = text.replace(/export\s+const\s+.*?=\s*[\s\S]*?;\n/g, '');
   text = text.replace(/<script[\s\S]*?<\/script>/g, ' ');
   text = text.replace(/<style[\s\S]*?<\/style>/g, ' ');
   text = text.replace(/<[^>]*>/g, ' ');
-  text = text.replace(/\{[^}]*\}/g, ' ');
-  text = text.replace(/&nbsp;/g, ' ');
-  text = text.replace(/&amp;/g, '&');
-  text = text.replace(/&lt;/g, '<');
-  text = text.replace(/&gt;/g, '>');
+  text = stripExpressions(text);
+  text = decodeEntities(text);
   text = text.replace(/\s+/g, ' ').trim();
   return text;
 }
 
+function readJsString(source, name) {
+  const match = source.match(new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*`));
+  if (!match) return '';
+  let i = match.index + match[0].length;
+  while (i < source.length && /\s/.test(source[i])) i++;
+  const quote = source[i];
+  if (!["'", '"', '`'].includes(quote)) return '';
+  i++;
+  let out = '';
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === '\\') {
+      const next = source[i + 1] || '';
+      if (next === quote || next === '\\') { out += next; i += 2; continue; }
+      out += ch + next;
+      i += 2;
+      continue;
+    }
+    if (ch === quote) break;
+    out += ch;
+    i++;
+  }
+  return out.replace(/\\n/g, ' ').replace(/\\t/g, ' ').trim();
+}
+
 function extractPageMeta(content) {
   const meta = { title: '', description: '' };
+  const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (frontmatter) {
+    meta.title = readJsString(frontmatter[1], 'title');
+    meta.description = readJsString(frontmatter[1], 'description');
+  }
   const layoutMatch = content.match(/<BaseLayout\s+([^>]*)>/);
-  if (layoutMatch) {
+  if (layoutMatch && !meta.title) {
     const attrs = layoutMatch[1];
     const titleMatch = attrs.match(/title\s*=\s*\{?"?([^"}]+)"?\}?/);
     const descMatch = attrs.match(/description\s*=\s*\{"?([\s\S]+?)"?\}/);
     if (titleMatch) meta.title = titleMatch[1].trim();
-    if (descMatch) meta.description = descMatch[1].trim();
+    if (descMatch && !meta.description) meta.description = descMatch[1].trim();
   }
   const fmTitle = content.match(/^---[\s\S]*?title:\s*['"]?([^'"\n]+)['"]?[\s\S]*?---/m);
   if (!meta.title && fmTitle) meta.title = fmTitle[1].trim();
@@ -72,11 +131,24 @@ function extractAstroPage(filePath) {
   const text = stripAstroContent(content);
   const rel = filePath.split(join(rootDir, 'src', 'pages'))[1].replace(/\\/g, '/').replace(/^\//, '');
   const slug = rel.replace(/\.astro$/, '').replace(/\/?index$/, '') || '/';
+
+  // Thin Astro routes (e.g. app-guide.astro) only render a content-collection
+  // entry, so their title and description live in src/content/pages/<slug>.
+  let fallback = { data: {} };
+  if (!meta.title || meta.title === slug) {
+    for (const ext of ['.mdx', '.md']) {
+      try {
+        fallback = parseFrontmatter(readFileSync(join(rootDir, 'src', 'content', 'pages', `${slug}${ext}`), 'utf-8'));
+        if (fallback.data.title) break;
+      } catch { /* no matching content entry */ }
+    }
+  }
+
   return {
     slug,
-    title: meta.title || slug,
-    description: meta.description,
-    content: text.substring(0, 3000),
+    title: meta.title || fallback.data.title || slug,
+    description: meta.description || fallback.data.description || '',
+    content: text.substring(0, 8000),
   };
 }
 
@@ -123,8 +195,9 @@ const pages = pageFiles
   .map((f) => extractAstroPage(f));
 
 function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return { data: {}, body: content };
+  const normalized = content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const match = normalized.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { data: {}, body: normalized };
   const data = {};
   const yaml = match[1];
   const lines = yaml.split('\n');
@@ -162,37 +235,52 @@ function extractContentFile(filePath, type) {
   const content = readFileSync(filePath, 'utf-8');
   const { data, body } = parseFrontmatter(content);
   const rel = filePath.split(join(rootDir, 'src', 'content'))[1].replace(/\\/g, '/').replace(/^\//, '');
-  const slug = rel.replace(/\.(md|mdx)$/, '').replace(/\/index$/, '');
-  const text = body
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\{[^}]*\}/g, ' ')
-    .replace(/import\s+.*?from\s+['"][^'"]*['"];?\n?/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\s+/g, ' ')
-    .trim();
+  let slug = rel.replace(/\.(md|mdx)$/, '').replace(/\/index$/, '');
+  // Content pages render at the site root, not under /pages/.
+  if (type === 'page') slug = slug.replace(/^pages\//, '');
+  const text = decodeEntities(
+    stripExpressions(
+      body
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/import\s+.*?from\s+['"][^'"]*['"];?\n?/g, '')
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    ),
+  );
   return {
     type,
     slug,
     title: data.title || slug,
     description: data.description || '',
     pubDate: data.pubDate || null,
+    updatedDate: data.updatedDate || null,
     pillar: data.pillar || null,
     seoMode: data.seoMode || null,
     targetKeyword: data.targetKeyword || null,
     tags: data.tags || [],
+    evidenceGrade: data.evidenceGrade || null,
+    category: data.category || null,
+    bestFor: data.bestFor || null,
+    hardestPart: data.hardestPart || null,
+    medicalCaution: data.medicalCaution || null,
     draft: data.draft === true,
-    content: text.substring(0, 5000)
+    content: text.substring(0, 30000)
   };
 }
 
 const blogFiles = getAllFiles(join(rootDir, 'src', 'content', 'blog'), ['.md', '.mdx']);
 const pageContentFiles = getAllFiles(join(rootDir, 'src', 'content', 'pages'), ['.md', '.mdx']);
 const dietContentFiles = getAllFiles(join(rootDir, 'src', 'content', 'diets'), ['.md', '.mdx']);
-const blogPosts = blogFiles.map((f) => extractContentFile(f, 'post'));
-const pillarPages = pageContentFiles.map((f) => extractContentFile(f, 'page'));
+const blogPosts = blogFiles
+  .map((f) => extractContentFile(f, 'post'))
+  .filter((p) => p.draft !== true);
+const pillarPages = pageContentFiles
+  .map((f) => extractContentFile(f, 'page'))
+  .filter((p) => p.draft !== true);
 const dietPages = dietContentFiles
   .map((f) => extractContentFile(f, 'diet'))
   .filter((d) => d.draft !== true);

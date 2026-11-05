@@ -377,13 +377,15 @@ const position = Astro.props.position === 'top' ? 'top' : 'bottom';
 
 <script define:vars={{ endpoint: chatEndpoint, source }}>
   const chatSessionKey = 'ctSessionId';
+  const chatHistoryKey = 'ctChatHistory:' + source;
+  const maxStoredMessages = 20;
   let chatOpen = false;
   let isSending = false;
   let sessionId = localStorage.getItem(chatSessionKey) || generateSessionId();
   let typingTimeout = null;
   let abortController = null;
   let pendingRetryMessage = null;
-  let chatHistory = [];
+  let chatHistory = loadStoredHistory();
 
   function generateSessionId() {
     const id = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -392,6 +394,33 @@ const position = Astro.props.position === 'top' ? 'top' : 'bottom';
     });
     localStorage.setItem(chatSessionKey, id);
     return id;
+  }
+
+  // Browser-side fallback memory: the server keeps the durable history in
+  // Supabase, but if that is unavailable (or the visitor reloads before the
+  // remote write lands) this restores the same conversation in the widget.
+  function loadStoredHistory() {
+    try {
+      const raw = localStorage.getItem(chatHistoryKey);
+      if (!raw) return [];
+      const saved = JSON.parse(raw);
+      if (!saved || saved.sessionId !== sessionId || !Array.isArray(saved.messages)) return [];
+      return saved.messages
+        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+        .slice(-maxStoredMessages);
+    } catch {
+      return [];
+    }
+  }
+
+  function saveStoredHistory() {
+    try {
+      localStorage.setItem(chatHistoryKey, JSON.stringify({
+        sessionId,
+        savedAt: Date.now(),
+        messages: chatHistory.slice(-maxStoredMessages),
+      }));
+    } catch { /* storage full or blocked — the chat still works */ }
   }
 
   function formatTime() {
@@ -532,7 +561,7 @@ const position = Astro.props.position === 'top' ? 'top' : 'bottom';
           sessionId,
           source,
           pageUrl: location.href,
-          history: chatHistory.slice(-8),
+          history: chatHistory.slice(-16),
         }),
         signal: abortController.signal,
       });
@@ -591,7 +620,8 @@ const position = Astro.props.position === 'top' ? 'top' : 'bottom';
 
       chatHistory.push({ role: 'user', content: message });
       if (fullText) chatHistory.push({ role: 'assistant', content: fullText });
-      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+      if (chatHistory.length > maxStoredMessages) chatHistory = chatHistory.slice(-maxStoredMessages);
+      saveStoredHistory();
     } catch (error) {
       hideTyping();
       if (error.name === 'AbortError') return;
@@ -644,4 +674,11 @@ const position = Astro.props.position === 'top' ? 'top' : 'bottom';
       wrapper.style.height = '480px';
     }
   });
+
+  if (chatHistory.length) {
+    for (const m of chatHistory) {
+      addMessage(m.content, m.role === 'user' ? 'user' : 'bot', 'sent');
+    }
+    scrollToBottom(false);
+  }
 </script>

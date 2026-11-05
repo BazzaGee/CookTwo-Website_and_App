@@ -4,27 +4,35 @@
 // Responsibilities:
 //   - request parsing / validation / rate limiting
 //   - knowledge sections + keyword retrieval
-//   - pricing fact sheet (date-aware, changeover 1 Nov 2026)
+//   - pricing fact sheet (date-aware, changeover 25 Nov 2026)
 //   - OpenRouter streaming with NDJSON output
 
 import { SITE_CONTENT } from './_chatKnowledge.js';
+import { buildToolSections } from './_toolKnowledge.js';
 
 export const SITE_URL = 'https://cooktwo.com';
 export const APP_TITLE = 'CookTwo Chat Bot';
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+// Free models change often. Verified against the live OpenRouter catalogue.
+// Dots answers directly and streams reliably; the router is the second attempt
+// in case the direct model is unavailable. The old minimax / nemotron-3-super
+// IDs were retired, Google's free endpoints reject the shared key, and the
+// Nemotron / Flint free models spend the whole budget on hidden reasoning
+// tokens, so none of those belong in the fallback chain.
 export const MODELS = [
+  'dots-studio/dots-3-note-preview:free',
   'openrouter/free',
-  'minimax/minimax-m3:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'google/gemma-4-26b-a4b-it:free',
+  'liquid/lfm-2.5-2.6b:free',
 ];
 
 export const MAX_INPUT_CHARS = 2000;
-export const MAX_HISTORY = 10;
-export const MAX_CONTEXT_CHARS = 8000;
+export const MAX_HISTORY = 20;
+export const MAX_CONTEXT_CHARS = 30000;
+export const MAX_SECTION_CHARS = 8000;
 export const RATE_LIMIT_PER_MIN = 10;
-export const FETCH_TIMEOUT_MS = 60000;
+export const FETCH_TIMEOUT_MS = 40000;
+export const MODEL_TIMEOUT_MS = 26000;
 
 export const STOPWORDS = new Set([
   'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been',
@@ -34,17 +42,99 @@ export const STOPWORDS = new Set([
   'did', 'can', 'could', 'will', 'would', 'should', 'have', 'has', 'had', 'am',
   'what', 'which', 'who', 'whom', 'how', 'when', 'where', 'why', 'there', 'here',
   'not', 'no', 'so', 'if', 'then', 'than', 'too', 'very', 'just', 'any', 'all',
-  'get', 'got', 'use', 'using', 'app', 'cooktwo', 'please', 'tell', 'know',
+  'get', 'got', 'use', 'using', 'cooktwo', 'please', 'tell', 'know', 'say', 'says',
+  'said', 'mean', 'means', 'want', 'wants', 'need', 'needs', 'like', 'think',
+  'work', 'works', 'help', 'ask', 'asked', 'way', 'thing', 'things',
 ]);
 
 // ── Knowledge flattening (site content) ───────────────────────────
+
+// Long pages are split into sentence-sized sections so keyword retrieval can
+// pull the exact passage (the LDL caveat in the keto guide, the pricing line
+// in the app guide) instead of only the opening paragraphs.
+function chunkText(text, max = 1800) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return [];
+  if (clean.length <= max) return [clean];
+
+  const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+  const chunks = [];
+  let current = '';
+  for (const sentence of sentences) {
+    if (current && current.length + sentence.length + 1 > max) {
+      chunks.push(current.trim());
+      current = sentence;
+    } else {
+      current += (current ? ' ' : '') + sentence;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+function isPublicPage(p) {
+  if (!p || typeof p.slug !== 'string' || !p.slug) return false;
+  if (p.slug === '404' || p.slug === 'blog') return false;
+  if (/^(admin|_internal)(\/|$)/.test(p.slug)) return false;
+  if (/[\[\]]/.test(p.slug)) return false;
+  return true;
+}
+
+function pageUrl(slug) {
+  return slug === '/' ? '/' : `/${slug.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function pushContentSections(out, entry, { lowPriority = false } = {}) {
+  const title = entry.title || entry.slug;
+  const description = entry.description || '';
+  const source = pageUrl(entry.slug);
+  const chunks = chunkText(`${description}\n\n${entry.content || ''}`);
+  if (chunks.length === 0) {
+    if (description) out.push({ source, title, text: description, lowPriority });
+    return;
+  }
+  chunks.forEach((chunk, i) => {
+    out.push({
+      source,
+      title: i === 0 ? title : `${title} (continued)`,
+      text: chunk,
+      lowPriority,
+    });
+  });
+}
 
 export function buildSiteSections() {
   const s = [];
   const c = SITE_CONTENT;
 
+  const dietPages = c.dietPages || [];
+  const blogPosts = c.blogPosts || [];
+  const pillarPages = c.pillarPages || [];
+
   if (c.business) {
-    s.push({ source: '/', title: 'About CookTwo', text: `${c.business.description} Website: ${c.business.url}. Web app: ${c.business.pwaUrl}.` });
+    s.push({
+      source: '/',
+      title: 'About CookTwo',
+      priority: true,
+      text: `${c.business.description} Website: ${c.business.url}. Web app: ${c.business.pwaUrl}.`,
+    });
+  }
+
+  // A compact front page: useful for broad questions and as the fallback when
+  // a message has no keywords at all (e.g. "hello").
+  if (c.features || dietPages.length) {
+    const dietNames = dietPages.map((d) => d.title || d.slug).join(', ');
+    s.push({
+      source: '/',
+      title: 'CookTwo at a glance',
+      priority: true,
+      text: [
+        c.business?.description || '',
+        `Core features: ${(c.features || []).map((f) => f.title).join(', ')}.`,
+        `Diet guides: ${dietNames}.`,
+        `Blog: ${blogPosts.map((p) => p.title).join(', ')}.`,
+      ].join(' '),
+    });
   }
 
   for (const f of c.faq || []) {
@@ -58,7 +148,7 @@ export function buildSiteSections() {
 
   if ((c.steps || []).length) {
     const text = c.steps.map((st) => `Step ${st.number}: ${st.title} — ${st.description} ${st.detail || ''}`).join(' ');
-    s.push({ source: '/how-it-works/', title: 'How it works (onboarding steps)', text });
+    s.push({ source: '/how-it-works/', title: 'How it works (onboarding steps)', text, priority: true });
   }
 
   const comp = c.comparison || {};
@@ -72,11 +162,67 @@ export function buildSiteSections() {
     s.push({ source: '/compare/', title: `CookTwo vs ${comp2.name}`, text: `${comp2.blurb || ''} ${comp2.positioning || ''} ${(comp2.summary || '')}` });
   }
 
-  for (const p of c.pages || []) {
-    if (p.content) s.push({ source: `/${p.slug}`, title: p.title || p.slug, text: `${p.title}. ${p.description || ''} ${p.content}` });
+  // Indexes let the bot answer "what pages / guides / posts are there?"
+  // directly, even when no single long page would score for the question.
+  if (dietPages.length) {
+    s.push({
+      source: '/diets',
+      title: `Complete diet guide catalogue (${dietPages.length} guides)`,
+      catalog: true,
+      text: dietPages
+        .map((d) => `${d.title} — ${d.description || ''} — https://cooktwo.com/diets/${d.slug.split('/').pop()}`)
+        .join('\n'),
+    });
   }
-  for (const p of [...(c.pillarPages || []), ...(c.dietPages || []), ...(c.blogPosts || [])]) {
-    if (p.content) s.push({ source: `/${p.slug}`, title: p.title || p.slug, text: `${p.title}. ${p.description || ''} ${p.content}` });
+
+  if (blogPosts.length) {
+    s.push({
+      source: '/blog',
+      title: `All blog posts (${blogPosts.length})`,
+      catalog: true,
+      text: blogPosts
+        .map((p) => `${p.title} — ${p.description || ''} — https://cooktwo.com/${p.slug.replace(/^\/+/, '')}`)
+        .join('\n'),
+    });
+  }
+
+  const publicPages = (c.pages || []).filter(isPublicPage);
+  if (publicPages.length) {
+    s.push({
+      source: '/',
+      title: 'All public pages on cooktwo.com',
+      catalog: true,
+      lowPriority: true,
+      text: publicPages
+        .map((p) => `${p.title} — https://cooktwo.com${pageUrl(p.slug)}`)
+        .join('\n'),
+    });
+  }
+
+  // Content-collection pages have their own full sections below. Skip the
+  // thin Astro wrapper so the same URL is not injected twice.
+  const pillarSlugs = new Set(pillarPages.map((p) => p.slug));
+  for (const p of publicPages) {
+    if (pillarSlugs.has(p.slug)) continue;
+    const lowPriority = /^(video|quiz)(\/|$)/.test(p.slug) || p.slug === 'join';
+    pushContentSections(s, p, { lowPriority });
+  }
+
+  for (const p of [...pillarPages, ...dietPages, ...blogPosts]) {
+    pushContentSections(s, p);
+  }
+
+  // The two Kitchen Tool pages are component-rendered, so the build extractor
+  // cannot see their content. Reuse the hand-maintained tool knowledge.
+  for (const audience of ['couples', 'solo']) {
+    for (const section of buildToolSections(audience)) {
+      if (!section.overview) continue;
+      s.push({
+        source: section.source,
+        title: section.title,
+        text: section.text,
+      });
+    }
   }
 
   if (c.navigation && Object.keys(c.navigation).length) {
@@ -89,7 +235,7 @@ export function buildSiteSections() {
 
 // ── Pricing fact sheet (date-aware) ───────────────────────────────
 
-const PRICING_CHANGEOVER_MS = Date.UTC(2026, 10, 1, 0, 0, 0); // 1 November 2026
+const PRICING_CHANGEOVER_MS = Date.UTC(2026, 10, 25, 0, 0, 0); // 25 November 2026
 
 export function pricingFactSheet(now = new Date()) {
   const beforeChange = now.getTime() < PRICING_CHANGEOVER_MS;
@@ -102,15 +248,15 @@ export function pricingFactSheet(now = new Date()) {
 
   if (beforeChange) {
     lines.push(
-      '- CURRENT pricing (launch special, runs until 1 November 2026):',
+      '- CURRENT pricing (launch special, runs until 25 November 2026):',
       '  • Free: $0 — 10 AI requests per day.',
       '  • Premium: $4.99 per month (or $44.99 per year, save 25%) — 70 AI requests per day.',
-      '- UPCOMING CHANGE from 1 November 2026: Free drops to 5 AI requests per day; Premium rises to $7.99 per month for the same 70 AI requests per day.',
-      '- MANDATORY for any pricing/plan/limit question: give today\'s pricing AND mention that this is a launch special ending 1 November 2026, when free AI requests drop from 10 to 5 per day and Premium goes from $4.99 to $7.99 per month (still 70 AI requests per day).',
+      '- UPCOMING CHANGE from 25 November 2026: Free drops to 5 AI requests per day; Premium rises to $7.99 per month for the same 70 AI requests per day.',
+      '- MANDATORY for any pricing/plan/limit question: give today\'s pricing AND mention that this is a launch special ending 25 November 2026, when free AI requests drop from 10 to 5 per day and Premium goes from $4.99 to $7.99 per month (still 70 AI requests per day).',
     );
   } else {
     lines.push(
-      '- CURRENT pricing (since 1 November 2026):',
+      '- CURRENT pricing (since 25 November 2026):',
       '  • Free: $0 — 5 AI requests per day.',
       '  • Premium: $7.99 per month — 70 AI requests per day.',
       '- The old launch special ($4.99 Premium with 10 free AI requests per day) has ended.',
@@ -142,21 +288,30 @@ export function scoreSection(section, terms) {
   const title = (section.title || '').toLowerCase();
   const text = (section.text || '').toLowerCase();
   let score = 0;
+  const uniqueTerms = [...new Set(terms)];
   for (const t of terms) {
     let i = title.indexOf(t);
-    while (i !== -1) { score += 3; i = title.indexOf(t, i + 1); }
+    while (i !== -1) { score += 4; i = title.indexOf(t, i + 1); }
     i = text.indexOf(t);
     while (i !== -1) { score += 1; i = text.indexOf(t, i + 1); }
   }
+  // Every meaningful word in the question appears in the title: a strong
+  // signal for "the app guide", "the kitchen tool", "the keto guide".
+  if (score > 0 && uniqueTerms.length > 1 && uniqueTerms.every((t) => title.includes(t))) {
+    score *= 2;
+  }
   if (score > 0 && section.faq) score *= 1.5;
   if (score > 0 && section.tool) score *= 1.5;
+  // Catalogues are broad by nature. They should surface for list questions but
+  // never outrank a specific page that matches the same keywords.
+  if (score > 0 && section.catalog) score *= 0.4;
   if (score > 0 && section.lowPriority) score *= 0.5;
   return score;
 }
 
 export function retrieveContext(sections, query, history, opts = {}) {
   const maxChars = opts.maxChars || MAX_CONTEXT_CHARS;
-  const historySlice = opts.historyMessages === 0 ? 0 : 2;
+  const historySlice = opts.historyMessages === 0 ? 0 : 3;
   const queryText = query + ' ' + history
     .filter((m) => m.role === 'user')
     .slice(-historySlice)
@@ -170,18 +325,57 @@ export function retrieveContext(sections, query, history, opts = {}) {
     .sort((a, b) => b.score - a.score);
 
   const picked = [];
+  const perSource = new Map();
   let total = 0;
-  for (const { s } of scored) {
-    if (total >= maxChars) break;
-    const slice = s.text.length > 2500 ? s.text.slice(0, 2500) + '…' : s.text;
+
+  // Explicit list questions ("list all diets", "how many blog posts") must
+  // include every relevant catalogue, not just whichever one wins on keyword
+  // score. Don't dump the page index into a diet/blog question, and vice versa.
+  const forcedKeys = new Set();
+  if (/\b(list|all|every|each|how many|complete|catalogue|catalog|index)\b/i.test(query)) {
+    const wantsDiet = /\b(diets?|guides?|food|eating)\b/i.test(query);
+    const wantsBlog = /\b(blog|blogs|posts?|articles?)\b/i.test(query);
+    const wantsPages = /\b(pages?|site|website|content|everything)\b/i.test(query);
+    for (const s of sections.filter((x) => x.catalog)) {
+      const relevant = s.source === '/diets'
+        ? wantsDiet || (!wantsBlog && !wantsPages)
+        : s.source === '/blog'
+          ? wantsBlog || (!wantsDiet && !wantsPages)
+          : wantsPages || (!wantsDiet && !wantsBlog);
+      if (!relevant) continue;
+      const slice = s.text.length > MAX_SECTION_CHARS ? s.text.slice(0, MAX_SECTION_CHARS) + '…' : s.text;
+      picked.push({ source: s.source, title: s.title, text: slice });
+      forcedKeys.add(`${s.source}\u0000${s.title}`);
+      perSource.set(s.source, 1);
+      total += slice.length;
+    }
+  }
+
+  const topScore = scored.length ? scored[0].score : 0;
+  const minScore = Math.max(2, topScore * 0.15);
+  const maxSections = opts.maxSections || 12;
+
+  for (const { s, score } of scored) {
+    if (picked.length >= maxSections || total >= maxChars) break;
+    if (score < minScore) break;
+    // Only catalogues are deduped by title. Long pages share a "(continued)"
+    // title across several distinct chunks and must still contribute them.
+    if (forcedKeys.has(`${s.source}\u0000${s.title}`)) continue;
+    const used = perSource.get(s.source) || 0;
+    // Keep room for other pages: at most four chunks from any one URL.
+    if (used >= 4 && !s.catalog) continue;
+    const limit = s.catalog ? MAX_SECTION_CHARS : 2200;
+    const slice = s.text.length > limit ? s.text.slice(0, limit) + '…' : s.text;
     picked.push({ source: s.source, title: s.title, text: slice });
+    perSource.set(s.source, used + 1);
     total += slice.length;
   }
 
   if (picked.length === 0) {
-    for (const s of sections.filter((x) => !x.lowPriority)) {
-      if (total >= 4000) break;
-      const slice = s.text.length > 800 ? s.text.slice(0, 800) + '…' : s.text;
+    const fallback = sections.filter((x) => x.priority || x.catalog || x.faq);
+    for (const s of fallback) {
+      if (total >= maxChars / 2) break;
+      const slice = s.text.length > 1600 ? s.text.slice(0, 1600) + '…' : s.text;
       picked.push({ source: s.source, title: s.title, text: slice });
       total += slice.length;
     }
@@ -298,7 +492,7 @@ async function openRouterStream(model, messages, apiKey, signal) {
       messages,
       stream: true,
       temperature: 0.3,
-      max_tokens: 700,
+      max_tokens: 1800,
       reasoning: { exclude: true },
     }),
     signal,
@@ -428,7 +622,9 @@ export function streamAnswer(context, env, messages, { onComplete } = {}) {
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
+  let visibleSent = false;
   const send = async (obj) => {
+    if (obj.type === 'item' && obj.content) visibleSent = true;
     try {
       await writer.write(encoder.encode(JSON.stringify(obj) + '\n'));
     } catch { /* client gone — keep consuming the model stream */ }
@@ -436,6 +632,7 @@ export function streamAnswer(context, env, messages, { onComplete } = {}) {
 
   let full = '';
   let usedModel = null;
+  let partialModel = null;
   let resolveFinished;
   const finished = new Promise((resolve) => { resolveFinished = resolve; });
 
@@ -448,51 +645,62 @@ export function streamAnswer(context, env, messages, { onComplete } = {}) {
   }
 
   (async () => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const overallDeadline = Date.now() + FETCH_TIMEOUT_MS;
     try {
       let lastError = 'No model available';
       let streamed = false;
 
       for (const model of MODELS) {
-        let attempt;
+        const remaining = overallDeadline - Date.now();
+        if (remaining <= 2000) {
+          lastError = 'time budget exhausted';
+          break;
+        }
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), Math.min(MODEL_TIMEOUT_MS, remaining));
         try {
-          attempt = await openRouterStream(model, messages, apiKey, controller.signal);
+          const attempt = await openRouterStream(model, messages, apiKey, controller.signal);
           if (!attempt.ok) {
             lastError = `${model}: HTTP ${attempt.status}`;
             continue;
           }
+
+          const result = await consumeModelStream(attempt, send);
+          if (result.junk || !result.streamed) {
+            lastError = `${model}: ${result.junk ? 'unusable output' : 'empty response'}`;
+            continue;
+          }
+
+          usedModel = model;
+          full = result.full;
+          streamed = result.streamed;
+          break;
         } catch (err) {
           lastError = `${model}: ${err.name === 'AbortError' ? 'timeout' : err.message}`;
-          continue;
+          // The visitor already saw part of an answer. Retrying another model
+          // would duplicate text, so stop and ask them to continue instead.
+          if (visibleSent) { partialModel = model; break; }
+        } finally {
+          clearTimeout(timer);
         }
-
-        const result = await consumeModelStream(attempt, send);
-        if (result.junk || !result.streamed) {
-          lastError = `${model}: ${result.junk ? 'unusable output' : 'empty response'}`;
-          continue;
-        }
-
-        usedModel = model;
-        full = result.full;
-        streamed = result.streamed;
-        break;
       }
 
-      if (!usedModel) {
+      if (!usedModel && !partialModel) {
         await send({ type: 'error', error: `AI unavailable (${lastError}). Please try again shortly.` });
         return;
       }
 
-      await send({ type: 'model', model: usedModel });
+      await send({ type: 'model', model: usedModel || partialModel });
 
-      if (!streamed || full.trim().length < 10) {
+      if (visibleSent && !streamed) {
+        await send({ type: 'item', content: '\n\n*I ran out of time there — ask me to continue and I will pick up from where I stopped.*' });
+      } else if (!streamed || full.trim().length < 10) {
         await send({ type: 'item', content: 'Sorry — I could not generate a complete answer just now. Please try again.' });
       }
     } catch {
       await send({ type: 'item', content: '\n\n*Connection interrupted — please try again.*' });
     } finally {
-      clearTimeout(timer);
       if (!context.waitUntil && onComplete) {
         // No waitUntil available (plain node test envs) — save inline.
         try { await onComplete(full, usedModel); } catch { /* best-effort */ }
