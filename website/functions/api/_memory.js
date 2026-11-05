@@ -34,6 +34,11 @@ function markMemoryUp() {
   memoryDownUntil = 0;
 }
 
+function logFailure(stage, detail) {
+  // Status/error name only — never log the URL, key or message content.
+  console.warn(`chat-memory ${stage}: ${detail}`);
+}
+
 export function memoryConfigured(env) {
   if (Date.now() < memoryDownUntil) return false;
   return Boolean(env && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
@@ -73,12 +78,14 @@ export async function ensureSession(env, sessionId, pageUrl, mode) {
     });
     if (!res.ok) {
       markMemoryDown();
+      logFailure('ensureSession', `HTTP ${res.status}`);
       return false;
     }
     markMemoryUp();
     return true;
-  } catch {
+  } catch (err) {
     markMemoryDown();
+    logFailure('ensureSession', err?.name || 'request failed');
     return false;
   }
 }
@@ -108,6 +115,7 @@ export async function loadHistory(env, sessionId, limit = MAX_HISTORY, mode = nu
     );
     if (!res.ok) {
       markMemoryDown();
+      logFailure('loadHistory', `HTTP ${res.status}`);
       return [];
     }
     const rows = await res.json();
@@ -116,8 +124,9 @@ export async function loadHistory(env, sessionId, limit = MAX_HISTORY, mode = nu
       .reverse()
       .filter((r) => typeof r.content === 'string' && r.content.trim())
       .map((r) => ({ role: r.role, content: String(r.content).slice(0, MAX_INPUT_CHARS * 4) }));
-  } catch {
+  } catch (err) {
     markMemoryDown();
+    logFailure('loadHistory', err?.name || 'request failed');
     return [];
   }
 }
@@ -136,10 +145,14 @@ export async function saveMessage(env, sessionId, { role, content, pageUrl, mode
         model: model || null,
       }]),
     });
-    if (!res.ok) markMemoryDown();
+    if (!res.ok) {
+      markMemoryDown();
+      logFailure('saveMessage', `HTTP ${res.status}`);
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
     markMemoryDown();
+    logFailure('saveMessage', err?.name || 'request failed');
     return false;
   }
 }
