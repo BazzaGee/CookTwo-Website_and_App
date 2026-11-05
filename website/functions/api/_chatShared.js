@@ -15,15 +15,17 @@ export const APP_TITLE = 'CookTwo Chat Bot';
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Free models change often. Verified against the live OpenRouter catalogue.
-// Dots answers directly and streams reliably; the router is the second attempt
-// in case the direct model is unavailable. The old minimax / nemotron-3-super
-// IDs were retired, Google's free endpoints reject the shared key, and the
-// Nemotron / Flint free models spend the whole budget on hidden reasoning
-// tokens, so none of those belong in the fallback chain.
+// Dots answers directly and streams reliably; the router is the second free
+// attempt in case the direct model is unavailable. If free inference is rate
+// limited or fails, fall back to the paid DeepSeek Flash model. The old
+// minimax / nemotron-3-super IDs were retired, Google's free endpoints reject
+// the shared key, and the Nemotron / Flint free models spend the whole budget
+// on hidden reasoning tokens, so none of those belong in the chain.
+export const PAID_FALLBACK_MODEL = 'deepseek/deepseek-v4.1-flash-1017';
 export const MODELS = [
   'dots-studio/dots-3-note-preview:free',
   'openrouter/free',
-  'liquid/lfm-2.5-2.6b:free',
+  PAID_FALLBACK_MODEL,
 ];
 
 export const MAX_INPUT_CHARS = 2000;
@@ -33,6 +35,7 @@ export const MAX_SECTION_CHARS = 8000;
 export const RATE_LIMIT_PER_MIN = 10;
 export const FETCH_TIMEOUT_MS = 40000;
 export const MODEL_TIMEOUT_MS = 26000;
+export const PAID_MODEL_TIMEOUT_MS = 35000;
 
 export const STOPWORDS = new Set([
   'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been',
@@ -649,8 +652,15 @@ export function streamAnswer(context, env, messages, { onComplete } = {}) {
     try {
       let lastError = 'No model available';
       let streamed = false;
+      let skipFree = false;
 
       for (const model of MODELS) {
+        const isPaid = model === PAID_FALLBACK_MODEL;
+        // Once free inference is rate limited or times out, go straight to the
+        // paid fallback instead of spending the remaining budget on more free
+        // models.
+        if (skipFree && !isPaid) continue;
+
         const remaining = overallDeadline - Date.now();
         if (remaining <= 2000) {
           lastError = 'time budget exhausted';
@@ -658,26 +668,31 @@ export function streamAnswer(context, env, messages, { onComplete } = {}) {
         }
 
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), Math.min(MODEL_TIMEOUT_MS, remaining));
+        const modelTimeout = isPaid ? PAID_MODEL_TIMEOUT_MS : MODEL_TIMEOUT_MS;
+        const timer = setTimeout(() => controller.abort(), Math.min(modelTimeout, remaining));
         try {
           const attempt = await openRouterStream(model, messages, apiKey, controller.signal);
           if (!attempt.ok) {
             lastError = `${model}: HTTP ${attempt.status}`;
+            if (!isPaid && (attempt.status === 429 || attempt.status === 402)) skipFree = true;
             continue;
           }
 
           const result = await consumeModelStream(attempt, send);
           if (result.junk || !result.streamed) {
             lastError = `${model}: ${result.junk ? 'unusable output' : 'empty response'}`;
+            if (!isPaid) skipFree = true;
             continue;
           }
 
           usedModel = model;
           full = result.full;
           streamed = result.streamed;
+          if (isPaid) console.log(`chat-ai paid fallback used: ${model}`);
           break;
         } catch (err) {
           lastError = `${model}: ${err.name === 'AbortError' ? 'timeout' : err.message}`;
+          if (!isPaid && err.name === 'AbortError') skipFree = true;
           // The visitor already saw part of an answer. Retrying another model
           // would duplicate text, so stop and ask them to continue instead.
           if (visibleSent) { partialModel = model; break; }
